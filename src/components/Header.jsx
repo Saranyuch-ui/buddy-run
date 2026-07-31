@@ -1,8 +1,9 @@
 function Header() {
   return (
     <header className="header">
-      <h1>🏃 Buddy Run</h1>
-      <p>Find Your Next Running Event</p>
+      <div className="header-content">
+        <img src="/logo.png" alt="Buddy Run Logo" className="logo" />
+      </div>
     </header>
   );
 }
