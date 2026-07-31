@@ -8,7 +8,7 @@ import Footer from "../components/Footer";
 
 import events from "../data/events";
 
-function Home() {
+function Home({ onSelectEvent }) {
 
   const [search, setSearch] = useState("");
 
@@ -34,6 +34,7 @@ function Home() {
           <EventCard
             key={event.id}
             event={event}
+            onSelect={onSelectEvent}
           />
         ))}
 
