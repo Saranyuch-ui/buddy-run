@@ -22,9 +22,9 @@ function Detail({ event, onBack }) {
   };
 
   return (
+  <>
+    <Header />
     <div className="detail">
-      <Header />
-
       <button className="back-btn" onClick={onBack}>← Back</button>
 
       <img src={event.image} alt={event.title} />
@@ -79,7 +79,7 @@ function Detail({ event, onBack }) {
         )}
       </div>
     </div>
-  );
-}
+  </>
+);
 
 export default Detail;
