@@ -2,6 +2,8 @@ import { useState } from "react";
 import Header from "./components/Header";
 import Home from "./pages/Home";
 import Detail from "./pages/Detail";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 function ComingSoon({ title, onNavigate, onLogoClick }) {
   return (
@@ -46,7 +48,15 @@ function App() {
   }
 
   if (page === "login") {
-    return <ComingSoon title="Login" onNavigate={setPage} onLogoClick={goHome} />;
+    return <Login onNavigate={setPage} onLogoClick={goHome} />;
+  }
+
+  if (page === "register") {
+    return <Register onNavigate={setPage} onLogoClick={goHome} />;
+  }
+
+  if (page === "forgot-password") {
+    return <ComingSoon title="ลืมรหัสผ่าน" onNavigate={setPage} onLogoClick={goHome} />;
   }
 
   return <Home onSelectEvent={handleSelectEvent} onNavigate={setPage} />;
