@@ -31,6 +31,17 @@ const events = [
     image: "https://picsum.photos/600/400?random=3",
     description:
       "Family friendly running event."
+  },
+  {
+    id: 4,
+    title: "Hua Hin Beach Run 2026",
+    date: "20 June 2026",
+    dateISO: "2026-06-20",
+    location: "Hua Hin",
+    distance: "5K / 10K",
+    image: "https://picsum.photos/600/400?random=4",
+    description:
+      "A scenic beach run that already took place."
   }
 ];
 
