@@ -1,13 +1,34 @@
-events.js
+const events = [
+  {
+    id: 1,
+    title: "Bangkok Marathon 2027",
+    date: "15 January 2027",
+    location: "Bangkok",
+    distance: "5K / 10K / 21K / 42K",
+    image: "https://picsum.photos/600/400?random=1",
+    description:
+      "One of the biggest marathon events in Thailand."
+  },
+  {
+    id: 2,
+    title: "Chiangmai Night Run",
+    date: "5 February 2027",
+    location: "Chiangmai",
+    distance: "5K / 10K",
+    image: "https://picsum.photos/600/400?random=2",
+    description:
+      "Enjoy running through Chiangmai at night."
+  },
+  {
+    id: 3,
+    title: "Pattaya Fun Run",
+    date: "10 March 2027",
+    location: "Pattaya",
+    distance: "5K",
+    image: "https://picsum.photos/600/400?random=3",
+    description:
+      "Family friendly running event."
+  }
+];
 
-[
- {
-   id:1,
-   title:"",
-   date:"",
-   location:"",
-   image:"",
-   description:"",
-   distance:[]
- }
-]
+export default events;
