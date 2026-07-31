@@ -83,5 +83,6 @@ function Detail({ event, onBack }) {
     </div>
   </>
 );
+}
 
 export default Detail;
