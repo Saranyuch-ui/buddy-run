@@ -1,6 +1,6 @@
-function EventCard({ event, onSelect }) {
+function EventCard({ event, onSelect, disabled }) {
   return (
-    <div className="card">
+    <div className={"card" + (disabled ? " card-disabled" : "")}>
 
       <img
         src={event.image}
@@ -17,8 +17,11 @@ function EventCard({ event, onSelect }) {
 
         <p>🏃 {event.distance}</p>
 
-        <button onClick={() => onSelect(event)}>
-          View Detail
+        <button
+          onClick={() => !disabled && onSelect(event)}
+          disabled={disabled}
+        >
+          {disabled ? "กิจกรรมสิ้นสุดแล้ว" : "View Detail"}
         </button>
 
       </div>
