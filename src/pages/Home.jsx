@@ -8,7 +8,7 @@ import Footer from "../components/Footer";
 
 import events from "../data/events";
 
-function Home({ onSelectEvent }) {
+function Home({ onSelectEvent, onNavigate }) {
 
   const [search, setSearch] = useState("");
 
