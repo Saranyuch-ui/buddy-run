@@ -397,3 +397,8 @@ body {
 .auth-secondary-btn:hover {
     background: #eff6ff;
 }
+
+.required-mark {
+    color: #dc2626;
+    font-weight: bold;
+}
