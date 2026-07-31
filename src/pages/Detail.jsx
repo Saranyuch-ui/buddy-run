@@ -8,11 +8,13 @@ function Detail({ event, onBack }) {
 
   if (!event) {
     return (
-      <div className="detail">
+      <>
         <Header />
-        <p>ไม่พบข้อมูลกิจกรรม</p>
-        <button onClick={onBack}>← Back</button>
-      </div>
+        <div className="detail">
+          <p>ไม่พบข้อมูลกิจกรรม</p>
+          <button onClick={onBack}>← Back</button>
+        </div>
+      </>
     );
   }
 
