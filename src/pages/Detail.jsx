@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Header from "../components/Header";
 import packages from "../data/packages";
 
 function Detail({ event, onBack }) {
@@ -8,6 +9,7 @@ function Detail({ event, onBack }) {
   if (!event) {
     return (
       <div className="detail">
+        <Header />
         <p>ไม่พบข้อมูลกิจกรรม</p>
         <button onClick={onBack}>← Back</button>
       </div>
@@ -21,6 +23,8 @@ function Detail({ event, onBack }) {
 
   return (
     <div className="detail">
+      <Header />
+
       <button className="back-btn" onClick={onBack}>← Back</button>
 
       <img src={event.image} alt={event.title} />
