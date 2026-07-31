@@ -68,6 +68,7 @@ function Home({ onSelectEvent, onNavigate }) {
                 key={event.id}
                 event={event}
                 onSelect={onSelectEvent}
+                disabled={true}
               />
             ))}
           </div>
