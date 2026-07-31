@@ -244,3 +244,49 @@ body {
     border-radius: 8px;
     font-weight: bold;
 }
+
+.header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.header-logo-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-nav {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.nav-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.5);
+    color: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.nav-btn:hover {
+    background: rgba(255,255,255,0.15);
+}
+
+.coming-soon {
+    max-width: 600px;
+    margin: 80px auto;
+    text-align: center;
+    padding: 40px;
+}
+
+.coming-soon h2 {
+    margin-bottom: 10px;
+}
