@@ -20,6 +20,7 @@ function ComingSoon({ title, onNavigate, onLogoClick }) {
 function App() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [page, setPage] = useState("home");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const goHome = () => {
     setSelectedEvent(null);
@@ -31,8 +32,20 @@ function App() {
     setPage("detail");
   };
 
+  const handleLoginSuccess = () => {
+    setIsLoggedIn(true);
+    setPage(selectedEvent ? "detail" : "home");
+  };
+
   if (page === "detail" && selectedEvent) {
-    return <Detail event={selectedEvent} onBack={goHome} />;
+    return (
+      <Detail
+        event={selectedEvent}
+        onBack={goHome}
+        onNavigate={setPage}
+        isLoggedIn={isLoggedIn}
+      />
+    );
   }
 
   if (page === "payment") {
@@ -48,7 +61,13 @@ function App() {
   }
 
   if (page === "login") {
-    return <Login onNavigate={setPage} onLogoClick={goHome} />;
+    return (
+      <Login
+        onNavigate={setPage}
+        onLogoClick={goHome}
+        onLoginSuccess={handleLoginSuccess}
+      />
+    );
   }
 
   if (page === "register") {
