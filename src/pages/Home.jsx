@@ -29,7 +29,7 @@ function Home({ onSelectEvent, onNavigate }) {
   return (
     <>
 
-      <Header />
+      <Header onNavigate={onNavigate} />
 
       <Hero />
 
