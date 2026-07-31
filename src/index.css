@@ -22,6 +22,18 @@ body {
     display: flex;
     align-items: center;
     justify-content: flex-start;
+    gap: 12px;
+    width: fit-content;
+}
+
+.header-text h1 {
+    font-size: 1.3rem;
+    line-height: 1.2;
+}
+
+.header-text p {
+    font-size: 0.85rem;
+    opacity: 0.9;
 }
 
 .logo {
