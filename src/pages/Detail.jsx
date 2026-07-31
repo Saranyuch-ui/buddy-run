@@ -9,7 +9,7 @@ function Detail({ event, onBack }) {
   if (!event) {
     return (
       <>
-        <Header />
+        <Header onLogoClick={onBack} />
         <div className="detail">
           <p>ไม่พบข้อมูลกิจกรรม</p>
           <button onClick={onBack}>← Back</button>
@@ -25,7 +25,7 @@ function Detail({ event, onBack }) {
 
   return (
   <>
-    <Header />
+    <Header onLogoClick={onBack} />
     <div className="detail">
       <button className="back-btn" onClick={onBack}>← Back</button>
 
