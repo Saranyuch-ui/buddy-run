@@ -1,1 +1,4 @@
-
+button {
+    background: var(--primary);
+    color: white;
+}
