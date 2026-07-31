@@ -282,3 +282,20 @@ body {
 .coming-soon h2 {
     margin-bottom: 10px;
 }
+
+.card-disabled {
+    opacity: 0.6;
+}
+
+.card-disabled img {
+    filter: grayscale(60%);
+}
+
+.card button:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+.card button:disabled:hover {
+    background: #9ca3af;
+}
