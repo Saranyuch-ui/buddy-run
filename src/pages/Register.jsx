@@ -26,8 +26,33 @@ function Register({ onNavigate, onLogoClick }) {
     setForm({ ...form, [field]: e.target.value });
   };
 
+  const requiredFields = [
+    { key: "email", label: "Email" },
+    { key: "password", label: "Password" },
+    { key: "confirmPassword", label: "Confirm Password" },
+    { key: "shirtSize", label: "ไซส์เสื้อ" },
+    { key: "houseNo", label: "บ้านเลขที่" },
+    { key: "subDistrict", label: "ตำบล" },
+    { key: "district", label: "อำเภอ" },
+    { key: "province", label: "จังหวัด" },
+    { key: "postalCode", label: "รหัสไปรษณีย์" },
+    { key: "phone", label: "เบอร์โทรศัพท์" },
+  ];
+
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const missing = requiredFields.filter(
+      (field) => !form[field.key].trim()
+    );
+
+    if (missing.length > 0) {
+      alert(
+        "กรุณากรอกข้อมูลให้ครบ:\n" +
+          missing.map((f) => "- " + f.label).join("\n")
+      );
+      return;
+    }
 
     if (form.password !== form.confirmPassword) {
       alert("รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน");
@@ -54,28 +79,31 @@ function Register({ onNavigate, onLogoClick }) {
           <label>นามสกุล</label>
           <input value={form.lastName} onChange={handleChange("lastName")} />
 
-          <label>Email *</label>
+          <label>
+            Email <span className="required-mark">*</span>
+          </label>
           <input
             type="email"
             value={form.email}
             onChange={handleChange("email")}
-            required
           />
 
-          <label>Password *</label>
+          <label>
+            Password <span className="required-mark">*</span>
+          </label>
           <input
             type="password"
             value={form.password}
             onChange={handleChange("password")}
-            required
           />
 
-          <label>Confirm Password *</label>
+          <label>
+            Confirm Password <span className="required-mark">*</span>
+          </label>
           <input
             type="password"
             value={form.confirmPassword}
             onChange={handleChange("confirmPassword")}
-            required
           />
 
           <h3 className="form-section-title">ข้อมูลนักวิ่ง</h3>
@@ -95,7 +123,9 @@ function Register({ onNavigate, onLogoClick }) {
             <option value="other">อื่นๆ</option>
           </select>
 
-          <label>ไซส์เสื้อ</label>
+          <label>
+            ไซส์เสื้อ <span className="required-mark">*</span>
+          </label>
           <select value={form.shirtSize} onChange={handleChange("shirtSize")}>
             <option value="">-- เลือกไซส์ --</option>
             <option value="XS">XS</option>
@@ -108,7 +138,9 @@ function Register({ onNavigate, onLogoClick }) {
 
           <h3 className="form-section-title">ที่อยู่จัดส่ง</h3>
 
-          <label>บ้านเลขที่</label>
+          <label>
+            บ้านเลขที่ <span className="required-mark">*</span>
+          </label>
           <input value={form.houseNo} onChange={handleChange("houseNo")} />
 
           <label>หมู่</label>
@@ -120,24 +152,39 @@ function Register({ onNavigate, onLogoClick }) {
           <label>ถนน</label>
           <input value={form.road} onChange={handleChange("road")} />
 
-          <label>ตำบล</label>
-          <input value={form.subDistrict} onChange={handleChange("subDistrict")} />
+          <label>
+            ตำบล <span className="required-mark">*</span>
+          </label>
+          <input
+            value={form.subDistrict}
+            onChange={handleChange("subDistrict")}
+          />
 
-          <label>อำเภอ</label>
+          <label>
+            อำเภอ <span className="required-mark">*</span>
+          </label>
           <input value={form.district} onChange={handleChange("district")} />
 
-          <label>จังหวัด</label>
+          <label>
+            จังหวัด <span className="required-mark">*</span>
+          </label>
           <input value={form.province} onChange={handleChange("province")} />
 
-          <label>รหัสไปรษณีย์</label>
-          <input value={form.postalCode} onChange={handleChange("postalCode")} />
+          <label>
+            รหัสไปรษณีย์ <span className="required-mark">*</span>
+          </label>
+          <input
+            value={form.postalCode}
+            onChange={handleChange("postalCode")}
+          />
 
-          <label>เบอร์โทรศัพท์ *</label>
+          <label>
+            เบอร์โทรศัพท์ <span className="required-mark">*</span>
+          </label>
           <input
             type="tel"
             value={form.phone}
             onChange={handleChange("phone")}
-            required
           />
 
           <button type="submit" className="auth-submit-btn">
