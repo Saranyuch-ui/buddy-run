@@ -78,10 +78,6 @@ body {
     flex: 1;
 }
 
-.card-body button {
-    margin-top: auto;
-}
-
 .card-body h3 {
     margin-bottom: 10px;
 }
@@ -91,7 +87,7 @@ body {
 }
 
 .card button {
-    margin-top: 15px;
+    margin-top: auto;
     width: 100%;
     padding: 12px;
     border: none;
