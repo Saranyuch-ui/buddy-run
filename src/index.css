@@ -12,11 +12,21 @@ body {
 .header {
     background: #2563eb;
     color: white;
-    text-align: center;
-    padding: 30px;
+    padding: 15px 30px;
     position: sticky;
     top: 0;
     z-index: 100;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.logo {
+    height: 45px;
+    object-fit: contain;
 }
 
 .hero {
