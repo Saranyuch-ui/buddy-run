@@ -18,14 +18,6 @@ body {
     z-index: 100;
 }
 
-.header-content {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 12px;
-    width: fit-content;
-}
-
 .header-text h1 {
     font-size: 1.3rem;
     line-height: 1.2;
