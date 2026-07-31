@@ -1,4 +1,4 @@
-function EventCard({ event }) {
+function EventCard({ event, onSelect }) {
   return (
     <div className="card">
 
@@ -17,7 +17,7 @@ function EventCard({ event }) {
 
         <p>🏃 {event.distance}</p>
 
-        <button>
+        <button onClick={() => onSelect(event)}>
           View Detail
         </button>
 
