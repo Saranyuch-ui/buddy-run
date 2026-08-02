@@ -5,10 +5,15 @@ import Detail from "./pages/Detail";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
-function ComingSoon({ title, onNavigate, onLogoClick }) {
+function ComingSoon({ title, onNavigate, onLogoClick, currentUser, onLogout }) {
   return (
     <>
-      <Header onNavigate={onNavigate} onLogoClick={onLogoClick} />
+      <Header
+        onNavigate={onNavigate}
+        onLogoClick={onLogoClick}
+        currentUser={currentUser}
+        onLogout={onLogout}
+      />
       <div className="coming-soon">
         <h2>🚧 {title}</h2>
         <p>หน้านี้อยู่ระหว่างพัฒนา</p>
@@ -39,6 +44,11 @@ function App() {
     setPage(selectedEvent ? "detail" : "home");
   };
 
+  const handleLogout = () => {
+    setCurrentUser(null);
+    goHome();
+  };
+
   if (page === "detail" && selectedEvent) {
     return (
       <Detail
@@ -46,20 +56,46 @@ function App() {
         onBack={goHome}
         onNavigate={setPage}
         isLoggedIn={isLoggedIn}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       />
     );
   }
 
   if (page === "payment") {
-    return <ComingSoon title="ชำระเงิน" onNavigate={setPage} onLogoClick={goHome} />;
+    return (
+      <ComingSoon
+        title="ชำระเงิน"
+        onNavigate={setPage}
+        onLogoClick={goHome}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+      />
+    );
   }
 
   if (page === "submit-result") {
-    return <ComingSoon title="ส่งผลกิจกรรม" onNavigate={setPage} onLogoClick={goHome} />;
+    return (
+      <ComingSoon
+        title="ส่งผลกิจกรรม"
+        onNavigate={setPage}
+        onLogoClick={goHome}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+      />
+    );
   }
 
   if (page === "contact") {
-    return <ComingSoon title="ติดต่อเรา" onNavigate={setPage} onLogoClick={goHome} />;
+    return (
+      <ComingSoon
+        title="ติดต่อเรา"
+        onNavigate={setPage}
+        onLogoClick={goHome}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+      />
+    );
   }
 
   if (page === "login") {
@@ -77,10 +113,25 @@ function App() {
   }
 
   if (page === "forgot-password") {
-    return <ComingSoon title="ลืมรหัสผ่าน" onNavigate={setPage} onLogoClick={goHome} />;
+    return (
+      <ComingSoon
+        title="ลืมรหัสผ่าน"
+        onNavigate={setPage}
+        onLogoClick={goHome}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+      />
+    );
   }
 
-  return <Home onSelectEvent={handleSelectEvent} onNavigate={setPage} />;
+  return (
+    <Home
+      onSelectEvent={handleSelectEvent}
+      onNavigate={setPage}
+      currentUser={currentUser}
+      onLogout={handleLogout}
+    />
+  );
 }
 
 export default App;
