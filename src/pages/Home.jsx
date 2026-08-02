@@ -8,7 +8,7 @@ import Footer from "../components/Footer";
 
 import events from "../data/events";
 
-function Home({ onSelectEvent, onNavigate }) {
+function Home({ onSelectEvent, onNavigate, currentUser, onLogout }) {
 
   const [search, setSearch] = useState("");
 
@@ -29,7 +29,7 @@ function Home({ onSelectEvent, onNavigate }) {
   return (
     <>
 
-      <Header onNavigate={onNavigate} />
+      <Header onNavigate={onNavigate} currentUser={currentUser} onLogout={onLogout} />
 
       <Hero />
 
