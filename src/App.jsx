@@ -20,7 +20,9 @@ function ComingSoon({ title, onNavigate, onLogoClick }) {
 function App() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [page, setPage] = useState("home");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  const isLoggedIn = !!currentUser;
 
   const goHome = () => {
     setSelectedEvent(null);
@@ -32,8 +34,8 @@ function App() {
     setPage("detail");
   };
 
-  const handleLoginSuccess = () => {
-    setIsLoggedIn(true);
+  const handleLoginSuccess = (user) => {
+    setCurrentUser(user);
     setPage(selectedEvent ? "detail" : "home");
   };
 
