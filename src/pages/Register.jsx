@@ -21,6 +21,7 @@ function Register({ onNavigate, onLogoClick }) {
     postalCode: "",
     phone: "",
   });
+  const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (field) => (e) => {
     setForm({ ...form, [field]: e.target.value });
@@ -39,7 +40,7 @@ function Register({ onNavigate, onLogoClick }) {
     { key: "phone", label: "เบอร์โทรศัพท์" },
   ];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const missing = requiredFields.filter(
@@ -59,8 +60,30 @@ function Register({ onNavigate, onLogoClick }) {
       return;
     }
 
-    alert("สมัครสมาชิกเรียบร้อยแล้ว");
-    onNavigate("login");
+    setSubmitting(true);
+
+    try {
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.error || "สมัครสมาชิกไม่สำเร็จ");
+        setSubmitting(false);
+        return;
+      }
+
+      alert("สมัครสมาชิกเรียบร้อยแล้ว");
+      onNavigate("login");
+    } catch (err) {
+      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -187,8 +210,8 @@ function Register({ onNavigate, onLogoClick }) {
             onChange={handleChange("phone")}
           />
 
-          <button type="submit" className="auth-submit-btn">
-            สมัครสมาชิก
+          <button type="submit" className="auth-submit-btn" disabled={submitting}>
+            {submitting ? "กำลังสมัคร..." : "สมัครสมาชิก"}
           </button>
 
           <button
