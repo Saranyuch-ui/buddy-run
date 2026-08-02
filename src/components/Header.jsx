@@ -1,10 +1,9 @@
-function Header({ onLogoClick, onNavigate }) {
+function Header({ onLogoClick, onNavigate, currentUser, onLogout }) {
   const navItems = [
     { key: "home", label: "หน้าแรก" },
     { key: "payment", label: "ชำระเงิน" },
     { key: "submit-result", label: "ส่งผลกิจกรรม" },
     { key: "contact", label: "ติดต่อเรา" },
-    { key: "login", label: "Login" },
   ];
 
   return (
@@ -32,6 +31,24 @@ function Header({ onLogoClick, onNavigate }) {
               {item.label}
             </button>
           ))}
+
+          {currentUser ? (
+            <div className="user-info">
+              <span className="user-name">
+                👤 {currentUser.first_name || currentUser.email}
+              </span>
+              <button className="nav-btn" onClick={onLogout}>
+                ออกจากระบบ
+              </button>
+            </div>
+          ) : (
+            <button
+              className="nav-btn"
+              onClick={() => onNavigate && onNavigate("login")}
+            >
+              Login
+            </button>
+          )}
         </nav>
       </div>
     </header>
