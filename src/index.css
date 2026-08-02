@@ -402,3 +402,15 @@ body {
     color: #dc2626;
     font-weight: bold;
 }
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-name {
+    color: white;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
