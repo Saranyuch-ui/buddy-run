@@ -2,14 +2,14 @@ import { useState } from "react";
 import Header from "../components/Header";
 import packages from "../data/packages";
 
-function Detail({ event, onBack, onNavigate, isLoggedIn }) {
+function Detail({ event, onBack, onNavigate, isLoggedIn, currentUser, onLogout }) {
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [registered, setRegistered] = useState(false);
 
   if (!event) {
     return (
       <>
-        <Header onNavigate={onNavigate} onLogoClick={onBack} />
+        <Header onNavigate={onNavigate} onLogoClick={onBack} currentUser={currentUser} onLogout={onLogout} />
         <div className="detail">
           <p>ไม่พบข้อมูลกิจกรรม</p>
           <button onClick={onBack}>← Back</button>
@@ -32,7 +32,7 @@ function Detail({ event, onBack, onNavigate, isLoggedIn }) {
 
   return (
     <>
-      <Header onNavigate={onNavigate} onLogoClick={onBack} />
+      <Header onNavigate={onNavigate} onLogoClick={onBack} currentUser={currentUser} onLogout={onLogout} />
       <div className="detail">
         <button className="back-btn" onClick={onBack}>← Back</button>
 
