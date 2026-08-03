@@ -59,6 +59,7 @@ const [slipPreview, setSlipPreview] = useState(null);
     setAmount("");
     setAmountLocked(false);
     setSlipFile(null);
+    setSlipPreview(null);
     setOcrMessage("");
   };
 
