@@ -5,6 +5,7 @@ import Detail from "./pages/Detail";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
+import Payment from "./pages/Payment";
 
 function ComingSoon({ title, onNavigate, onLogoClick, currentUser, onLogout }) {
   return (
@@ -76,10 +77,10 @@ function App() {
 
   if (page === "payment") {
     return (
-      <ComingSoon
-        title="ชำระเงิน"
+      <Payment
         onNavigate={setPage}
         onLogoClick={goHome}
+        isLoggedIn={isLoggedIn}
         currentUser={currentUser}
         onLogout={handleLogout}
       />
