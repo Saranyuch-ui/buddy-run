@@ -71,14 +71,13 @@ function Payment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout })
       }
 
       setRegistrations(
-        registrations.map((r) =>
-          r.id === reg.id ? { ...r, status: "paid", paid_amount: amountNum } : r
-        )
-      );
-      setPayingId(null);
-      alert("ชำระเงินสำเร็จ! สถานะอัปเดตเป็น 'ชำระเรียบร้อย' แล้ว");
-    } catch (err) {
-      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+  registrations.map((r) =>
+    r.id === reg.id ? { ...r, status: "paid", paid_amount: amountNum } : r
+  )
+);
+setPayingId(null);
+setSlipFile(null);
+alert("ชำระเงินสำเร็จ! สถานะอัปเดตเป็น 'ชำระเรียบร้อย' แล้ว");
     } finally {
       setSubmitting(false);
     }
