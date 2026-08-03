@@ -56,6 +56,17 @@ function Header({ onLogoClick, onNavigate, currentUser, onLogout }) {
                   >
                     ข้อมูลสมาชิก
                   </button>
+                  {currentUser.is_admin === 1 && (
+                    <button
+                      className="dropdown-item"
+                      onClick={() => {
+                        setDropdownOpen(false);
+                        onNavigate("admin");
+                      }}
+                    >
+                      🛠️ จัดการอนุมัติ
+                    </button>
+                  )}
                   <button
                     className="dropdown-item"
                     onClick={() => {
