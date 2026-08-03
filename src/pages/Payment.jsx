@@ -193,6 +193,14 @@ const [slipPreview, setSlipPreview] = useState(null);
                       onChange={(e) => handleFileChange(e, reg)}
                     />
 
+                    {slipPreview && (
+                      <img
+                        src={slipPreview}
+                        alt="ตัวอย่างสลิป"
+                        className="slip-preview"
+                      />
+                    )}
+
                     {ocrProcessing && (
                       <p className="ocr-status">🔍 กำลังอ่านยอดจากสลิป...</p>
                     )}
