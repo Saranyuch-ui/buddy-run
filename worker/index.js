@@ -161,6 +161,7 @@ async function handlePayRegistration(request, env) {
   const registrationId = formData.get("registrationId");
   const amount = Number(formData.get("amount"));
   const file = formData.get("slip");
+  const verifiedByOcr = formData.get("verifiedByOcr") === "true";
 
   if (!registrationId || !amount || !file) {
     return Response.json(
@@ -211,15 +212,18 @@ async function handlePayRegistration(request, env) {
     );
   }
 
-  // ผ่านเช็คพื้นฐานทั้งหมด -> อัปเดตสถานะทันที (ไม่เก็บไฟล์ที่ไหนเลย)
+  // ผ่านเช็คพื้นฐานทั้งหมด -> อัปเดตสถานะ (ไม่เก็บไฟล์ที่ไหนเลย)
+  // OCR ยืนยันแล้ว -> ชำระเรียบร้อยทันที / กรอกเอง -> รอการอนุมัติ
+  const newStatus = verifiedByOcr ? "paid" : "pending_verification";
+
   try {
     await env.DB.prepare(
-      "UPDATE registrations SET status = 'paid', paid_amount = ? WHERE id = ?"
+      "UPDATE registrations SET status = ?, paid_amount = ? WHERE id = ?"
     )
-      .bind(amount, registrationId)
+      .bind(newStatus, amount, registrationId)
       .run();
 
-    return Response.json({ success: true });
+    return Response.json({ success: true, status: newStatus });
   } catch (err) {
     return Response.json(
       { success: false, error: "อัปเดตสถานะไม่สำเร็จ กรุณาลองใหม่" },
