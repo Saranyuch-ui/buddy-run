@@ -169,7 +169,6 @@ async function handlePayRegistration(request, env) {
     );
   }
 
-  // เช็คพื้นฐาน - ไฟล์ต้องเป็นรูปภาพ (เช็คแล้วไม่เก็บไฟล์นี้ไว้ที่ไหนเลย)
   const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
   if (!allowedTypes.includes(file.type)) {
     return Response.json(
@@ -178,7 +177,6 @@ async function handlePayRegistration(request, env) {
     );
   }
 
-  // เช็คขนาดไฟล์ - ไม่เกิน 5MB
   if (file.size > 5 * 1024 * 1024) {
     return Response.json(
       { success: false, error: "ไฟล์ใหญ่เกินไป (จำกัดไม่เกิน 5MB)" },
@@ -206,7 +204,6 @@ async function handlePayRegistration(request, env) {
     );
   }
 
-  // เช็คยอดเงินตรงตามแพ็กเกจ (เท่ากับหรือมากกว่า)
   if (amount < reg.price) {
     return Response.json(
       { success: false, error: `ยอดชำระต้องไม่ต่ำกว่า ${reg.price.toLocaleString()} บาท` },
@@ -214,8 +211,7 @@ async function handlePayRegistration(request, env) {
     );
   }
 
-  // ผ่านเช็คพื้นฐานทั้งหมดแล้ว -> อัปเดตสถานะเป็นชำระเรียบร้อยทันที
-  // (ไม่มีการบันทึกไฟล์สลิปไว้ที่ไหนเลย - file ถูกทิ้งไปหลัง request นี้จบ)
+  // ผ่านเช็คพื้นฐานทั้งหมด -> อัปเดตสถานะทันที (ไม่เก็บไฟล์ที่ไหนเลย)
   try {
     await env.DB.prepare(
       "UPDATE registrations SET status = 'paid', paid_amount = ? WHERE id = ?"
@@ -265,35 +261,4 @@ async function handleUpdateUser(request, env) {
   try {
     await env.DB.prepare(
       `UPDATE users SET
-        first_name = ?, last_name = ?, birthdate = ?, gender = ?, shirt_size = ?,
-        house_no = ?, moo = ?, soi = ?, road = ?, sub_district = ?, district = ?,
-        province = ?, postal_code = ?, phone = ?
-       WHERE id = ?`
-    )
-      .bind(
-        body.firstName,
-        body.lastName,
-        body.birthdate,
-        body.gender,
-        body.shirtSize,
-        body.houseNo,
-        body.moo,
-        body.soi,
-        body.road,
-        body.subDistrict,
-        body.district,
-        body.province,
-        body.postalCode,
-        body.phone,
-        body.userId
-      )
-      .run();
-
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "แก้ไขข้อมูลไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
-}
+        first_name =
