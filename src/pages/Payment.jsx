@@ -6,6 +6,7 @@ function Payment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout })
   const [loading, setLoading] = useState(true);
   const [payingId, setPayingId] = useState(null);
   const [amount, setAmount] = useState("");
+  const [slipFile, setSlipFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -40,6 +41,7 @@ function Payment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout })
   const startPay = (reg) => {
     setPayingId(reg.id);
     setAmount(reg.price.toString());
+    setSlipFile(null);
   };
 
   const handlePay = async (reg) => {
@@ -50,16 +52,22 @@ function Payment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout })
       return;
     }
 
+    if (!slipFile) {
+      alert("กรุณาแนบสลิปการโอนเงิน");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
+      const formData = new FormData();
+      formData.append("registrationId", reg.id);
+      formData.append("amount", amountNum);
+      formData.append("slip", slipFile);
+
       const res = await fetch("/api/registrations/pay", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          registrationId: reg.id,
-          amount: amountNum,
-        }),
+        body: formData,
       });
 
       const data = await res.json();
@@ -71,13 +79,15 @@ function Payment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout })
       }
 
       setRegistrations(
-  registrations.map((r) =>
-    r.id === reg.id ? { ...r, status: "paid", paid_amount: amountNum } : r
-  )
-);
-setPayingId(null);
-setSlipFile(null);
-alert("ชำระเงินสำเร็จ! สถานะอัปเดตเป็น 'ชำระเรียบร้อย' แล้ว");
+        registrations.map((r) =>
+          r.id === reg.id ? { ...r, status: "paid", paid_amount: amountNum } : r
+        )
+      );
+      setPayingId(null);
+      setSlipFile(null);
+      alert("ชำระเงินสำเร็จ! สถานะอัปเดตเป็น 'ชำระเรียบร้อย' แล้ว");
+    } catch (err) {
+      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     } finally {
       setSubmitting(false);
     }
@@ -120,13 +130,21 @@ alert("ชำระเงินสำเร็จ! สถานะอัปเ�
                       onChange={(e) => setAmount(e.target.value)}
                       min={reg.price}
                     />
+
+                    <label>แนบสลิปการโอนเงิน</label>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => setSlipFile(e.target.files[0])}
+                    />
+
                     <div className="payment-actions">
                       <button
                         className="auth-submit-btn"
                         onClick={() => handlePay(reg)}
                         disabled={submitting}
                       >
-                        {submitting ? "กำลังบันทึก..." : "ยืนยันการชำระเงิน"}
+                        {submitting ? "กำลังตรวจสอบ..." : "ยืนยันการชำระเงิน"}
                       </button>
                       <button
                         className="auth-secondary-btn"
