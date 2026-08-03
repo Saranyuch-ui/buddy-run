@@ -18,6 +18,14 @@ export default {
       return handleGetRegistrations(request, env);
     }
 
+    if (url.pathname === "/api/users" && request.method === "GET") {
+      return handleGetUser(request, env);
+    }
+
+    if (url.pathname === "/api/users" && request.method === "PUT") {
+      return handleUpdateUser(request, env);
+    }
+
     return env.ASSETS.fetch(request);
   },
 };
@@ -141,4 +149,70 @@ async function handleGetRegistrations(request, env) {
     .all();
 
   return Response.json({ success: true, registrations: results });
+}
+
+async function handleGetUser(request, env) {
+  const url = new URL(request.url);
+  const userId = url.searchParams.get("userId");
+
+  if (!userId) {
+    return Response.json({ success: false, error: "ไม่พบ userId" }, { status: 400 });
+  }
+
+  const user = await env.DB.prepare(
+    `SELECT id, email, first_name, last_name, birthdate, gender, shirt_size,
+            house_no, moo, soi, road, sub_district, district, province, postal_code, phone
+     FROM users WHERE id = ?`
+  )
+    .bind(userId)
+    .first();
+
+  if (!user) {
+    return Response.json({ success: false, error: "ไม่พบผู้ใช้" }, { status: 404 });
+  }
+
+  return Response.json({ success: true, user });
+}
+
+async function handleUpdateUser(request, env) {
+  const body = await request.json();
+
+  if (!body.userId) {
+    return Response.json({ success: false, error: "ไม่พบ userId" }, { status: 400 });
+  }
+
+  try {
+    await env.DB.prepare(
+      `UPDATE users SET
+        first_name = ?, last_name = ?, birthdate = ?, gender = ?, shirt_size = ?,
+        house_no = ?, moo = ?, soi = ?, road = ?, sub_district = ?, district = ?,
+        province = ?, postal_code = ?, phone = ?
+       WHERE id = ?`
+    )
+      .bind(
+        body.firstName,
+        body.lastName,
+        body.birthdate,
+        body.gender,
+        body.shirtSize,
+        body.houseNo,
+        body.moo,
+        body.soi,
+        body.road,
+        body.subDistrict,
+        body.district,
+        body.province,
+        body.postalCode,
+        body.phone,
+        body.userId
+      )
+      .run();
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "แก้ไขข้อมูลไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
 }
