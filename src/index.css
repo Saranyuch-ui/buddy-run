@@ -689,3 +689,14 @@ body {
     border-radius: 6px;
     margin: 8px 0;
 }
+
+.slip-preview {
+    max-width: 250px;
+    max-height: 350px;
+    width: auto;
+    height: auto;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    margin: 10px 0;
+    object-fit: contain;
+}
