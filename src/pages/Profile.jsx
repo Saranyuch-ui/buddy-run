@@ -249,12 +249,14 @@ function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
                     </p>
                   </div>
                   <span className={`reg-status reg-status-${reg.status}`}>
-  {reg.status === "confirmed"
-    ? "ยืนยันแล้ว"
-    : reg.status === "paid"
-    ? "ชำระเรียบร้อย"
-    : reg.status}
-</span>
+                    {reg.status === "confirmed"
+                      ? "ยืนยันแล้ว"
+                      : reg.status === "pending_verification"
+                      ? "รอการอนุมัติ"
+                      : reg.status === "paid"
+                      ? "ชำระเรียบร้อย"
+                      : reg.status}
+                  </span>
                 </div>
               ))}
             </div>
