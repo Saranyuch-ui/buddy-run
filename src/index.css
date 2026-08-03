@@ -700,3 +700,8 @@ body {
     margin: 10px 0;
     object-fit: contain;
 }
+
+.reg-status-pending_verification {
+    background: #fef3c7;
+    color: #92400e;
+}
