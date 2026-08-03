@@ -20,6 +20,7 @@ function Payment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout })
   const [amount, setAmount] = useState("");
   const [amountLocked, setAmountLocked] = useState(false);
   const [slipFile, setSlipFile] = useState(null);
+const [slipPreview, setSlipPreview] = useState(null);
   const [ocrProcessing, setOcrProcessing] = useState(false);
   const [ocrMessage, setOcrMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
