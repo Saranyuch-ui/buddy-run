@@ -156,11 +156,32 @@ async function handleGetRegistrations(request, env) {
 }
 
 async function handlePayRegistration(request, env) {
-  const body = await request.json();
+  const formData = await request.formData();
 
-  if (!body.registrationId || body.amount == null) {
+  const registrationId = formData.get("registrationId");
+  const amount = Number(formData.get("amount"));
+  const file = formData.get("slip");
+
+  if (!registrationId || !amount || !file) {
     return Response.json(
-      { success: false, error: "ข้อมูลไม่ครบถ้วน" },
+      { success: false, error: "ข้อมูลไม่ครบถ้วน กรุณาแนบสลิปและกรอกยอดเงิน" },
+      { status: 400 }
+    );
+  }
+
+  // เช็คพื้นฐาน - ไฟล์ต้องเป็นรูปภาพ (เช็คแล้วไม่เก็บไฟล์นี้ไว้ที่ไหนเลย)
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+  if (!allowedTypes.includes(file.type)) {
+    return Response.json(
+      { success: false, error: "รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WEBP) เท่านั้น" },
+      { status: 400 }
+    );
+  }
+
+  // เช็คขนาดไฟล์ - ไม่เกิน 5MB
+  if (file.size > 5 * 1024 * 1024) {
+    return Response.json(
+      { success: false, error: "ไฟล์ใหญ่เกินไป (จำกัดไม่เกิน 5MB)" },
       { status: 400 }
     );
   }
@@ -168,7 +189,7 @@ async function handlePayRegistration(request, env) {
   const reg = await env.DB.prepare(
     "SELECT * FROM registrations WHERE id = ?"
   )
-    .bind(body.registrationId)
+    .bind(registrationId)
     .first();
 
   if (!reg) {
@@ -185,20 +206,21 @@ async function handlePayRegistration(request, env) {
     );
   }
 
-  const amount = Number(body.amount);
-
-  if (isNaN(amount) || amount < reg.price) {
+  // เช็คยอดเงินตรงตามแพ็กเกจ (เท่ากับหรือมากกว่า)
+  if (amount < reg.price) {
     return Response.json(
       { success: false, error: `ยอดชำระต้องไม่ต่ำกว่า ${reg.price.toLocaleString()} บาท` },
       { status: 400 }
     );
   }
 
+  // ผ่านเช็คพื้นฐานทั้งหมดแล้ว -> อัปเดตสถานะเป็นชำระเรียบร้อยทันที
+  // (ไม่มีการบันทึกไฟล์สลิปไว้ที่ไหนเลย - file ถูกทิ้งไปหลัง request นี้จบ)
   try {
     await env.DB.prepare(
       "UPDATE registrations SET status = 'paid', paid_amount = ? WHERE id = ?"
     )
-      .bind(amount, body.registrationId)
+      .bind(amount, registrationId)
       .run();
 
     return Response.json({ success: true });
