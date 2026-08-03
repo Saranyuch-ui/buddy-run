@@ -10,7 +10,14 @@ export default {
       return handleLogin(request, env);
     }
 
-    // ถ้าไม่ตรงกับ API route ใดๆ ให้ static assets จัดการต่อ (React app)
+    if (url.pathname === "/api/registrations" && request.method === "POST") {
+      return handleCreateRegistration(request, env);
+    }
+
+    if (url.pathname === "/api/registrations" && request.method === "GET") {
+      return handleGetRegistrations(request, env);
+    }
+
     return env.ASSETS.fetch(request);
   },
 };
@@ -26,7 +33,6 @@ async function hashPassword(password) {
 
 async function handleRegister(request, env) {
   const body = await request.json();
-
   const passwordHash = await hashPassword(body.password);
 
   try {
@@ -83,4 +89,56 @@ async function handleLogin(request, env) {
   }
 
   return Response.json({ success: true, user });
+}
+
+async function handleCreateRegistration(request, env) {
+  const body = await request.json();
+
+  if (!body.userId || !body.eventId || !body.packageId) {
+    return Response.json(
+      { success: false, error: "ข้อมูลไม่ครบถ้วน" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    await env.DB.prepare(
+      `INSERT INTO registrations
+        (user_id, event_id, package_id, event_title, package_name, price, status)
+       VALUES (?, ?, ?, ?, ?, ?, 'confirmed')`
+    )
+      .bind(
+        body.userId,
+        body.eventId,
+        body.packageId,
+        body.eventTitle,
+        body.packageName,
+        body.price
+      )
+      .run();
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "ลงทะเบียนไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
+}
+
+async function handleGetRegistrations(request, env) {
+  const url = new URL(request.url);
+  const userId = url.searchParams.get("userId");
+
+  if (!userId) {
+    return Response.json({ success: false, error: "ไม่พบ userId" }, { status: 400 });
+  }
+
+  const { results } = await env.DB.prepare(
+    "SELECT * FROM registrations WHERE user_id = ? ORDER BY created_at DESC"
+  )
+    .bind(userId)
+    .all();
+
+  return Response.json({ success: true, registrations: results });
 }
