@@ -68,6 +68,7 @@ const [slipPreview, setSlipPreview] = useState(null);
     if (!file) return;
 
     setSlipFile(file);
+    setSlipPreview(URL.createObjectURL(file));
     setAmount("");
     setAmountLocked(false);
     setOcrMessage("");
