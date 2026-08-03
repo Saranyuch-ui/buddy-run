@@ -5,6 +5,7 @@ import packages from "../data/packages";
 function Detail({ event, onBack, onNavigate, isLoggedIn, currentUser, onLogout }) {
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [registered, setRegistered] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   if (!event) {
     return (
@@ -18,7 +19,7 @@ function Detail({ event, onBack, onNavigate, isLoggedIn, currentUser, onLogout }
     );
   }
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!selectedPackage) return;
 
     if (!isLoggedIn) {
@@ -27,7 +28,38 @@ function Detail({ event, onBack, onNavigate, isLoggedIn, currentUser, onLogout }
       return;
     }
 
-    setRegistered(true);
+    const pkg = packages.find((p) => p.id === selectedPackage);
+
+    setSubmitting(true);
+
+    try {
+      const res = await fetch("/api/registrations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          eventId: event.id,
+          packageId: pkg.id,
+          eventTitle: event.title,
+          packageName: pkg.name,
+          price: pkg.price,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.error || "ลงทะเบียนไม่สำเร็จ");
+        setSubmitting(false);
+        return;
+      }
+
+      setRegistered(true);
+    } catch (err) {
+      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -75,15 +107,15 @@ function Detail({ event, onBack, onNavigate, isLoggedIn, currentUser, onLogout }
 
           {registered ? (
             <p className="register-success">
-              ✅ ลงทะเบียน {event.title} ({selectedPackage}) เรียบร้อยแล้ว
+              ✅ ลงทะเบียน {event.title} เรียบร้อยแล้ว
             </p>
           ) : (
             <button
               className="register-btn"
-              disabled={!selectedPackage}
+              disabled={!selectedPackage || submitting}
               onClick={handleRegister}
             >
-              ลงทะเบียนกิจกรรมนี้
+              {submitting ? "กำลังลงทะเบียน..." : "ลงทะเบียนกิจกรรมนี้"}
             </button>
           )}
         </div>
