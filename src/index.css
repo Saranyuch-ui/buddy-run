@@ -705,3 +705,86 @@ body {
     background: #fef3c7;
     color: #92400e;
 }
+
+.admin-page {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.admin-title {
+    margin-bottom: 20px;
+}
+
+.admin-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.admin-item {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,.1);
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.admin-info h4 {
+    margin-bottom: 6px;
+}
+
+.admin-paid {
+    font-weight: bold;
+    color: #2563eb;
+    margin: 6px 0;
+}
+
+.admin-user {
+    font-size: 0.9rem;
+    color: #374151;
+    margin-top: 6px;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.approve-btn {
+    padding: 10px 18px;
+    background: #16a34a;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.approve-btn:hover {
+    background: #15803d;
+}
+
+.reject-btn {
+    padding: 10px 18px;
+    background: #dc2626;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.reject-btn:hover {
+    background: #b91c1c;
+}
+
+.approve-btn:disabled,
+.reject-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
