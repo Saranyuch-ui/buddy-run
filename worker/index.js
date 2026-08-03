@@ -257,8 +257,3 @@ async function handleUpdateUser(request, env) {
   if (!body.userId) {
     return Response.json({ success: false, error: "ไม่พบ userId" }, { status: 400 });
   }
-
-  try {
-    await env.DB.prepare(
-      `UPDATE users SET
-        first_name =
