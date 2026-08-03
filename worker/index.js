@@ -30,6 +30,14 @@ export default {
       return handleUpdateUser(request, env);
     }
 
+    if (url.pathname === "/api/admin/pending" && request.method === "GET") {
+      return handleGetPendingRegistrations(request, env);
+    }
+
+    if (url.pathname === "/api/admin/review" && request.method === "POST") {
+      return handleReviewRegistration(request, env);
+    }
+
     return env.ASSETS.fetch(request);
   },
 };
@@ -41,6 +49,13 @@ async function hashPassword(password) {
   return Array.from(new Uint8Array(hashBuffer))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
+}
+
+async function isAdmin(env, userId) {
+  const user = await env.DB.prepare("SELECT is_admin FROM users WHERE id = ?")
+    .bind(userId)
+    .first();
+  return !!(user && user.is_admin === 1);
 }
 
 async function handleRegister(request, env) {
@@ -88,7 +103,7 @@ async function handleLogin(request, env) {
   const passwordHash = await hashPassword(body.password);
 
   const user = await env.DB.prepare(
-    "SELECT id, email, first_name FROM users WHERE email = ? AND password_hash = ?"
+    "SELECT id, email, first_name, is_admin FROM users WHERE email = ? AND password_hash = ?"
   )
     .bind(body.email, passwordHash)
     .first();
@@ -212,8 +227,6 @@ async function handlePayRegistration(request, env) {
     );
   }
 
-  // ผ่านเช็คพื้นฐานทั้งหมด -> อัปเดตสถานะ (ไม่เก็บไฟล์ที่ไหนเลย)
-  // OCR ยืนยันแล้ว -> ชำระเรียบร้อยทันที / กรอกเอง -> รอการอนุมัติ
   const newStatus = verifiedByOcr ? "paid" : "pending_verification";
 
   try {
@@ -242,7 +255,7 @@ async function handleGetUser(request, env) {
 
   const user = await env.DB.prepare(
     `SELECT id, email, first_name, last_name, birthdate, gender, shirt_size,
-            house_no, moo, soi, road, sub_district, district, province, postal_code, phone
+            house_no, moo, soi, road, sub_district, district, province, postal_code, phone, is_admin
      FROM users WHERE id = ?`
   )
     .bind(userId)
@@ -293,6 +306,64 @@ async function handleUpdateUser(request, env) {
   } catch (err) {
     return Response.json(
       { success: false, error: "แก้ไขข้อมูลไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
+}
+
+async function handleGetPendingRegistrations(request, env) {
+  const url = new URL(request.url);
+  const adminUserId = url.searchParams.get("adminUserId");
+
+  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
+    return Response.json(
+      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
+      { status: 403 }
+    );
+  }
+
+  const { results } = await env.DB.prepare(
+    `SELECT r.*, u.email AS user_email, u.first_name AS user_first_name, u.last_name AS user_last_name
+     FROM registrations r
+     JOIN users u ON r.user_id = u.id
+     WHERE r.status = 'pending_verification'
+     ORDER BY r.created_at ASC`
+  ).all();
+
+  return Response.json({ success: true, registrations: results });
+}
+
+async function handleReviewRegistration(request, env) {
+  const body = await request.json();
+  const { adminUserId, registrationId, action } = body;
+
+  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
+    return Response.json(
+      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
+      { status: 403 }
+    );
+  }
+
+  if (!registrationId || !["approve", "reject"].includes(action)) {
+    return Response.json(
+      { success: false, error: "ข้อมูลไม่ครบถ้วน" },
+      { status: 400 }
+    );
+  }
+
+  const newStatus = action === "approve" ? "paid" : "confirmed";
+
+  try {
+    await env.DB.prepare(
+      "UPDATE registrations SET status = ? WHERE id = ?"
+    )
+      .bind(newStatus, registrationId)
+      .run();
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "อัปเดตสถานะไม่สำเร็จ กรุณาลองใหม่" },
       { status: 500 }
     );
   }
