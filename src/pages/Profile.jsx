@@ -136,63 +136,99 @@ function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
               </p>
             </>
           ) : (
-            <div className="edit-form">
-              <label>ชื่อ</label>
-              <input value={form.first_name || ""} onChange={handleChange("first_name")} />
+            ) : (
+  <div className="edit-form">
+    <h3 className="form-section-title">ข้อมูลส่วนตัว</h3>
+    <div className="edit-form-grid">
+      <div className="field">
+        <label>ชื่อ</label>
+        <input value={form.first_name || ""} onChange={handleChange("first_name")} />
+      </div>
+      <div className="field">
+        <label>นามสกุล</label>
+        <input value={form.last_name || ""} onChange={handleChange("last_name")} />
+      </div>
+      <div className="field">
+        <label>วันเกิด</label>
+        <input type="date" value={form.birthdate || ""} onChange={handleChange("birthdate")} />
+      </div>
+      <div className="field">
+        <label>เพศ</label>
+        <select value={form.gender || ""} onChange={handleChange("gender")}>
+          <option value="">-- เลือกเพศ --</option>
+          <option value="male">ชาย</option>
+          <option value="female">หญิง</option>
+          <option value="other">อื่นๆ</option>
+        </select>
+      </div>
+      <div className="field">
+        <label>ไซส์เสื้อ</label>
+        <select value={form.shirt_size || ""} onChange={handleChange("shirt_size")}>
+          <option value="">-- เลือกไซส์ --</option>
+          <option value="XS">XS</option>
+          <option value="S">S</option>
+          <option value="M">M</option>
+          <option value="L">L</option>
+          <option value="XL">XL</option>
+          <option value="XXL">XXL</option>
+        </select>
+      </div>
+      <div className="field">
+        <label>เบอร์โทรศัพท์</label>
+        <input value={form.phone || ""} onChange={handleChange("phone")} />
+      </div>
+    </div>
 
-              <label>นามสกุล</label>
-              <input value={form.last_name || ""} onChange={handleChange("last_name")} />
+    <h3 className="form-section-title">ที่อยู่จัดส่ง</h3>
+    <div className="edit-form-grid">
+      <div className="field">
+        <label>บ้านเลขที่</label>
+        <input value={form.house_no || ""} onChange={handleChange("house_no")} />
+      </div>
+      <div className="field">
+        <label>หมู่</label>
+        <input value={form.moo || ""} onChange={handleChange("moo")} />
+      </div>
+      <div className="field">
+        <label>ซอย</label>
+        <input value={form.soi || ""} onChange={handleChange("soi")} />
+      </div>
+      <div className="field">
+        <label>ถนน</label>
+        <input value={form.road || ""} onChange={handleChange("road")} />
+      </div>
+      <div className="field">
+        <label>ตำบล</label>
+        <input value={form.sub_district || ""} onChange={handleChange("sub_district")} />
+      </div>
+      <div className="field">
+        <label>อำเภอ</label>
+        <input value={form.district || ""} onChange={handleChange("district")} />
+      </div>
+      <div className="field">
+        <label>จังหวัด</label>
+        <input value={form.province || ""} onChange={handleChange("province")} />
+      </div>
+      <div className="field">
+        <label>รหัสไปรษณีย์</label>
+        <input value={form.postal_code || ""} onChange={handleChange("postal_code")} />
+      </div>
+    </div>
 
-              <label>วันเกิด</label>
-              <input type="date" value={form.birthdate || ""} onChange={handleChange("birthdate")} />
-
-              <label>เพศ</label>
-              <select value={form.gender || ""} onChange={handleChange("gender")}>
-                <option value="">-- เลือกเพศ --</option>
-                <option value="male">ชาย</option>
-                <option value="female">หญิง</option>
-                <option value="other">อื่นๆ</option>
-              </select>
-
-              <label>ไซส์เสื้อ</label>
-              <select value={form.shirt_size || ""} onChange={handleChange("shirt_size")}>
-                <option value="">-- เลือกไซส์ --</option>
-                <option value="XS">XS</option>
-                <option value="S">S</option>
-                <option value="M">M</option>
-                <option value="L">L</option>
-                <option value="XL">XL</option>
-                <option value="XXL">XXL</option>
-              </select>
-
-              <label>บ้านเลขที่</label>
-              <input value={form.house_no || ""} onChange={handleChange("house_no")} />
-
-              <label>หมู่</label>
-              <input value={form.moo || ""} onChange={handleChange("moo")} />
-
-              <label>ซอย</label>
-              <input value={form.soi || ""} onChange={handleChange("soi")} />
-
-              <label>ถนน</label>
-              <input value={form.road || ""} onChange={handleChange("road")} />
-
-              <label>ตำบล</label>
-              <input value={form.sub_district || ""} onChange={handleChange("sub_district")} />
-
-              <label>อำเภอ</label>
-              <input value={form.district || ""} onChange={handleChange("district")} />
-
-              <label>จังหวัด</label>
-              <input value={form.province || ""} onChange={handleChange("province")} />
-
-              <label>รหัสไปรษณีย์</label>
-              <input value={form.postal_code || ""} onChange={handleChange("postal_code")} />
-
-              <label>เบอร์โทรศัพท์</label>
-              <input value={form.phone || ""} onChange={handleChange("phone")} />
-
-              <div className="edit-actions">
+    <div className="edit-actions">
+      <button className="auth-submit-btn" onClick={handleSave} disabled={saving}>
+        {saving ? "กำลังบันทึก..." : "บันทึก"}
+      </button>
+      <button
+        className="auth-secondary-btn"
+        onClick={() => setEditMode(false)}
+        disabled={saving}
+      >
+        ยกเลิก
+      </button>
+    </div>
+  </div>
+)}
                 <button className="auth-submit-btn" onClick={handleSave} disabled={saving}>
                   {saving ? "กำลังบันทึก..." : "บันทึก"}
                 </button>
