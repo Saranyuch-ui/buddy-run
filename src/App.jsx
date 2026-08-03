@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import Payment from "./pages/Payment";
+import Admin from "./pages/Admin";
 
 function ComingSoon({ title, onNavigate, onLogoClick, currentUser, onLogout }) {
   return (
@@ -111,15 +112,18 @@ function App() {
     );
   }
 
-  if (page === "login") {
+  if (page === "admin") {
     return (
-      <Login
+      <Admin
         onNavigate={setPage}
         onLogoClick={goHome}
-        onLoginSuccess={handleLoginSuccess}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       />
     );
   }
+
+  if (page === "login") {
 
   if (page === "register") {
     return <Register onNavigate={setPage} onLogoClick={goHome} />;
