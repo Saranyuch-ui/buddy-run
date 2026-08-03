@@ -548,8 +548,25 @@ body {
     flex-direction: column;
 }
 
+.edit-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px 20px;
+    margin-bottom: 10px;
+}
+
+@media (max-width: 500px) {
+    .edit-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+}
+
 .edit-form label {
-    margin-top: 12px;
     margin-bottom: 6px;
     font-size: 0.9rem;
     color: #374151;
