@@ -257,3 +257,39 @@ async function handleUpdateUser(request, env) {
   if (!body.userId) {
     return Response.json({ success: false, error: "ไม่พบ userId" }, { status: 400 });
   }
+
+  try {
+    await env.DB.prepare(
+      `UPDATE users SET
+        first_name = ?, last_name = ?, birthdate = ?, gender = ?, shirt_size = ?,
+        house_no = ?, moo = ?, soi = ?, road = ?, sub_district = ?, district = ?,
+        province = ?, postal_code = ?, phone = ?
+       WHERE id = ?`
+    )
+      .bind(
+        body.firstName,
+        body.lastName,
+        body.birthdate,
+        body.gender,
+        body.shirtSize,
+        body.houseNo,
+        body.moo,
+        body.soi,
+        body.road,
+        body.subDistrict,
+        body.district,
+        body.province,
+        body.postalCode,
+        body.phone,
+        body.userId
+      )
+      .run();
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "แก้ไขข้อมูลไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
+}
