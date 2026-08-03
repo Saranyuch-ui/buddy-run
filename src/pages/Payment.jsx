@@ -125,6 +125,7 @@ const [slipPreview, setSlipPreview] = useState(null);
       formData.append("registrationId", reg.id);
       formData.append("amount", amountNum);
       formData.append("slip", slipFile);
+      formData.append("verifiedByOcr", amountLocked ? "true" : "false");
 
       const res = await fetch("/api/registrations/pay", {
         method: "POST",
@@ -141,14 +142,19 @@ const [slipPreview, setSlipPreview] = useState(null);
 
       setRegistrations(
         registrations.map((r) =>
-          r.id === reg.id ? { ...r, status: "paid", paid_amount: amountNum } : r
+          r.id === reg.id ? { ...r, status: data.status, paid_amount: amountNum } : r
         )
       );
       setPayingId(null);
       setSlipFile(null);
       setSlipPreview(null);
       setAmountLocked(false);
-      alert("ชำระเงินสำเร็จ! สถานะอัปเดตเป็น 'ชำระเรียบร้อย' แล้ว");
+
+      if (data.status === "paid") {
+        alert("ชำระเงินสำเร็จ! สถานะอัปเดตเป็น 'ชำระเรียบร้อย' แล้ว");
+      } else {
+        alert("ส่งข้อมูลการชำระเงินเรียบร้อยแล้ว กรุณารอการอนุมัติจากเจ้าหน้าที่");
+      }
     } catch (err) {
       alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     } finally {
