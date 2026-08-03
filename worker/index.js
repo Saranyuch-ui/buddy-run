@@ -18,6 +18,10 @@ export default {
       return handleGetRegistrations(request, env);
     }
 
+    if (url.pathname === "/api/registrations/pay" && request.method === "POST") {
+      return handlePayRegistration(request, env);
+    }
+
     if (url.pathname === "/api/users" && request.method === "GET") {
       return handleGetUser(request, env);
     }
@@ -149,6 +153,61 @@ async function handleGetRegistrations(request, env) {
     .all();
 
   return Response.json({ success: true, registrations: results });
+}
+
+async function handlePayRegistration(request, env) {
+  const body = await request.json();
+
+  if (!body.registrationId || body.amount == null) {
+    return Response.json(
+      { success: false, error: "ข้อมูลไม่ครบถ้วน" },
+      { status: 400 }
+    );
+  }
+
+  const reg = await env.DB.prepare(
+    "SELECT * FROM registrations WHERE id = ?"
+  )
+    .bind(body.registrationId)
+    .first();
+
+  if (!reg) {
+    return Response.json(
+      { success: false, error: "ไม่พบรายการลงทะเบียนนี้" },
+      { status: 404 }
+    );
+  }
+
+  if (reg.status === "paid") {
+    return Response.json(
+      { success: false, error: "รายการนี้ชำระเงินแล้ว" },
+      { status: 400 }
+    );
+  }
+
+  const amount = Number(body.amount);
+
+  if (isNaN(amount) || amount < reg.price) {
+    return Response.json(
+      { success: false, error: `ยอดชำระต้องไม่ต่ำกว่า ${reg.price.toLocaleString()} บาท` },
+      { status: 400 }
+    );
+  }
+
+  try {
+    await env.DB.prepare(
+      "UPDATE registrations SET status = 'paid', paid_amount = ? WHERE id = ?"
+    )
+      .bind(amount, body.registrationId)
+      .run();
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "อัปเดตสถานะไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
 }
 
 async function handleGetUser(request, env) {
