@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import Detail from "./pages/Detail";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Profile from "./pages/Profile";
 
 function ComingSoon({ title, onNavigate, onLogoClick, currentUser, onLogout }) {
   return (
@@ -56,6 +57,17 @@ function App() {
         onBack={goHome}
         onNavigate={setPage}
         isLoggedIn={isLoggedIn}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
+  if (page === "profile") {
+    return (
+      <Profile
+        onNavigate={setPage}
+        onLogoClick={goHome}
         currentUser={currentUser}
         onLogout={handleLogout}
       />
