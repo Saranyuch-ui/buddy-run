@@ -516,3 +516,60 @@ body {
     background: #fef3c7;
     color: #92400e;
 }
+
+.profile-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.profile-card-header h2 {
+    margin-bottom: 0;
+}
+
+.edit-btn {
+    padding: 8px 14px;
+    background: white;
+    border: 1px solid #2563eb;
+    color: #2563eb;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.edit-btn:hover {
+    background: #eff6ff;
+}
+
+.edit-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.edit-form label {
+    margin-top: 12px;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+.edit-form input,
+.edit-form select {
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.edit-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.edit-actions button {
+    flex: 1;
+    margin-top: 0;
+}
