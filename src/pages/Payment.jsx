@@ -146,6 +146,7 @@ const [slipPreview, setSlipPreview] = useState(null);
       );
       setPayingId(null);
       setSlipFile(null);
+      setSlipPreview(null);
       setAmountLocked(false);
       alert("ชำระเงินสำเร็จ! สถานะอัปเดตเป็น 'ชำระเรียบร้อย' แล้ว");
     } catch (err) {
