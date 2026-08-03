@@ -1,4 +1,8 @@
+import { useState } from "react";
+
 function Header({ onLogoClick, onNavigate, currentUser, onLogout }) {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
   const navItems = [
     { key: "home", label: "หน้าแรก" },
     { key: "payment", label: "ชำระเงิน" },
@@ -33,13 +37,36 @@ function Header({ onLogoClick, onNavigate, currentUser, onLogout }) {
           ))}
 
           {currentUser ? (
-            <div className="user-info">
-              <span className="user-name">
-                👤 {currentUser.first_name || currentUser.email}
-              </span>
-              <button className="nav-btn" onClick={onLogout}>
-                ออกจากระบบ
+            <div className="user-dropdown">
+              <button
+                className="nav-btn user-dropdown-btn"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+              >
+                👤 {currentUser.first_name || currentUser.email} ▾
               </button>
+
+              {dropdownOpen && (
+                <div className="dropdown-menu">
+                  <button
+                    className="dropdown-item"
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      onNavigate("profile");
+                    }}
+                  >
+                    ข้อมูลสมาชิก
+                  </button>
+                  <button
+                    className="dropdown-item"
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      onLogout();
+                    }}
+                  >
+                    ออกจากระบบ
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <button
