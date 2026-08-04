@@ -1,6 +1,21 @@
 import { useState, useEffect } from "react";
 import Header from "../components/Header";
 
+const STATUS_LABELS = {
+  confirmed: "ยืนยันแล้ว",
+  pending_verification: "รอการอนุมัติชำระเงิน",
+  paid: "ชำระเรียบร้อย",
+  result_pending: "รอการอนุมัติผลกิจกรรม",
+  completed: "ส่งผลกิจกรรมแล้ว",
+};
+
+const STATUS_SECTIONS = [
+  { key: "confirmed", title: "ยืนยันแล้ว" },
+  { key: "paid", title: "ชำระเรียบร้อย" },
+  { key: "result_pending", title: "รอการอนุมัติผลกิจกรรม" },
+  { key: "completed", title: "ส่งผลกิจกรรมแล้ว" },
+];
+
 function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -90,6 +105,22 @@ function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
       </>
     );
   }
+
+  const knownKeys = STATUS_SECTIONS.map((s) => s.key);
+  const otherRegs = registrations.filter((r) => !knownKeys.includes(r.status));
+
+  const renderRegItem = (reg) => (
+    <div key={reg.id} className="reg-item">
+      <div>
+        <h4>{reg.event_title}</h4>
+        <p>{reg.package_name} — {reg.price?.toLocaleString()} บาท</p>
+        <p className="reg-date">ลงทะเบียนเมื่อ: {reg.created_at}</p>
+      </div>
+      <span className={`reg-status reg-status-${reg.status}`}>
+        {STATUS_LABELS[reg.status] || reg.status}
+      </span>
+    </div>
+  );
 
   return (
     <>
@@ -230,42 +261,40 @@ function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
           )}
         </div>
 
-        <div className="profile-card">
-          <h2>กิจกรรมที่ลงทะเบียนแล้ว</h2>
-
-          {loading ? (
+        {loading ? (
+          <div className="profile-card">
             <p className="empty-text">กำลังโหลด...</p>
-          ) : registrations.length === 0 ? (
-            <p className="empty-text">ยังไม่มีกิจกรรมที่ลงทะเบียน</p>
-          ) : (
-            <div className="reg-list">
-              {registrations.map((reg) => (
-                <div key={reg.id} className="reg-item">
-                  <div>
-                    <h4>{reg.event_title}</h4>
-                    <p>{reg.package_name} — {reg.price?.toLocaleString()} บาท</p>
-                    <p className="reg-date">
-                      ลงทะเบียนเมื่อ: {reg.created_at}
-                    </p>
-                  </div>
-                  <span className={`reg-status reg-status-${reg.status}`}>
-                    {reg.status === "confirmed"
-                      ? "ยืนยันแล้ว"
-                      : reg.status === "pending_verification"
-                      ? "รอการอนุมัติชำระเงิน"
-                      : reg.status === "paid"
-                      ? "ชำระเรียบร้อย"
-                      : reg.status === "result_pending"
-                      ? "รอการอนุมัติผลกิจกรรม"
-                      : reg.status === "completed"
-                      ? "ส่งผลกิจกรรมแล้ว"
-                      : reg.status}
-                  </span>
+          </div>
+        ) : (
+          <>
+            {STATUS_SECTIONS.map((section) => {
+              const items = registrations.filter((r) => r.status === section.key);
+
+              return (
+                <div key={section.key} className="profile-card">
+                  <h2>{section.title}</h2>
+
+                  {items.length === 0 ? (
+                    <p className="empty-text">ไม่มีกิจกรรมในหมวดนี้</p>
+                  ) : (
+                    <div className="reg-list">
+                      {items.map(renderRegItem)}
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+              );
+            })}
+
+            {otherRegs.length > 0 && (
+              <div className="profile-card">
+                <h2>อื่นๆ</h2>
+                <div className="reg-list">
+                  {otherRegs.map(renderRegItem)}
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </>
   );
