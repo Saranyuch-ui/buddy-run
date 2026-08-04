@@ -7,6 +7,7 @@ import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import Payment from "./pages/Payment";
 import Admin from "./pages/Admin";
+import SubmitResult from "./pages/SubmitResult";
 
 function ComingSoon({ title, onNavigate, onLogoClick, currentUser, onLogout }) {
   return (
@@ -90,10 +91,10 @@ function App() {
 
   if (page === "submit-result") {
     return (
-      <ComingSoon
-        title="ส่งผลกิจกรรม"
+      <SubmitResult
         onNavigate={setPage}
         onLogoClick={goHome}
+        isLoggedIn={isLoggedIn}
         currentUser={currentUser}
         onLogout={handleLogout}
       />
