@@ -188,7 +188,7 @@ async function handleGetRegistrations(request, env) {
   }
 
   const { results } = await env.DB.prepare(
-    "SELECT id, user_id, event_id, package_id, status, created_at, event_title, package_name, price, paid_amount FROM registrations WHERE user_id = ? ORDER BY created_at DESC"
+    "SELECT id, user_id, event_id, package_id, status, created_at, event_title, package_name, price, paid_amount, slip_image FROM registrations WHERE user_id = ? ORDER BY created_at DESC"
   )
     .bind(userId)
     .all();
