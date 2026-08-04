@@ -73,7 +73,8 @@ function Detail({ event, onBack, onNavigate, isLoggedIn, currentUser, onLogout }
         <div className="detail-body">
           <h2>{event.title}</h2>
 
-          <p>📅 {event.date}</p>
+          <p>📅 เริ่ม: {event.date}</p>
+          <p>🏁 สิ้นสุด: {event.endDate}</p>
           <p>📍 {event.location}</p>
           <p>🏃 {event.distance}</p>
           <p>{event.description}</p>
