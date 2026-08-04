@@ -2,15 +2,15 @@ import { useState } from "react";
 import Header from "../components/Header";
 
 function Login({ onNavigate, onLogoClick, onLoginSuccess }) {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!email.trim() || !password.trim()) {
-      alert("กรุณากรอก Email และ Password");
+    if (!username.trim() || !password.trim()) {
+      alert("กรุณากรอก User ID และ Password");
       return;
     }
 
@@ -20,7 +20,7 @@ function Login({ onNavigate, onLogoClick, onLoginSuccess }) {
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       });
 
       const data = await res.json();
@@ -46,11 +46,11 @@ function Login({ onNavigate, onLogoClick, onLoginSuccess }) {
         <form className="auth-form" onSubmit={handleSubmit}>
           <h2>เข้าสู่ระบบ</h2>
 
-          <label>Email</label>
+          <label>User ID</label>
           <input
             type="text"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
           />
 
           <label>Password</label>
