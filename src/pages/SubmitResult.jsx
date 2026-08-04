@@ -1,12 +1,19 @@
 import { useState, useEffect } from "react";
 import Header from "../components/Header";
 
+async function dataUrlToFile(dataUrl, filename) {
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+  return new File([blob], filename, { type: blob.type });
+}
+
 function SubmitResult({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submittingId, setSubmittingId] = useState(null);
   const [resultFile, setResultFile] = useState(null);
   const [resultPreview, setResultPreview] = useState(null);
+  const [resubmitMessage, setResubmitMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -38,10 +45,25 @@ function SubmitResult({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogo
 
   const readyToSubmit = registrations.filter((r) => r.status === "paid");
 
-  const startSubmit = (reg) => {
+  const startSubmit = async (reg) => {
     setSubmittingId(reg.id);
-    setResultFile(null);
-    setResultPreview(null);
+    setResubmitMessage("");
+
+    if (reg.result_image) {
+      // เคยส่งมาก่อนแต่ถูกปฏิเสธ -> แนบรูปเดิมกลับให้อัตโนมัติ
+      setResultPreview(reg.result_image);
+      setResubmitMessage("📎 นี่คือรูปผลกิจกรรมที่เคยส่งไว้ก่อนหน้านี้ สามารถส่งใหม่หรือแนบไฟล์อื่นแทนได้");
+
+      try {
+        const file = await dataUrlToFile(reg.result_image, "previous-result.jpg");
+        setResultFile(file);
+      } catch (err) {
+        setResultFile(null);
+      }
+    } else {
+      setResultFile(null);
+      setResultPreview(null);
+    }
   };
 
   const handleFileChange = (e) => {
@@ -49,6 +71,7 @@ function SubmitResult({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogo
     if (!file) return;
     setResultFile(file);
     setResultPreview(URL.createObjectURL(file));
+    setResubmitMessage("");
   };
 
   const handleSubmit = async (reg) => {
@@ -80,13 +103,13 @@ function SubmitResult({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogo
 
       setRegistrations(
         registrations.map((r) =>
-          r.id === reg.id ? { ...r, status: "completed" } : r
+          r.id === reg.id ? { ...r, status: "result_pending" } : r
         )
       );
       setSubmittingId(null);
       setResultFile(null);
       setResultPreview(null);
-      alert("ส่งผลกิจกรรมเรียบร้อยแล้ว!");
+      alert("ส่งผลกิจกรรมเรียบร้อยแล้ว กรุณารอการอนุมัติจากเจ้าหน้าที่");
     } catch (err) {
       alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     } finally {
@@ -134,6 +157,10 @@ function SubmitResult({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogo
                         alt="ตัวอย่างผลกิจกรรม"
                         className="slip-preview"
                       />
+                    )}
+
+                    {resubmitMessage && (
+                      <p className="ocr-status">{resubmitMessage}</p>
                     )}
 
                     <div className="payment-actions">
