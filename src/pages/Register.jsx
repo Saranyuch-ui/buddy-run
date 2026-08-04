@@ -3,6 +3,7 @@ import Header from "../components/Header";
 
 function Register({ onNavigate, onLogoClick }) {
   const [form, setForm] = useState({
+    username: "",
     firstName: "",
     lastName: "",
     email: "",
@@ -28,6 +29,7 @@ function Register({ onNavigate, onLogoClick }) {
   };
 
   const requiredFields = [
+    { key: "username", label: "User ID" },
     { key: "email", label: "Email" },
     { key: "password", label: "Password" },
     { key: "confirmPassword", label: "Confirm Password" },
@@ -95,6 +97,14 @@ function Register({ onNavigate, onLogoClick }) {
           <h2>สมัครสมาชิก</h2>
 
           <h3 className="form-section-title">ข้อมูลบัญชี</h3>
+
+          <label>
+            User ID <span className="required-mark">*</span>
+          </label>
+          <input
+            value={form.username}
+            onChange={handleChange("username")}
+          />
 
           <label>ชื่อ</label>
           <input value={form.firstName} onChange={handleChange("firstName")} />
