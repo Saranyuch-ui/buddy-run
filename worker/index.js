@@ -378,14 +378,22 @@ async function handleReviewRegistration(request, env) {
     );
   }
 
-  const newStatus = action === "approve" ? "paid" : "confirmed";
-
   try {
-    await env.DB.prepare(
-      "UPDATE registrations SET status = ? WHERE id = ?"
-    )
-      .bind(newStatus, registrationId)
-      .run();
+    if (action === "approve") {
+      // อนุมัติแล้ว -> ลบรูปสลิปทิ้ง ไม่ต้องเก็บต่อ
+      await env.DB.prepare(
+        "UPDATE registrations SET status = 'paid', slip_image = NULL WHERE id = ?"
+      )
+        .bind(registrationId)
+        .run();
+    } else {
+      // ปฏิเสธ -> กลับไปสถานะ confirmed ให้ผู้ใช้แนบสลิปใหม่ (ไม่แตะรูปเดิม)
+      await env.DB.prepare(
+        "UPDATE registrations SET status = 'confirmed' WHERE id = ?"
+      )
+        .bind(registrationId)
+        .run();
+    }
 
     return Response.json({ success: true });
   } catch (err) {
