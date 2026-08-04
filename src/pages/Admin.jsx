@@ -5,7 +5,7 @@ function Admin({ onNavigate, onLogoClick, currentUser, onLogout }) {
   const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
-  const [viewingSlip, setViewingSlip] = useState(null);
+  const [viewingImage, setViewingImage] = useState(null);
 
   const loadPending = () => {
     setLoading(true);
@@ -70,6 +70,53 @@ function Admin({ onNavigate, onLogoClick, currentUser, onLogout }) {
     }
   };
 
+  const paymentPending = pending.filter((r) => r.status === "pending_verification");
+  const resultPending = pending.filter((r) => r.status === "result_pending");
+
+  const renderItem = (reg, imageField, imageLabel) => (
+    <div key={reg.id} className="admin-item">
+      <div className="admin-info">
+        <h4>{reg.event_title}</h4>
+        <p>{reg.package_name} — ยอดที่ต้องชำระ {reg.price?.toLocaleString()} บาท</p>
+        {reg.paid_amount != null && (
+          <p className="admin-paid">
+            ยอดที่ผู้ใช้แจ้ง: {reg.paid_amount.toLocaleString()} บาท
+          </p>
+        )}
+        <p className="admin-user">
+          ผู้ลงทะเบียน: {reg.user_first_name || "-"} {reg.user_last_name || ""} ({reg.user_email})
+        </p>
+        <p className="reg-date">ส่งเมื่อ: {reg.created_at}</p>
+
+        {reg[imageField] && (
+          <button
+            className="view-slip-btn"
+            onClick={() => setViewingImage(reg[imageField])}
+          >
+            🖼️ {imageLabel}
+          </button>
+        )}
+      </div>
+
+      <div className="admin-actions">
+        <button
+          className="approve-btn"
+          onClick={() => handleReview(reg.id, "approve")}
+          disabled={processingId === reg.id}
+        >
+          ✅ อนุมัติ
+        </button>
+        <button
+          className="reject-btn"
+          onClick={() => handleReview(reg.id, "reject")}
+          disabled={processingId === reg.id}
+        >
+          ❌ ปฏิเสธ
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <>
       <Header
@@ -80,66 +127,38 @@ function Admin({ onNavigate, onLogoClick, currentUser, onLogout }) {
       />
 
       <div className="admin-page">
-        <h2 className="admin-title">รายการรอการอนุมัติ</h2>
+        <h2 className="admin-title">1. อนุมัติชำระเงิน</h2>
 
         {loading ? (
           <p className="empty-text">กำลังโหลด...</p>
-        ) : pending.length === 0 ? (
+        ) : paymentPending.length === 0 ? (
           <p className="empty-text">ไม่มีรายการรอการอนุมัติ</p>
         ) : (
           <div className="admin-list">
-            {pending.map((reg) => (
-              <div key={reg.id} className="admin-item">
-                <div className="admin-info">
-                  <h4>{reg.event_title}</h4>
-                  <p>{reg.package_name} — ยอดที่ต้องชำระ {reg.price?.toLocaleString()} บาท</p>
-                  <p className="admin-paid">
-                    ยอดที่ผู้ใช้แจ้ง: {reg.paid_amount?.toLocaleString()} บาท
-                  </p>
-                  <p className="admin-user">
-                    ผู้ลงทะเบียน: {reg.user_first_name || "-"} {reg.user_last_name || ""} ({reg.user_email})
-                  </p>
-                  <p className="reg-date">ส่งเมื่อ: {reg.created_at}</p>
+            {paymentPending.map((reg) => renderItem(reg, "slip_image", "ดูสลิป"))}
+          </div>
+        )}
 
-                  {reg.slip_image && (
-                    <button
-                      className="view-slip-btn"
-                      onClick={() => setViewingSlip(reg.slip_image)}
-                    >
-                      🖼️ ดูสลิป
-                    </button>
-                  )}
-                </div>
+        <h2 className="admin-title admin-section-spacing">2. อนุมัติส่งผลกิจกรรม</h2>
 
-                <div className="admin-actions">
-                  <button
-                    className="approve-btn"
-                    onClick={() => handleReview(reg.id, "approve")}
-                    disabled={processingId === reg.id}
-                  >
-                    ✅ อนุมัติ
-                  </button>
-                  <button
-                    className="reject-btn"
-                    onClick={() => handleReview(reg.id, "reject")}
-                    disabled={processingId === reg.id}
-                  >
-                    ❌ ปฏิเสธ
-                  </button>
-                </div>
-              </div>
-            ))}
+        {loading ? (
+          <p className="empty-text">กำลังโหลด...</p>
+        ) : resultPending.length === 0 ? (
+          <p className="empty-text">ไม่มีรายการรอการอนุมัติ</p>
+        ) : (
+          <div className="admin-list">
+            {resultPending.map((reg) => renderItem(reg, "result_image", "ดูผลกิจกรรม"))}
           </div>
         )}
       </div>
 
-      {viewingSlip && (
-        <div className="slip-modal" onClick={() => setViewingSlip(null)}>
+      {viewingImage && (
+        <div className="slip-modal" onClick={() => setViewingImage(null)}>
           <div className="slip-modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="slip-modal-close" onClick={() => setViewingSlip(null)}>
+            <button className="slip-modal-close" onClick={() => setViewingImage(null)}>
               ✕
             </button>
-            <img src={viewingSlip} alt="สลิปการโอนเงิน" />
+            <img src={viewingImage} alt="รูปแนบ" />
           </div>
         </div>
       )}
