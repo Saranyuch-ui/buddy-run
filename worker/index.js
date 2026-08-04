@@ -22,6 +22,10 @@ export default {
       return handlePayRegistration(request, env);
     }
 
+    if (url.pathname === "/api/registrations/result" && request.method === "POST") {
+      return handleSubmitResult(request, env);
+    }
+
     if (url.pathname === "/api/users" && request.method === "GET") {
       return handleGetUser(request, env);
     }
@@ -272,6 +276,80 @@ async function handlePayRegistration(request, env) {
   }
 }
 
+async function handleSubmitResult(request, env) {
+  const formData = await request.formData();
+
+  const registrationId = formData.get("registrationId");
+  const userId = formData.get("userId");
+  const file = formData.get("resultImage");
+
+  if (!registrationId || !userId || !file) {
+    return Response.json(
+      { success: false, error: "ข้อมูลไม่ครบถ้วน กรุณาแนบรูปผลกิจกรรม" },
+      { status: 400 }
+    );
+  }
+
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+  if (!allowedTypes.includes(file.type)) {
+    return Response.json(
+      { success: false, error: "รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WEBP) เท่านั้น" },
+      { status: 400 }
+    );
+  }
+
+  if (file.size > 2 * 1024 * 1024) {
+    return Response.json(
+      { success: false, error: "ไฟล์ใหญ่เกินไป (จำกัดไม่เกิน 2MB)" },
+      { status: 400 }
+    );
+  }
+
+  const reg = await env.DB.prepare(
+    "SELECT * FROM registrations WHERE id = ?"
+  )
+    .bind(registrationId)
+    .first();
+
+  if (!reg) {
+    return Response.json(
+      { success: false, error: "ไม่พบรายการลงทะเบียนนี้" },
+      { status: 404 }
+    );
+  }
+
+  if (String(reg.user_id) !== String(userId)) {
+    return Response.json(
+      { success: false, error: "ไม่มีสิทธิ์ทำรายการนี้" },
+      { status: 403 }
+    );
+  }
+
+  if (reg.status !== "paid") {
+    return Response.json(
+      { success: false, error: "กิจกรรมนี้ยังไม่พร้อมให้ส่งผล" },
+      { status: 400 }
+    );
+  }
+
+  const resultDataUrl = await fileToBase64DataUrl(file);
+
+  try {
+    await env.DB.prepare(
+      "UPDATE registrations SET status = 'completed', result_image = ? WHERE id = ?"
+    )
+      .bind(resultDataUrl, registrationId)
+      .run();
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "ส่งผลกิจกรรมไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
+}
+
 async function handleGetUser(request, env) {
   const url = new URL(request.url);
   const userId = url.searchParams.get("userId");
@@ -380,14 +458,12 @@ async function handleReviewRegistration(request, env) {
 
   try {
     if (action === "approve") {
-      // อนุมัติแล้ว -> ลบรูปสลิปทิ้ง ไม่ต้องเก็บต่อ
       await env.DB.prepare(
         "UPDATE registrations SET status = 'paid', slip_image = NULL WHERE id = ?"
       )
         .bind(registrationId)
         .run();
     } else {
-      // ปฏิเสธ -> กลับไปสถานะ confirmed ให้ผู้ใช้แนบสลิปใหม่ (ไม่แตะรูปเดิม)
       await env.DB.prepare(
         "UPDATE registrations SET status = 'confirmed' WHERE id = ?"
       )
