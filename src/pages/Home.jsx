@@ -19,11 +19,11 @@ function Home({ onSelectEvent, onNavigate, currentUser, onLogout }) {
   const today = new Date();
 
   const ongoingEvents = filteredEvents.filter(
-    (event) => new Date(event.dateISO) >= today
+    (event) => new Date(event.endDateISO) >= today
   );
 
   const finishedEvents = filteredEvents.filter(
-    (event) => new Date(event.dateISO) < today
+    (event) => new Date(event.endDateISO) < today
   );
 
   return (
