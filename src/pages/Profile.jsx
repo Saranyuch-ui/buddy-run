@@ -252,9 +252,11 @@ function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
                     {reg.status === "confirmed"
                       ? "ยืนยันแล้ว"
                       : reg.status === "pending_verification"
-                      ? "รอการอนุมัติ"
+                      ? "รอการอนุมัติชำระเงิน"
                       : reg.status === "paid"
                       ? "ชำระเรียบร้อย"
+                      : reg.status === "result_pending"
+                      ? "รอการอนุมัติผลกิจกรรม"
                       : reg.status === "completed"
                       ? "ส่งผลกิจกรรมแล้ว"
                       : reg.status}
