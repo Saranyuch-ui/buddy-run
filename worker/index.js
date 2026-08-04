@@ -58,6 +58,18 @@ async function isAdmin(env, userId) {
   return !!(user && user.is_admin === 1);
 }
 
+async function fileToBase64DataUrl(file) {
+  const buffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  const chunkSize = 8192;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  const base64 = btoa(binary);
+  return `data:${file.type};base64,${base64}`;
+}
+
 async function handleRegister(request, env) {
   const body = await request.json();
   const passwordHash = await hashPassword(body.password);
@@ -176,7 +188,7 @@ async function handleGetRegistrations(request, env) {
   }
 
   const { results } = await env.DB.prepare(
-    "SELECT * FROM registrations WHERE user_id = ? ORDER BY created_at DESC"
+    "SELECT id, user_id, event_id, package_id, status, created_at, event_title, package_name, price, paid_amount FROM registrations WHERE user_id = ? ORDER BY created_at DESC"
   )
     .bind(userId)
     .all();
@@ -207,9 +219,9 @@ async function handlePayRegistration(request, env) {
     );
   }
 
-  if (file.size > 5 * 1024 * 1024) {
+  if (file.size > 2 * 1024 * 1024) {
     return Response.json(
-      { success: false, error: "ไฟล์ใหญ่เกินไป (จำกัดไม่เกิน 5MB)" },
+      { success: false, error: "ไฟล์ใหญ่เกินไป (จำกัดไม่เกิน 2MB)" },
       { status: 400 }
     );
   }
@@ -242,12 +254,13 @@ async function handlePayRegistration(request, env) {
   }
 
   const newStatus = verifiedByOcr ? "paid" : "pending_verification";
+  const slipDataUrl = await fileToBase64DataUrl(file);
 
   try {
     await env.DB.prepare(
-      "UPDATE registrations SET status = ?, paid_amount = ? WHERE id = ?"
+      "UPDATE registrations SET status = ?, paid_amount = ?, slip_image = ? WHERE id = ?"
     )
-      .bind(newStatus, amount, registrationId)
+      .bind(newStatus, amount, slipDataUrl, registrationId)
       .run();
 
     return Response.json({ success: true, status: newStatus });
