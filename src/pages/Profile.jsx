@@ -255,6 +255,8 @@ function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
                       ? "รอการอนุมัติ"
                       : reg.status === "paid"
                       ? "ชำระเรียบร้อย"
+                      : reg.status === "completed"
+                      ? "ส่งผลกิจกรรมแล้ว"
                       : reg.status}
                   </span>
                 </div>
