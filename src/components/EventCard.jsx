@@ -11,7 +11,9 @@ function EventCard({ event, onSelect, disabled }) {
 
         <h3>{event.title}</h3>
 
-        <p>📅 {event.date}</p>
+        <p>📅 เริ่ม: {event.date}</p>
+
+        <p>🏁 สิ้นสุด: {event.endDate}</p>
 
         <p>📍 {event.location}</p>
 
