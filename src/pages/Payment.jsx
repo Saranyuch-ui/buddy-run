@@ -3,14 +3,16 @@ import Tesseract from "tesseract.js";
 import Header from "../components/Header";
 
 function extractAmountFromText(text) {
-  // หาตัวเลขรูปแบบ "1,234.00" หรือ "1234.00" ในข้อความที่ OCR อ่านได้
   const matches = text.match(/\d{1,3}(,\d{3})*\.\d{2}/g);
-
   if (!matches || matches.length === 0) return null;
-
-  // เลือกตัวเลขที่มากที่สุด (ยอดเงินมักเป็นตัวเลขเด่นที่สุดในสลิป)
   const numbers = matches.map((m) => Number(m.replace(/,/g, "")));
   return Math.max(...numbers);
+}
+
+async function dataUrlToFile(dataUrl, filename) {
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+  return new File([blob], filename, { type: blob.type });
 }
 
 function Payment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
@@ -20,7 +22,7 @@ function Payment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout })
   const [amount, setAmount] = useState("");
   const [amountLocked, setAmountLocked] = useState(false);
   const [slipFile, setSlipFile] = useState(null);
-const [slipPreview, setSlipPreview] = useState(null);
+  const [slipPreview, setSlipPreview] = useState(null);
   const [ocrProcessing, setOcrProcessing] = useState(false);
   const [ocrMessage, setOcrMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -54,13 +56,29 @@ const [slipPreview, setSlipPreview] = useState(null);
 
   const unpaidRegs = registrations.filter((r) => r.status === "confirmed");
 
-  const startPay = (reg) => {
+  const startPay = async (reg) => {
     setPayingId(reg.id);
-    setAmount("");
-    setAmountLocked(false);
-    setSlipFile(null);
-    setSlipPreview(null);
     setOcrMessage("");
+
+    if (reg.slip_image) {
+      // มีสลิปเดิมที่เคยแนบไว้ (ถูกปฏิเสธมาก่อน) -> แนบกลับให้อัตโนมัติ
+      setSlipPreview(reg.slip_image);
+      setAmount(reg.paid_amount ? reg.paid_amount.toString() : "");
+      setAmountLocked(false);
+      setOcrMessage("📎 นี่คือสลิปที่เคยแนบไว้ก่อนหน้านี้ สามารถส่งใหม่หรือแนบไฟล์อื่นแทนได้");
+
+      try {
+        const file = await dataUrlToFile(reg.slip_image, "previous-slip.jpg");
+        setSlipFile(file);
+      } catch (err) {
+        setSlipFile(null);
+      }
+    } else {
+      setAmount("");
+      setAmountLocked(false);
+      setSlipFile(null);
+      setSlipPreview(null);
+    }
   };
 
   const handleFileChange = async (e, reg) => {
@@ -83,14 +101,12 @@ const [slipPreview, setSlipPreview] = useState(null);
         setAmountLocked(true);
         setOcrMessage(`✅ อ่านยอดจากสลิปได้: ${detectedAmount.toLocaleString()} บาท`);
       } else if (detectedAmount) {
-        // อ่านตัวเลขได้ แต่ยอดต่ำกว่าราคาแพ็กเกจ - ยังล็อกเพื่อความถูกต้อง แต่แจ้งเตือน
         setAmount(detectedAmount.toString());
         setAmountLocked(true);
         setOcrMessage(
           `⚠️ อ่านยอดได้ ${detectedAmount.toLocaleString()} บาท ซึ่งต่ำกว่ายอดที่ต้องชำระ (${reg.price.toLocaleString()} บาท)`
         );
       } else {
-        // อ่านไม่ได้เลย - ไม่ล็อกฟิลด์ ให้ผู้ใช้กรอกเองแทน
         setAmount("");
         setAmountLocked(false);
         setOcrMessage(
