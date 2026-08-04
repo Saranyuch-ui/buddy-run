@@ -62,14 +62,28 @@ async function handleRegister(request, env) {
   const body = await request.json();
   const passwordHash = await hashPassword(body.password);
 
+  const existing = await env.DB.prepare(
+    "SELECT id FROM users WHERE username = ?"
+  )
+    .bind(body.username)
+    .first();
+
+  if (existing) {
+    return Response.json(
+      { success: false, error: "User ID นี้ถูกใช้งานแล้ว" },
+      { status: 400 }
+    );
+  }
+
   try {
     await env.DB.prepare(
       `INSERT INTO users
-        (email, password_hash, first_name, last_name, birthdate, gender, shirt_size,
+        (username, email, password_hash, first_name, last_name, birthdate, gender, shirt_size,
          house_no, moo, soi, road, sub_district, district, province, postal_code, phone)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
       .bind(
+        body.username,
         body.email,
         passwordHash,
         body.firstName,
@@ -103,14 +117,14 @@ async function handleLogin(request, env) {
   const passwordHash = await hashPassword(body.password);
 
   const user = await env.DB.prepare(
-    "SELECT id, email, first_name, is_admin FROM users WHERE email = ? AND password_hash = ?"
+    "SELECT id, email, first_name, is_admin FROM users WHERE username = ? AND password_hash = ?"
   )
-    .bind(body.email, passwordHash)
+    .bind(body.username, passwordHash)
     .first();
 
   if (!user) {
     return Response.json(
-      { success: false, error: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" },
+      { success: false, error: "User ID หรือรหัสผ่านไม่ถูกต้อง" },
       { status: 401 }
     );
   }
@@ -254,7 +268,7 @@ async function handleGetUser(request, env) {
   }
 
   const user = await env.DB.prepare(
-    `SELECT id, email, first_name, last_name, birthdate, gender, shirt_size,
+    `SELECT id, username, email, first_name, last_name, birthdate, gender, shirt_size,
             house_no, moo, soi, road, sub_district, district, province, postal_code, phone, is_admin
      FROM users WHERE id = ?`
   )
