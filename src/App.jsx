@@ -124,6 +124,14 @@ function App() {
   }
 
   if (page === "login") {
+    return (
+      <Login
+        onNavigate={setPage}
+        onLogoClick={goHome}
+        onLoginSuccess={handleLoginSuccess}
+      />
+    );
+  }
 
   if (page === "register") {
     return <Register onNavigate={setPage} onLogoClick={goHome} />;
