@@ -857,3 +857,8 @@ body {
     background: #fef3c7;
     color: #92400e;
 }
+
+.reg-status-expired {
+    background: #f3f4f6;
+    color: #6b7280;
+}
