@@ -192,7 +192,7 @@ async function handleGetRegistrations(request, env) {
   }
 
   const { results } = await env.DB.prepare(
-    "SELECT id, user_id, event_id, package_id, status, created_at, event_title, package_name, price, paid_amount, slip_image FROM registrations WHERE user_id = ? ORDER BY created_at DESC"
+    "SELECT id, user_id, event_id, package_id, status, created_at, event_title, package_name, price, paid_amount, slip_image, result_image FROM registrations WHERE user_id = ? ORDER BY created_at DESC"
   )
     .bind(userId)
     .all();
@@ -335,8 +335,9 @@ async function handleSubmitResult(request, env) {
   const resultDataUrl = await fileToBase64DataUrl(file);
 
   try {
+    // ส่งผลแล้ว -> รอ admin อนุมัติ (ยังไม่เป็น completed ทันที)
     await env.DB.prepare(
-      "UPDATE registrations SET status = 'completed', result_image = ? WHERE id = ?"
+      "UPDATE registrations SET status = 'result_pending', result_image = ? WHERE id = ?"
     )
       .bind(resultDataUrl, registrationId)
       .run();
@@ -431,7 +432,7 @@ async function handleGetPendingRegistrations(request, env) {
     `SELECT r.*, u.email AS user_email, u.first_name AS user_first_name, u.last_name AS user_last_name
      FROM registrations r
      JOIN users u ON r.user_id = u.id
-     WHERE r.status = 'pending_verification'
+     WHERE r.status IN ('pending_verification', 'result_pending')
      ORDER BY r.created_at ASC`
   ).all();
 
@@ -456,19 +457,53 @@ async function handleReviewRegistration(request, env) {
     );
   }
 
+  const reg = await env.DB.prepare("SELECT status FROM registrations WHERE id = ?")
+    .bind(registrationId)
+    .first();
+
+  if (!reg) {
+    return Response.json(
+      { success: false, error: "ไม่พบรายการลงทะเบียนนี้" },
+      { status: 404 }
+    );
+  }
+
   try {
-    if (action === "approve") {
-      await env.DB.prepare(
-        "UPDATE registrations SET status = 'paid', slip_image = NULL WHERE id = ?"
-      )
-        .bind(registrationId)
-        .run();
+    if (reg.status === "pending_verification") {
+      // รีวิวการชำระเงิน
+      if (action === "approve") {
+        await env.DB.prepare(
+          "UPDATE registrations SET status = 'paid', slip_image = NULL WHERE id = ?"
+        )
+          .bind(registrationId)
+          .run();
+      } else {
+        await env.DB.prepare(
+          "UPDATE registrations SET status = 'confirmed' WHERE id = ?"
+        )
+          .bind(registrationId)
+          .run();
+      }
+    } else if (reg.status === "result_pending") {
+      // รีวิวการส่งผลกิจกรรม
+      if (action === "approve") {
+        await env.DB.prepare(
+          "UPDATE registrations SET status = 'completed', result_image = NULL WHERE id = ?"
+        )
+          .bind(registrationId)
+          .run();
+      } else {
+        await env.DB.prepare(
+          "UPDATE registrations SET status = 'paid' WHERE id = ?"
+        )
+          .bind(registrationId)
+          .run();
+      }
     } else {
-      await env.DB.prepare(
-        "UPDATE registrations SET status = 'confirmed' WHERE id = ?"
-      )
-        .bind(registrationId)
-        .run();
+      return Response.json(
+        { success: false, error: "รายการนี้ไม่ได้อยู่ในสถานะรอตรวจสอบ" },
+        { status: 400 }
+      );
     }
 
     return Response.json({ success: true });
