@@ -5,6 +5,7 @@ function Admin({ onNavigate, onLogoClick, currentUser, onLogout }) {
   const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
+  const [viewingSlip, setViewingSlip] = useState(null);
 
   const loadPending = () => {
     setLoading(true);
@@ -99,6 +100,15 @@ function Admin({ onNavigate, onLogoClick, currentUser, onLogout }) {
                     ผู้ลงทะเบียน: {reg.user_first_name || "-"} {reg.user_last_name || ""} ({reg.user_email})
                   </p>
                   <p className="reg-date">ส่งเมื่อ: {reg.created_at}</p>
+
+                  {reg.slip_image && (
+                    <button
+                      className="view-slip-btn"
+                      onClick={() => setViewingSlip(reg.slip_image)}
+                    >
+                      🖼️ ดูสลิป
+                    </button>
+                  )}
                 </div>
 
                 <div className="admin-actions">
@@ -122,6 +132,17 @@ function Admin({ onNavigate, onLogoClick, currentUser, onLogout }) {
           </div>
         )}
       </div>
+
+      {viewingSlip && (
+        <div className="slip-modal" onClick={() => setViewingSlip(null)}>
+          <div className="slip-modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="slip-modal-close" onClick={() => setViewingSlip(null)}>
+              ✕
+            </button>
+            <img src={viewingSlip} alt="สลิปการโอนเงิน" />
+          </div>
+        </div>
+      )}
     </>
   );
 }
