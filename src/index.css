@@ -848,3 +848,12 @@ body {
     background: #ede9fe;
     color: #5b21b6;
 }
+
+.admin-section-spacing {
+    margin-top: 40px;
+}
+
+.reg-status-result_pending {
+    background: #fef3c7;
+    color: #92400e;
+}
