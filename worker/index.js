@@ -42,6 +42,10 @@ export default {
       return handleReviewRegistration(request, env);
     }
 
+    if (url.pathname === "/api/admin/dashboard" && request.method === "GET") {
+      return handleGetDashboard(request, env);
+    }
+
     return env.ASSETS.fetch(request);
   },
 };
@@ -259,12 +263,13 @@ async function handlePayRegistration(request, env) {
 
   const newStatus = verifiedByOcr ? "paid" : "pending_verification";
   const slipDataUrl = await fileToBase64DataUrl(file);
+  const paidAt = verifiedByOcr ? new Date().toISOString() : null;
 
   try {
     await env.DB.prepare(
-      "UPDATE registrations SET status = ?, paid_amount = ?, slip_image = ? WHERE id = ?"
+      "UPDATE registrations SET status = ?, paid_amount = ?, slip_image = ?, paid_at = COALESCE(?, paid_at) WHERE id = ?"
     )
-      .bind(newStatus, amount, slipDataUrl, registrationId)
+      .bind(newStatus, amount, slipDataUrl, paidAt, registrationId)
       .run();
 
     return Response.json({ success: true, status: newStatus });
@@ -335,7 +340,6 @@ async function handleSubmitResult(request, env) {
   const resultDataUrl = await fileToBase64DataUrl(file);
 
   try {
-    // ส่งผลแล้ว -> รอ admin อนุมัติ (ยังไม่เป็น completed ทันที)
     await env.DB.prepare(
       "UPDATE registrations SET status = 'result_pending', result_image = ? WHERE id = ?"
     )
@@ -470,10 +474,15 @@ async function handleReviewRegistration(request, env) {
 
   try {
     if (reg.status === "pending_verification") {
-      // รีวิวการชำระเงิน
+      await env.DB.prepare(
+        "INSERT INTO admin_reviews (registration_id, review_type, action) VALUES (?, 'payment', ?)"
+      )
+        .bind(registrationId, action)
+        .run();
+
       if (action === "approve") {
         await env.DB.prepare(
-          "UPDATE registrations SET status = 'paid', slip_image = NULL WHERE id = ?"
+          "UPDATE registrations SET status = 'paid', slip_image = NULL, paid_at = datetime('now') WHERE id = ?"
         )
           .bind(registrationId)
           .run();
@@ -485,7 +494,12 @@ async function handleReviewRegistration(request, env) {
           .run();
       }
     } else if (reg.status === "result_pending") {
-      // รีวิวการส่งผลกิจกรรม
+      await env.DB.prepare(
+        "INSERT INTO admin_reviews (registration_id, review_type, action) VALUES (?, 'result', ?)"
+      )
+        .bind(registrationId, action)
+        .run();
+
       if (action === "approve") {
         await env.DB.prepare(
           "UPDATE registrations SET status = 'completed', result_image = NULL WHERE id = ?"
@@ -513,4 +527,121 @@ async function handleReviewRegistration(request, env) {
       { status: 500 }
     );
   }
+}
+
+async function handleGetDashboard(request, env) {
+  const url = new URL(request.url);
+  const adminUserId = url.searchParams.get("adminUserId");
+  const period = url.searchParams.get("period") || "month";
+
+  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
+    return Response.json(
+      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
+      { status: 403 }
+    );
+  }
+
+  const totalMembers = await env.DB.prepare("SELECT COUNT(*) AS c FROM users").first();
+
+  const activeEventsCount = await env.DB.prepare(
+    "SELECT COUNT(*) AS c FROM events WHERE end_date >= date('now')"
+  ).first();
+
+  const todaySignups = await env.DB.prepare(
+    "SELECT COUNT(*) AS c FROM registrations WHERE date(created_at) = date('now')"
+  ).first();
+
+  const revenueQuery =
+    period === "today"
+      ? "SELECT COALESCE(SUM(paid_amount),0) AS s FROM registrations WHERE paid_at IS NOT NULL AND date(paid_at) = date('now')"
+      : "SELECT COALESCE(SUM(paid_amount),0) AS s FROM registrations WHERE paid_at IS NOT NULL AND strftime('%Y-%m', paid_at) = strftime('%Y-%m', 'now')";
+  const revenue = await env.DB.prepare(revenueQuery).first();
+
+  const pendingPayment = await env.DB.prepare(
+    "SELECT COUNT(*) AS c FROM registrations WHERE status = 'confirmed'"
+  ).first();
+
+  const pendingSlip = await env.DB.prepare(
+    "SELECT COUNT(*) AS c FROM registrations WHERE status = 'pending_verification'"
+  ).first();
+
+  const pendingResult = await env.DB.prepare(
+    "SELECT COUNT(*) AS c FROM registrations WHERE status = 'result_pending'"
+  ).first();
+
+  const { results: weeklySignupsRaw } = await env.DB.prepare(
+    `SELECT date(created_at) AS d, COUNT(*) AS c
+     FROM registrations
+     WHERE date(created_at) >= date('now', '-6 days')
+     GROUP BY d
+     ORDER BY d ASC`
+  ).all();
+
+  const { results: monthlyRevenueRaw } = await env.DB.prepare(
+    `SELECT strftime('%m', paid_at) AS m, SUM(paid_amount) AS s
+     FROM registrations
+     WHERE paid_at IS NOT NULL AND strftime('%Y', paid_at) = strftime('%Y', 'now')
+     GROUP BY m
+     ORDER BY m ASC`
+  ).all();
+
+  const newMembersToday = await env.DB.prepare(
+    "SELECT COUNT(*) AS c FROM users WHERE date(created_at) = date('now')"
+  ).first();
+
+  const newMembersWeek = await env.DB.prepare(
+    "SELECT COUNT(*) AS c FROM users WHERE date(created_at) >= date('now', '-6 days')"
+  ).first();
+
+  const newMembersMonth = await env.DB.prepare(
+    "SELECT COUNT(*) AS c FROM users WHERE strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now')"
+  ).first();
+
+  const { results: activeEventsList } = await env.DB.prepare(
+    `SELECT
+       e.id, e.title,
+       (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) AS signups,
+       (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.status IN ('paid','result_pending','completed')) AS paid,
+       (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.status IN ('result_pending','completed')) AS result
+     FROM events e
+     WHERE e.end_date >= date('now')
+     ORDER BY e.event_date ASC`
+  ).all();
+
+  const paymentPaid = await env.DB.prepare(
+    "SELECT COUNT(*) AS c FROM registrations WHERE status IN ('paid','result_pending','completed')"
+  ).first();
+
+  const paymentPending = await env.DB.prepare(
+    "SELECT COUNT(*) AS c FROM registrations WHERE status = 'pending_verification'"
+  ).first();
+
+  const paymentRejected = await env.DB.prepare(
+    "SELECT COUNT(*) AS c FROM admin_reviews WHERE review_type = 'payment' AND action = 'reject'"
+  ).first();
+
+  return Response.json({
+    success: true,
+    totalMembers: totalMembers.c,
+    activeEvents: activeEventsCount.c,
+    todaySignups: todaySignups.c,
+    revenue: revenue.s,
+    revenuePeriod: period,
+    pendingPayment: pendingPayment.c,
+    pendingSlip: pendingSlip.c,
+    pendingResult: pendingResult.c,
+    weeklySignups: weeklySignupsRaw,
+    monthlyRevenue: monthlyRevenueRaw,
+    newMembers: {
+      today: newMembersToday.c,
+      week: newMembersWeek.c,
+      month: newMembersMonth.c,
+    },
+    activeEventsList,
+    paymentSummary: {
+      paid: paymentPaid.c,
+      pending: paymentPending.c,
+      rejected: paymentRejected.c,
+    },
+  });
 }
