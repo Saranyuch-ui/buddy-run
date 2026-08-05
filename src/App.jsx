@@ -7,6 +7,7 @@ import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import Payment from "./pages/Payment";
 import Admin from "./pages/Admin";
+import AdminDashboard from "./pages/AdminDashboard";
 import SubmitResult from "./pages/SubmitResult";
 
 function ComingSoon({ title, onNavigate, onLogoClick, currentUser, onLogout }) {
@@ -116,6 +117,17 @@ function App() {
   if (page === "admin") {
     return (
       <Admin
+        onNavigate={setPage}
+        onLogoClick={goHome}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+      />
+    );
+  }
+  
+  if (page === "admin-dashboard") {
+    return (
+      <AdminDashboard
         onNavigate={setPage}
         onLogoClick={goHome}
         currentUser={currentUser}
