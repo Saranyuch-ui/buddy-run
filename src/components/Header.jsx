@@ -61,6 +61,17 @@ function Header({ onLogoClick, onNavigate, currentUser, onLogout }) {
                       className="dropdown-item"
                       onClick={() => {
                         setDropdownOpen(false);
+                        onNavigate("admin-dashboard");
+                      }}
+                    >
+                      📊 Dashboard
+                    </button>
+                  )}
+                  {currentUser.is_admin === 1 && (
+                    <button
+                      className="dropdown-item"
+                      onClick={() => {
+                        setDropdownOpen(false);
                         onNavigate("admin");
                       }}
                     >
