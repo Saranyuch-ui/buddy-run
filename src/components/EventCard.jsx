@@ -11,9 +11,7 @@ function EventCard({ event, onSelect, disabled }) {
 
         <h3>{event.title}</h3>
 
-        <p>📅 เริ่ม: {event.date}</p>
-
-        <p>🏁 สิ้นสุด: {event.endDate}</p>
+        <p>📝 ลงทะเบียน: {event.regStart} - {event.regEnd}</p>
 
         {event.location && <p>📍 {event.location}</p>}
 
@@ -23,7 +21,7 @@ function EventCard({ event, onSelect, disabled }) {
           onClick={() => !disabled && onSelect(event)}
           disabled={disabled}
         >
-          {disabled ? "กิจกรรมสิ้นสุดแล้ว" : "View Detail"}
+          {disabled ? "หมดเขตรับสมัครแล้ว" : "View Detail"}
         </button>
 
       </div>
