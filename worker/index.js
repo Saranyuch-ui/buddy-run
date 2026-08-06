@@ -608,18 +608,6 @@ async function handleGetDashboard(request, env) {
      GROUP BY event_id
      ORDER BY MAX(created_at) DESC`
   ).all();
-  
-  const paymentPaid = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM registrations WHERE status IN ('paid','result_pending','completed')"
-  ).first();
-
-  const paymentPending = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM registrations WHERE status = 'pending_verification'"
-  ).first();
-
-  const paymentRejected = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM admin_reviews WHERE review_type = 'payment' AND action = 'reject'"
-  ).first();
 
   return Response.json({
     success: true,
@@ -639,10 +627,5 @@ async function handleGetDashboard(request, env) {
       month: newMembersMonth.c,
     },
     activeEventsList,
-    paymentSummary: {
-      paid: paymentPaid.c,
-      pending: paymentPending.c,
-      rejected: paymentRejected.c,
-    },
   });
 }
