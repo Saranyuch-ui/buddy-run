@@ -544,7 +544,7 @@ async function handleGetDashboard(request, env) {
   const totalMembers = await env.DB.prepare("SELECT COUNT(*) AS c FROM users").first();
 
   const activeEventsCount = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM events WHERE end_date >= date('now')"
+    "SELECT COUNT(DISTINCT event_id) AS c FROM registrations"
   ).first();
 
   const todaySignups = await env.DB.prepare(
@@ -599,15 +599,16 @@ async function handleGetDashboard(request, env) {
 
   const { results: activeEventsList } = await env.DB.prepare(
     `SELECT
-       e.id, e.title,
-       (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) AS signups,
-       (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.status IN ('paid','result_pending','completed')) AS paid,
-       (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.status IN ('result_pending','completed')) AS result
-     FROM events e
-     WHERE e.end_date >= date('now')
-     ORDER BY e.event_date ASC`
+       event_id AS id,
+       event_title AS title,
+       COUNT(*) AS signups,
+       SUM(CASE WHEN status IN ('paid','result_pending','completed') THEN 1 ELSE 0 END) AS paid,
+       SUM(CASE WHEN status IN ('result_pending','completed') THEN 1 ELSE 0 END) AS result
+     FROM registrations
+     GROUP BY event_id
+     ORDER BY MAX(created_at) DESC`
   ).all();
-
+  
   const paymentPaid = await env.DB.prepare(
     "SELECT COUNT(*) AS c FROM registrations WHERE status IN ('paid','result_pending','completed')"
   ).first();
