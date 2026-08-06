@@ -186,13 +186,26 @@ async function handleCreateEvent(request, env) {
   }
 
   const title = formData.get("title");
-  const startDate = formData.get("startDate");
-  const endDate = formData.get("endDate");
+  const challenge = formData.get("challenge");
+  const location = formData.get("location");
   const distance = formData.get("distance");
-  const description = formData.get("description");
+  const regStartDate = formData.get("regStartDate");
+  const regEndDate = formData.get("regEndDate");
+  const resultStartDate = formData.get("resultStartDate");
+  const resultEndDate = formData.get("resultEndDate");
   const file = formData.get("image");
 
-  if (!title || !startDate || !endDate || !distance || !file) {
+  if (
+    !title ||
+    !challenge ||
+    !location ||
+    !distance ||
+    !regStartDate ||
+    !regEndDate ||
+    !resultStartDate ||
+    !resultEndDate ||
+    !file
+  ) {
     return Response.json(
       { success: false, error: "กรุณากรอกข้อมูลให้ครบถ้วน" },
       { status: 400 }
@@ -218,9 +231,24 @@ async function handleCreateEvent(request, env) {
 
   try {
     await env.DB.prepare(
-      "INSERT INTO events (title, event_date, end_date, distance, image, description) VALUES (?, ?, ?, ?, ?, ?)"
+      `INSERT INTO events
+        (title, event_date, end_date, location, distance, image, description,
+         reg_start_date, reg_end_date, result_start_date, result_end_date)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
-      .bind(title, startDate, endDate, distance, imageDataUrl, description)
+      .bind(
+        title,
+        regStartDate,
+        resultEndDate,
+        location,
+        distance,
+        imageDataUrl,
+        challenge,
+        regStartDate,
+        regEndDate,
+        resultStartDate,
+        resultEndDate
+      )
       .run();
 
     return Response.json({ success: true });
