@@ -78,6 +78,17 @@ function Header({ onLogoClick, onNavigate, currentUser, onLogout }) {
                       🛠️ จัดการอนุมัติ
                     </button>
                   )}
+                  {currentUser.is_admin === 1 && (
+                    <button
+                      className="dropdown-item"
+                      onClick={() => {
+                        setDropdownOpen(false);
+                        onNavigate("admin-events");
+                      }}
+                    >
+                      🏁 จัดการกิจกรรม
+                    </button>
+                  )}
                   <button
                     className="dropdown-item"
                     onClick={() => {
