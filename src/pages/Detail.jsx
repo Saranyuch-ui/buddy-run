@@ -43,7 +43,7 @@ function Detail({ event, onBack, onNavigate, isLoggedIn, currentUser, onLogout }
           eventTitle: event.title,
           packageName: pkg.name,
           price: pkg.price,
-          eventEndDate: event.endDateISO,
+          eventEndDate: event.resultEndISO,
         }),
       });
 
@@ -74,11 +74,12 @@ function Detail({ event, onBack, onNavigate, isLoggedIn, currentUser, onLogout }
         <div className="detail-body">
           <h2>{event.title}</h2>
 
-          <p>📅 เริ่ม: {event.date}</p>
-          <p>🏁 สิ้นสุด: {event.endDate}</p>
+          <p>{event.challenge}</p>
+
+          <p>📝 ช่วงลงทะเบียน: {event.regStart} - {event.regEnd}</p>
+          <p>📤 ช่วงส่งผลกิจกรรม: {event.resultStart} - {event.resultEnd}</p>
           {event.location && <p>📍 {event.location}</p>}
           <p>🏃 {event.distance}</p>
-          <p>{event.description}</p>
 
           <h3 className="package-title">เลือกแพ็กเกจลงทะเบียน</h3>
 
