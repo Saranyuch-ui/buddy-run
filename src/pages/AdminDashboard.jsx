@@ -93,13 +93,6 @@ function AdminDashboard({ onNavigate, onLogoClick, currentUser, onLogout }) {
     return { label, amount: monthlyMap[key] || 0 };
   }).filter((m) => m.amount > 0);
 
-  const { paid, pending, rejected } = data.paymentSummary;
-  const total = paid + pending + rejected || 1;
-  const paidPct = (paid / total) * 100;
-  const pendingPct = (pending / total) * 100;
-  const rejectedPct = (rejected / total) * 100;
-  const pieGradient = `conic-gradient(#16a34a 0% ${paidPct}%, #f59e0b ${paidPct}% ${paidPct + pendingPct}%, #dc2626 ${paidPct + pendingPct}% 100%)`;
-
   return (
     <>
       <Header
@@ -249,24 +242,6 @@ function AdminDashboard({ onNavigate, onLogoClick, currentUser, onLogout }) {
               ))}
             </div>
           )}
-        </div>
-
-        <div className="dash-chart-card">
-          <h3>Payment Summary</h3>
-          <div className="pie-row">
-            <div className="pie-chart" style={{ background: pieGradient }}></div>
-            <div className="pie-legend">
-              <div className="pie-legend-item">
-                <span className="pie-dot pie-dot-paid"></span> Paid: {paid}
-              </div>
-              <div className="pie-legend-item">
-                <span className="pie-dot pie-dot-pending"></span> Pending: {pending}
-              </div>
-              <div className="pie-legend-item">
-                <span className="pie-dot pie-dot-rejected"></span> Rejected: {rejected}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </>
