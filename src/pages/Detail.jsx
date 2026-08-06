@@ -43,6 +43,7 @@ function Detail({ event, onBack, onNavigate, isLoggedIn, currentUser, onLogout }
           eventTitle: event.title,
           packageName: pkg.name,
           price: pkg.price,
+          eventEndDate: event.endDateISO,
         }),
       });
 
@@ -75,7 +76,7 @@ function Detail({ event, onBack, onNavigate, isLoggedIn, currentUser, onLogout }
 
           <p>📅 เริ่ม: {event.date}</p>
           <p>🏁 สิ้นสุด: {event.endDate}</p>
-          <p>📍 {event.location}</p>
+          {event.location && <p>📍 {event.location}</p>}
           <p>🏃 {event.distance}</p>
           <p>{event.description}</p>
 
