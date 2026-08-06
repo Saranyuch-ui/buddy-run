@@ -242,8 +242,8 @@ function AdminDashboard({ onNavigate, onLogoClick, currentUser, onLogout }) {
                   <h4>{ev.title}</h4>
                   <div className="event-overview-stats">
                     <span>สมัคร {ev.signups} คน</span>
-                    <span>Paid {ev.paid} คน</span>
-                    <span>Result {ev.result} คน</span>
+                    <span>ชำระแล้ว {ev.paid} คน</span>
+                    <span>ส่งผลแล้ว {ev.result} คน</span>
                   </div>
                 </div>
               ))}
