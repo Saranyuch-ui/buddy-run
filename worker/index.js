@@ -166,7 +166,9 @@ async function handleLogin(request, env) {
 
 async function handleGetEvents(env) {
   const { results } = await env.DB.prepare(
-    "SELECT id, title, event_date, end_date, location, distance, image, description FROM events ORDER BY event_date ASC"
+    `SELECT id, title, location, distance, image, description,
+            reg_start_date, reg_end_date, result_start_date, result_end_date
+     FROM events ORDER BY reg_start_date ASC`
   ).all();
 
   return Response.json({ success: true, events: results });
