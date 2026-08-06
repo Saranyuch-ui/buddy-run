@@ -15,7 +15,7 @@ function EventCard({ event, onSelect, disabled }) {
 
         <p>🏁 สิ้นสุด: {event.endDate}</p>
 
-        <p>📍 {event.location}</p>
+        {event.location && <p>📍 {event.location}</p>}
 
         <p>🏃 {event.distance}</p>
 
