@@ -7,10 +7,13 @@ function AdminEvents({ onNavigate, onLogoClick, currentUser, onLogout }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
     title: "",
-    startDate: "",
-    endDate: "",
+    challenge: "",
+    location: "",
     distance: "",
-    description: "",
+    regStartDate: "",
+    regEndDate: "",
+    resultStartDate: "",
+    resultEndDate: "",
   });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -61,7 +64,16 @@ function AdminEvents({ onNavigate, onLogoClick, currentUser, onLogout }) {
   };
 
   const resetForm = () => {
-    setForm({ title: "", startDate: "", endDate: "", distance: "", description: "" });
+    setForm({
+      title: "",
+      challenge: "",
+      location: "",
+      distance: "",
+      regStartDate: "",
+      regEndDate: "",
+      resultStartDate: "",
+      resultEndDate: "",
+    });
     setImageFile(null);
     setImagePreview(null);
     setShowForm(false);
@@ -70,8 +82,20 @@ function AdminEvents({ onNavigate, onLogoClick, currentUser, onLogout }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.title || !form.startDate || !form.endDate || !form.distance || !imageFile) {
-      alert("กรุณากรอกข้อมูลให้ครบ (รวมถึงรูปภาพ)");
+    const required = [
+      form.title,
+      form.challenge,
+      form.location,
+      form.distance,
+      form.regStartDate,
+      form.regEndDate,
+      form.resultStartDate,
+      form.resultEndDate,
+      imageFile,
+    ];
+
+    if (required.some((v) => !v)) {
+      alert("กรุณากรอกข้อมูลให้ครบทุกช่อง (รวมถึงรูปภาพ)");
       return;
     }
 
@@ -81,10 +105,13 @@ function AdminEvents({ onNavigate, onLogoClick, currentUser, onLogout }) {
       const formData = new FormData();
       formData.append("adminUserId", currentUser.id);
       formData.append("title", form.title);
-      formData.append("startDate", form.startDate);
-      formData.append("endDate", form.endDate);
+      formData.append("challenge", form.challenge);
+      formData.append("location", form.location);
       formData.append("distance", form.distance);
-      formData.append("description", form.description);
+      formData.append("regStartDate", form.regStartDate);
+      formData.append("regEndDate", form.regEndDate);
+      formData.append("resultStartDate", form.resultStartDate);
+      formData.append("resultEndDate", form.resultEndDate);
       formData.append("image", imageFile);
 
       const res = await fetch("/api/admin/events", {
@@ -170,22 +197,38 @@ function AdminEvents({ onNavigate, onLogoClick, currentUser, onLogout }) {
             <label>ชื่อกิจกรรม</label>
             <input value={form.title} onChange={handleChange("title")} />
 
-            <div className="edit-form-grid">
-              <div className="field">
-                <label>วันที่เริ่มกิจกรรม</label>
-                <input type="date" value={form.startDate} onChange={handleChange("startDate")} />
-              </div>
-              <div className="field">
-                <label>วันที่สิ้นสุดกิจกรรม</label>
-                <input type="date" value={form.endDate} onChange={handleChange("endDate")} />
-              </div>
-            </div>
+            <label>Challenge (รายละเอียดกิจกรรม)</label>
+            <input value={form.challenge} onChange={handleChange("challenge")} />
+
+            <label>สถานที่</label>
+            <input value={form.location} onChange={handleChange("location")} />
 
             <label>ระยะทาง (เช่น 5K / 10K / 21K)</label>
             <input value={form.distance} onChange={handleChange("distance")} />
 
-            <label>รายละเอียดกิจกรรม</label>
-            <input value={form.description} onChange={handleChange("description")} />
+            <h3 className="form-section-title">ช่วงลงทะเบียน</h3>
+            <div className="edit-form-grid">
+              <div className="field">
+                <label>วันเริ่มลงทะเบียน</label>
+                <input type="date" value={form.regStartDate} onChange={handleChange("regStartDate")} />
+              </div>
+              <div className="field">
+                <label>วันสิ้นสุดลงทะเบียน</label>
+                <input type="date" value={form.regEndDate} onChange={handleChange("regEndDate")} />
+              </div>
+            </div>
+
+            <h3 className="form-section-title">ช่วงส่งผลกิจกรรม</h3>
+            <div className="edit-form-grid">
+              <div className="field">
+                <label>วันเริ่มส่งผลกิจกรรม</label>
+                <input type="date" value={form.resultStartDate} onChange={handleChange("resultStartDate")} />
+              </div>
+              <div className="field">
+                <label>วันสิ้นสุดส่งผลกิจกรรม</label>
+                <input type="date" value={form.resultEndDate} onChange={handleChange("resultEndDate")} />
+              </div>
+            </div>
 
             <button type="submit" className="auth-submit-btn" disabled={submitting}>
               {submitting ? "กำลังบันทึก..." : "บันทึกกิจกรรม"}
@@ -205,8 +248,9 @@ function AdminEvents({ onNavigate, onLogoClick, currentUser, onLogout }) {
               <div key={ev.id} className="admin-item">
                 <div className="admin-info">
                   <h4>{ev.title}</h4>
-                  <p>{ev.event_date} — {ev.end_date}</p>
-                  <p>{ev.distance}</p>
+                  <p>📝 ลงทะเบียน: {ev.reg_start_date} - {ev.reg_end_date}</p>
+                  <p>📤 ส่งผลกิจกรรม: {ev.result_start_date} - {ev.result_end_date}</p>
+                  <p>📍 {ev.location} — 🏃 {ev.distance}</p>
                 </div>
                 <div className="admin-actions">
                   <button
