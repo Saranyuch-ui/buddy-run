@@ -9,17 +9,27 @@ function AdminDashboard({ onNavigate, onLogoClick, currentUser, onLogout }) {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("month");
 
+  const [error, setError] = useState("");
+
   useEffect(() => {
     if (!currentUser || !currentUser.is_admin) return;
 
     setLoading(true);
+    setError("");
     fetch(`/api/admin/dashboard?adminUserId=${currentUser.id}&period=${period}`)
       .then((res) => res.json())
       .then((res) => {
-        if (res.success) setData(res);
+        if (res.success) {
+          setData(res);
+        } else {
+          setError(res.error || "โหลดข้อมูลไม่สำเร็จ");
+        }
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        setError("เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง");
+        setLoading(false);
+      });
   }, [currentUser, period]);
 
   if (!currentUser || !currentUser.is_admin) {
@@ -39,7 +49,7 @@ function AdminDashboard({ onNavigate, onLogoClick, currentUser, onLogout }) {
     );
   }
 
-  if (loading || !data) {
+  if (loading) {
     return (
       <>
         <Header
@@ -50,6 +60,22 @@ function AdminDashboard({ onNavigate, onLogoClick, currentUser, onLogout }) {
         />
         <div className="dashboard-page">
           <p className="empty-text">กำลังโหลด...</p>
+        </div>
+      </>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <>
+        <Header
+          onNavigate={onNavigate}
+          onLogoClick={onLogoClick}
+          currentUser={currentUser}
+          onLogout={onLogout}
+        />
+        <div className="dashboard-page">
+          <p className="empty-text">⚠️ {error || "ไม่สามารถโหลดข้อมูลได้"}</p>
         </div>
       </>
     );
