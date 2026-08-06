@@ -25,14 +25,18 @@ function Home({ onSelectEvent, onNavigate, currentUser, onLogout }) {
           const mapped = data.events.map((e) => ({
             id: e.id,
             title: e.title,
-            date: formatDateDisplay(e.event_date),
-            dateISO: e.event_date,
-            endDate: formatDateDisplay(e.end_date),
-            endDateISO: e.end_date,
+            image: e.image,
+            challenge: e.description,
             location: e.location,
             distance: e.distance,
-            image: e.image,
-            description: e.description,
+            regStart: formatDateDisplay(e.reg_start_date),
+            regStartISO: e.reg_start_date,
+            regEnd: formatDateDisplay(e.reg_end_date),
+            regEndISO: e.reg_end_date,
+            resultStart: formatDateDisplay(e.result_start_date),
+            resultStartISO: e.result_start_date,
+            resultEnd: formatDateDisplay(e.result_end_date),
+            resultEndISO: e.result_end_date,
           }));
           setEvents(mapped);
         }
@@ -48,11 +52,11 @@ function Home({ onSelectEvent, onNavigate, currentUser, onLogout }) {
   const today = new Date();
 
   const ongoingEvents = filteredEvents.filter(
-    (event) => new Date(event.endDateISO) >= today
+    (event) => event.regEndISO && new Date(event.regEndISO) >= today
   );
 
   const finishedEvents = filteredEvents.filter(
-    (event) => new Date(event.endDateISO) < today
+    (event) => !event.regEndISO || new Date(event.regEndISO) < today
   );
 
   return (
@@ -64,12 +68,12 @@ function Home({ onSelectEvent, onNavigate, currentUser, onLogout }) {
       <SearchBar search={search} setSearch={setSearch} />
 
       <section className="event-section">
-        <h2 className="section-title">🏃 กิจกรรมที่กำลังดำเนินการ</h2>
+        <h2 className="section-title">🏃 กิจกรรมที่เปิดรับสมัคร</h2>
 
         {loading ? (
           <p className="empty-text">กำลังโหลด...</p>
         ) : ongoingEvents.length === 0 ? (
-          <p className="empty-text">ยังไม่มีกิจกรรมที่กำลังจะจัดขึ้น</p>
+          <p className="empty-text">ยังไม่มีกิจกรรมที่เปิดรับสมัคร</p>
         ) : (
           <div className="grid">
             {ongoingEvents.map((event) => (
@@ -80,12 +84,12 @@ function Home({ onSelectEvent, onNavigate, currentUser, onLogout }) {
       </section>
 
       <section className="event-section">
-        <h2 className="section-title">🏁 กิจกรรมที่จบไปแล้ว</h2>
+        <h2 className="section-title">🏁 หมดเขตรับสมัครแล้ว</h2>
 
         {loading ? (
           <p className="empty-text">กำลังโหลด...</p>
         ) : finishedEvents.length === 0 ? (
-          <p className="empty-text">ยังไม่มีกิจกรรมที่จบไปแล้ว</p>
+          <p className="empty-text">ยังไม่มีกิจกรรมที่หมดเขต</p>
         ) : (
           <div className="grid">
             {finishedEvents.map((event) => (
