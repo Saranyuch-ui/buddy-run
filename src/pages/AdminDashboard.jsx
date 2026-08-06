@@ -122,7 +122,7 @@ function AdminDashboard({ onNavigate, onLogoClick, currentUser, onLogout }) {
             <p className="dash-card-value">{data.activeEvents.toLocaleString()}</p>
           </div>
           <div className="dash-card">
-            <p className="dash-card-label">สมัครวันนี้</p>
+            <p className="dash-card-label">สมัครกิจกรรมวันนี้</p>
             <p className="dash-card-value">{data.todaySignups.toLocaleString()}</p>
           </div>
           <div className="dash-card">
