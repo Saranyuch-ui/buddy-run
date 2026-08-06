@@ -10,6 +10,18 @@ export default {
       return handleLogin(request, env);
     }
 
+    if (url.pathname === "/api/events" && request.method === "GET") {
+      return handleGetEvents(env);
+    }
+
+    if (url.pathname === "/api/admin/events" && request.method === "POST") {
+      return handleCreateEvent(request, env);
+    }
+
+    if (url.pathname === "/api/admin/events" && request.method === "DELETE") {
+      return handleDeleteEvent(request, env);
+    }
+
     if (url.pathname === "/api/registrations" && request.method === "POST") {
       return handleCreateRegistration(request, env);
     }
@@ -152,6 +164,98 @@ async function handleLogin(request, env) {
   return Response.json({ success: true, user });
 }
 
+async function handleGetEvents(env) {
+  const { results } = await env.DB.prepare(
+    "SELECT id, title, event_date, end_date, location, distance, image, description FROM events ORDER BY event_date ASC"
+  ).all();
+
+  return Response.json({ success: true, events: results });
+}
+
+async function handleCreateEvent(request, env) {
+  const formData = await request.formData();
+  const adminUserId = formData.get("adminUserId");
+
+  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
+    return Response.json(
+      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
+      { status: 403 }
+    );
+  }
+
+  const title = formData.get("title");
+  const startDate = formData.get("startDate");
+  const endDate = formData.get("endDate");
+  const distance = formData.get("distance");
+  const description = formData.get("description");
+  const file = formData.get("image");
+
+  if (!title || !startDate || !endDate || !distance || !file) {
+    return Response.json(
+      { success: false, error: "กรุณากรอกข้อมูลให้ครบถ้วน" },
+      { status: 400 }
+    );
+  }
+
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+  if (!allowedTypes.includes(file.type)) {
+    return Response.json(
+      { success: false, error: "รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WEBP) เท่านั้น" },
+      { status: 400 }
+    );
+  }
+
+  if (file.size > 2 * 1024 * 1024) {
+    return Response.json(
+      { success: false, error: "ไฟล์ใหญ่เกินไป (จำกัดไม่เกิน 2MB)" },
+      { status: 400 }
+    );
+  }
+
+  const imageDataUrl = await fileToBase64DataUrl(file);
+
+  try {
+    await env.DB.prepare(
+      "INSERT INTO events (title, event_date, end_date, distance, image, description) VALUES (?, ?, ?, ?, ?, ?)"
+    )
+      .bind(title, startDate, endDate, distance, imageDataUrl, description)
+      .run();
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "เพิ่มกิจกรรมไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
+}
+
+async function handleDeleteEvent(request, env) {
+  const body = await request.json();
+  const { adminUserId, eventId } = body;
+
+  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
+    return Response.json(
+      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
+      { status: 403 }
+    );
+  }
+
+  if (!eventId) {
+    return Response.json({ success: false, error: "ไม่พบ eventId" }, { status: 400 });
+  }
+
+  try {
+    await env.DB.prepare("DELETE FROM events WHERE id = ?").bind(eventId).run();
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "ลบกิจกรรมไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
+}
+
 async function handleCreateRegistration(request, env) {
   const body = await request.json();
 
@@ -165,8 +269,8 @@ async function handleCreateRegistration(request, env) {
   try {
     await env.DB.prepare(
       `INSERT INTO registrations
-        (user_id, event_id, package_id, event_title, package_name, price, status)
-       VALUES (?, ?, ?, ?, ?, ?, 'confirmed')`
+        (user_id, event_id, package_id, event_title, package_name, price, status, event_end_date)
+       VALUES (?, ?, ?, ?, ?, ?, 'confirmed', ?)`
     )
       .bind(
         body.userId,
@@ -174,7 +278,8 @@ async function handleCreateRegistration(request, env) {
         body.packageId,
         body.eventTitle,
         body.packageName,
-        body.price
+        body.price,
+        body.eventEndDate || null
       )
       .run();
 
@@ -196,7 +301,7 @@ async function handleGetRegistrations(request, env) {
   }
 
   const { results } = await env.DB.prepare(
-    "SELECT id, user_id, event_id, package_id, status, created_at, event_title, package_name, price, paid_amount, slip_image, result_image FROM registrations WHERE user_id = ? ORDER BY created_at DESC"
+    "SELECT id, user_id, event_id, package_id, status, created_at, event_title, package_name, price, paid_amount, slip_image, result_image, event_end_date FROM registrations WHERE user_id = ? ORDER BY created_at DESC"
   )
     .bind(userId)
     .all();
@@ -544,7 +649,7 @@ async function handleGetDashboard(request, env) {
   const totalMembers = await env.DB.prepare("SELECT COUNT(*) AS c FROM users").first();
 
   const activeEventsCount = await env.DB.prepare(
-    "SELECT COUNT(DISTINCT event_id) AS c FROM registrations"
+    "SELECT COUNT(*) AS c FROM events WHERE end_date >= date('now')"
   ).first();
 
   const todaySignups = await env.DB.prepare(
@@ -599,14 +704,13 @@ async function handleGetDashboard(request, env) {
 
   const { results: activeEventsList } = await env.DB.prepare(
     `SELECT
-       event_id AS id,
-       event_title AS title,
-       COUNT(*) AS signups,
-       SUM(CASE WHEN status IN ('paid','result_pending','completed') THEN 1 ELSE 0 END) AS paid,
-       SUM(CASE WHEN status IN ('result_pending','completed') THEN 1 ELSE 0 END) AS result
-     FROM registrations
-     GROUP BY event_id
-     ORDER BY MAX(created_at) DESC`
+       e.id, e.title,
+       (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) AS signups,
+       (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.status IN ('paid','result_pending','completed')) AS paid,
+       (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.status IN ('result_pending','completed')) AS result
+     FROM events e
+     WHERE e.end_date >= date('now')
+     ORDER BY e.event_date ASC`
   ).all();
 
   return Response.json({
