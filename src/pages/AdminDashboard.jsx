@@ -106,7 +106,10 @@ function AdminDashboard({ onNavigate, onLogoClick, currentUser, onLogout }) {
         <h2 className="admin-title">Dashboard</h2>
 
         <div className="dash-cards">
-          <div className="dash-card">
+          <div
+            className="dash-card dash-card-clickable"
+            onClick={() => onNavigate("admin-members")}
+          >
             <p className="dash-card-label">สมาชิกทั้งหมด</p>
             <p className="dash-card-value">{data.totalMembers.toLocaleString()}</p>
           </div>
