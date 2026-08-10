@@ -1050,3 +1050,19 @@ body {
     max-width: 600px;
     margin: 0 auto 30px;
 }
+
+.dash-card-clickable {
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.dash-card-clickable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,.12);
+}
+
+.admin-badge {
+    font-size: 0.75rem;
+    color: #2563eb;
+    font-weight: normal;
+}
