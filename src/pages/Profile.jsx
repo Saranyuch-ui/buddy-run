@@ -12,7 +12,7 @@ function getDisplayLabel(reg) {
   if (reg.status === "completed") return "ส่งผลกิจกรรมแล้ว";
 
   if (
-    ["confirmed", "pending_verification", "paid"].includes(reg.status) &&
+    ["confirmed", "pending_ocr_approval", "pending_verification", "paid"].includes(reg.status) &&
     isEventExpired(reg)
   ) {
     return "หมดเวลากิจกรรม";
@@ -21,8 +21,10 @@ function getDisplayLabel(reg) {
   switch (reg.status) {
     case "confirmed":
       return "รอชำระเงิน";
+    case "pending_ocr_approval":
+      return "รอการอนุมัติ";
     case "pending_verification":
-      return "รอการอนุมัติชำระเงิน";
+      return "รอการตรวจสอบและอนุมัติ";
     case "paid":
       return "ชำระเงินเรียบร้อย";
     case "result_pending":
@@ -36,7 +38,7 @@ function getDisplayStatusClass(reg) {
   if (reg.status === "completed") return "completed";
 
   if (
-    ["confirmed", "pending_verification", "paid"].includes(reg.status) &&
+    ["confirmed", "pending_ocr_approval", "pending_verification", "paid"].includes(reg.status) &&
     isEventExpired(reg)
   ) {
     return "expired";
@@ -137,7 +139,7 @@ function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
 
   const paymentRegs = registrations.filter(
     (r) =>
-      ["confirmed", "pending_verification", "paid"].includes(r.status) &&
+      ["confirmed", "pending_ocr_approval", "pending_verification", "paid"].includes(r.status) &&
       !isEventExpired(r)
   );
 
@@ -148,7 +150,7 @@ function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
   const historyRegs = registrations.filter(
     (r) =>
       r.status === "completed" ||
-      (["confirmed", "pending_verification", "paid"].includes(r.status) &&
+      (["confirmed", "pending_ocr_approval", "pending_verification", "paid"].includes(r.status) &&
         isEventExpired(r))
   );
 
