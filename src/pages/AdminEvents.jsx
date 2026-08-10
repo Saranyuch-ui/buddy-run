@@ -236,38 +236,59 @@ function AdminEvents({ onNavigate, onLogoClick, currentUser, onLogout }) {
           </form>
         )}
 
-        <h2 className="admin-title admin-section-spacing">รายการกิจกรรมทั้งหมด</h2>
+        {(() => {
+          const today = new Date();
+          const openEvents = events.filter(
+            (ev) => ev.reg_end_date && new Date(ev.reg_end_date) >= today
+          );
+          const closedEvents = events.filter(
+            (ev) => !ev.reg_end_date || new Date(ev.reg_end_date) < today
+          );
 
-        {loading ? (
-          <p className="empty-text">กำลังโหลด...</p>
-        ) : events.length === 0 ? (
-          <p className="empty-text">ยังไม่มีกิจกรรม</p>
-        ) : (
-          <div className="admin-list">
-            {events.map((ev) => (
-              <div key={ev.id} className="admin-item">
-                <div className="admin-info">
-                  <h4>{ev.title}</h4>
-                  <p>📝 ลงทะเบียน: {ev.reg_start_date} - {ev.reg_end_date}</p>
-                  <p>📤 ส่งผลกิจกรรม: {ev.result_start_date} - {ev.result_end_date}</p>
-                  <p>📍 {ev.location} — 🏃 {ev.distance}</p>
-                </div>
-                <div className="admin-actions">
-                  <button
-                    className="reject-btn"
-                    onClick={() => handleDelete(ev.id)}
-                    disabled={deletingId === ev.id}
-                  >
-                    {deletingId === ev.id ? "กำลังลบ..." : "🗑️ ลบ"}
-                  </button>
-                </div>
+          const renderEventItem = (ev) => (
+            <div key={ev.id} className="admin-item">
+              <div className="admin-info">
+                <h4>{ev.title}</h4>
+                <p>📝 ลงทะเบียน: {ev.reg_start_date} - {ev.reg_end_date}</p>
+                <p>📤 ส่งผลกิจกรรม: {ev.result_start_date} - {ev.result_end_date}</p>
+                <p>📍 {ev.location} — 🏃 {ev.distance}</p>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </>
-  );
+              <div className="admin-actions">
+                <button
+                  className="reject-btn"
+                  onClick={() => handleDelete(ev.id)}
+                  disabled={deletingId === ev.id}
+                >
+                  {deletingId === ev.id ? "กำลังลบ..." : "🗑️ ลบ"}
+                </button>
+              </div>
+            </div>
+          );
+
+          return (
+            <>
+              <h2 className="admin-title admin-section-spacing">🏃 กิจกรรมที่เปิดรับสมัคร</h2>
+
+              {loading ? (
+                <p className="empty-text">กำลังโหลด...</p>
+              ) : openEvents.length === 0 ? (
+                <p className="empty-text">ยังไม่มีกิจกรรมที่เปิดรับสมัคร</p>
+              ) : (
+                <div className="admin-list">{openEvents.map(renderEventItem)}</div>
+              )}
+
+              <h2 className="admin-title admin-section-spacing">🏁 หมดเขตรับสมัครแล้ว</h2>
+
+              {loading ? (
+                <p className="empty-text">กำลังโหลด...</p>
+              ) : closedEvents.length === 0 ? (
+                <p className="empty-text">ยังไม่มีกิจกรรมที่หมดเขต</p>
+              ) : (
+                <div className="admin-list">{closedEvents.map(renderEventItem)}</div>
+              )}
+            </>
+          );
+        })()}
 }
 
 export default AdminEvents;
