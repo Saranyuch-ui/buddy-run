@@ -400,15 +400,15 @@ async function handlePayRegistration(request, env) {
     );
   }
 
-  const newStatus = verifiedByOcr ? "paid" : "pending_verification";
+  // ทุกกรณีต้องผ่านแอดมินอนุมัติเสมอ - แค่แยกสถานะให้รู้ว่าตรวจสอบมาแล้วด้วย OCR หรือยัง
+  const newStatus = verifiedByOcr ? "pending_ocr_approval" : "pending_verification";
   const slipDataUrl = await fileToBase64DataUrl(file);
-  const paidAt = verifiedByOcr ? new Date().toISOString() : null;
 
   try {
     await env.DB.prepare(
-      "UPDATE registrations SET status = ?, paid_amount = ?, slip_image = ?, paid_at = COALESCE(?, paid_at) WHERE id = ?"
+      "UPDATE registrations SET status = ?, paid_amount = ?, slip_image = ? WHERE id = ?"
     )
-      .bind(newStatus, amount, slipDataUrl, paidAt, registrationId)
+      .bind(newStatus, amount, slipDataUrl, registrationId)
       .run();
 
     return Response.json({ success: true, status: newStatus });
@@ -575,7 +575,7 @@ async function handleGetPendingRegistrations(request, env) {
     `SELECT r.*, u.email AS user_email, u.first_name AS user_first_name, u.last_name AS user_last_name
      FROM registrations r
      JOIN users u ON r.user_id = u.id
-     WHERE r.status IN ('pending_verification', 'result_pending')
+     WHERE r.status IN ('pending_verification', 'pending_ocr_approval', 'result_pending')
      ORDER BY r.created_at ASC`
   ).all();
 
@@ -612,7 +612,7 @@ async function handleReviewRegistration(request, env) {
   }
 
   try {
-    if (reg.status === "pending_verification") {
+    if (reg.status === "pending_verification" || reg.status === "pending_ocr_approval") {
       await env.DB.prepare(
         "INSERT INTO admin_reviews (registration_id, review_type, action) VALUES (?, 'payment', ?)"
       )
@@ -701,7 +701,7 @@ async function handleGetDashboard(request, env) {
   ).first();
 
   const pendingSlip = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM registrations WHERE status = 'pending_verification'"
+    "SELECT COUNT(*) AS c FROM registrations WHERE status IN ('pending_verification', 'pending_ocr_approval')"
   ).first();
 
   const pendingResult = await env.DB.prepare(
