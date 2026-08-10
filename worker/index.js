@@ -679,7 +679,7 @@ async function handleGetDashboard(request, env) {
   const totalMembers = await env.DB.prepare("SELECT COUNT(*) AS c FROM users").first();
 
   const activeEventsCount = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM events WHERE end_date >= date('now')"
+    "SELECT COUNT(*) AS c FROM events WHERE reg_start_date <= date('now') AND result_end_date >= date('now')"
   ).first();
 
   const todaySignups = await env.DB.prepare(
@@ -739,8 +739,8 @@ async function handleGetDashboard(request, env) {
        (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.status IN ('paid','result_pending','completed')) AS paid,
        (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.status IN ('result_pending','completed')) AS result
      FROM events e
-     WHERE e.end_date >= date('now')
-     ORDER BY e.event_date ASC`
+     WHERE e.reg_start_date <= date('now') AND e.result_end_date >= date('now')
+     ORDER BY e.reg_start_date ASC`
   ).all();
 
   return Response.json({
