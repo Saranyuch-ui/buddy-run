@@ -58,6 +58,30 @@ export default {
       return handleGetDashboard(request, env);
     }
 
+          async function handleGetMembers(request, env) {
+          const url = new URL(request.url);
+          const adminUserId = url.searchParams.get("adminUserId");
+        
+          if (!adminUserId || !(await isAdmin(env, adminUserId))) {
+            return Response.json(
+              { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
+              { status: 403 }
+            );
+          }
+        
+          const { results } = await env.DB.prepare(
+            `SELECT id, username, email, first_name, last_name, phone, is_admin, created_at
+             FROM users
+             ORDER BY created_at DESC`
+          ).all();
+        
+          return Response.json({ success: true, members: results });
+        }
+    
+    if (url.pathname === "/api/admin/members" && request.method === "GET") {
+      return handleGetMembers(request, env);
+    }
+
     return env.ASSETS.fetch(request);
   },
 };
