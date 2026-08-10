@@ -70,6 +70,7 @@ function Admin({ onNavigate, onLogoClick, currentUser, onLogout }) {
     }
   };
 
+  const ocrApprovalPending = pending.filter((r) => r.status === "pending_ocr_approval");
   const paymentPending = pending.filter((r) => r.status === "pending_verification");
   const resultPending = pending.filter((r) => r.status === "result_pending");
 
@@ -127,19 +128,31 @@ function Admin({ onNavigate, onLogoClick, currentUser, onLogout }) {
       />
 
       <div className="admin-page">
-        <h2 className="admin-title">1. อนุมัติชำระเงิน</h2>
+        <h2 className="admin-title">1. รอการอนุมัติ (สลิปตรวจสอบผ่านแล้ว)</h2>
+
+        {loading ? (
+          <p className="empty-text">กำลังโหลด...</p>
+        ) : ocrApprovalPending.length === 0 ? (
+          <p className="empty-text">ไม่มีรายการรอการอนุมัติ</p>
+        ) : (
+          <div className="admin-list">
+            {ocrApprovalPending.map((reg) => renderItem(reg, "slip_image", "ดูสลิป"))}
+          </div>
+        )}
+
+        <h2 className="admin-title admin-section-spacing">2. รอการตรวจสอบและอนุมัติสลิป</h2>
 
         {loading ? (
           <p className="empty-text">กำลังโหลด...</p>
         ) : paymentPending.length === 0 ? (
-          <p className="empty-text">ไม่มีรายการรอการอนุมัติ</p>
+          <p className="empty-text">ไม่มีรายการรอการตรวจสอบ</p>
         ) : (
           <div className="admin-list">
             {paymentPending.map((reg) => renderItem(reg, "slip_image", "ดูสลิป"))}
           </div>
         )}
 
-        <h2 className="admin-title admin-section-spacing">2. อนุมัติส่งผลกิจกรรม</h2>
+        <h2 className="admin-title admin-section-spacing">3. อนุมัติส่งผลกิจกรรม</h2>
 
         {loading ? (
           <p className="empty-text">กำลังโหลด...</p>
