@@ -1066,3 +1066,8 @@ body {
     color: #2563eb;
     font-weight: normal;
 }
+
+.reg-status-pending_ocr_approval {
+    background: #dbeafe;
+    color: #1e40af;
+}
