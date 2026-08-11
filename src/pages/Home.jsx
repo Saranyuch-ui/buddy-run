@@ -1,107 +1,44 @@
-import { useState, useEffect } from "react";
+Server instance: BCG
+Category: SqlConnection
+ClientSessionId: 00000000-0000-0000-0000-000000000000
+ClientActivityId: 00000000-0000-0000-0000-000000000000
+ServerSessionUniqueId: e88293c9-5e3b-4783-965c-18ce17d2e586
+ServerActivityId: 00000000-0000-0000-0000-000000000000
+EventTime: 08/11/2026 09:16:43
+Message (SqlException): RootException: SqlException (HResult: 0x80131904)
+Cannot open database "BCG-DB" requested by the login. The login failed.
+Login failed for user 'NT AUTHORITY\NETWORK SERVICE'.
+ExceptionStackTrace:
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, SqlCommand command, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.TryRun(RunBehavior runBehavior, SqlCommand cmdHandler, SqlDataReader dataStream, BulkCopySimpleResultSet bulkCopyHandler, TdsParserStateObject stateObj, Boolean& dataReady)
+   at Microsoft.Data.SqlClient.TdsParser.Run(RunBehavior runBehavior, SqlCommand cmdHandler, SqlDataReader dataStream, BulkCopySimpleResultSet bulkCopyHandler, TdsParserStateObject stateObj)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.CompleteLogin(Boolean enlistOK)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance)
+   at Microsoft.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, Boolean applyTransientFaultHandling, String accessToken, DbConnectionPool pool, Func`3 accessTokenCallback)
+   at Microsoft.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, Object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+   at Microsoft.Data.ProviderBase.DbConnectionFactory.<>c__DisplayClass48_0.<CreateReplaceConnectionContinuation>b__0(Task`1 _)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at Microsoft.Dynamics.Nav.Types.NavCancellationToken.RunActionWithCancellationTokenTaskAsync(Func`2 func)
+   at Microsoft.Dynamics.Nav.Runtime.NavSqlConnection.TryConnectAsync()
+CallerStackTrace:
+   at _Diag_.Net._Async_Internals_()
+   at Microsoft.Dynamics.Nav.Types.NavCancellationToken.RunActionWithCancellationTokenTaskAsync(Func`2 func)
+   at _Diag_.Net._Async_Internals_()
+   at Microsoft.Data.SqlClient.SqlConnection.OpenAsyncRetry.Retry(Task`1 retryTask)
+   at _Diag_.Net._Async_Internals_()
 
-import Header from "../components/Header";
-import Hero from "../components/Hero";
-import SearchBar from "../components/SearchBar";
-import EventCard from "../components/EventCard";
-import Footer from "../components/Footer";
 
-function formatDateDisplay(isoDate) {
-  if (!isoDate) return "-";
-  const d = new Date(isoDate);
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+ProcessId: 74472
+Tag: 000018R
+ThreadId: 323
+ExecutionId: 1000
+CounterInformation: 
+CustomParameters: {
 }
-
-function Home({ onSelectEvent, onNavigate, currentUser, onLogout }) {
-  const [search, setSearch] = useState("");
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/events")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          const mapped = data.events.map((e) => ({
-            id: e.id,
-            title: e.title,
-            image: e.image,
-            challenge: e.description,
-            location: e.location,
-            distance: e.distance,
-            regStart: formatDateDisplay(e.reg_start_date),
-            regStartISO: e.reg_start_date,
-            regEnd: formatDateDisplay(e.reg_end_date),
-            regEndISO: e.reg_end_date,
-            resultStart: formatDateDisplay(e.result_start_date),
-            resultStartISO: e.result_start_date,
-            resultEnd: formatDateDisplay(e.result_end_date),
-            resultEndISO: e.result_end_date,
-          }));
-          setEvents(mapped);
-        }
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
-
-  const filteredEvents = events.filter((event) =>
-    event.title.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const today = new Date();
-
-  const ongoingEvents = filteredEvents.filter(
-    (event) => event.regEndISO && new Date(event.regEndISO) >= today
-  );
-
-  const finishedEvents = filteredEvents.filter(
-    (event) => !event.regEndISO || new Date(event.regEndISO) < today
-  );
-
-  return (
-    <>
-      <Header onNavigate={onNavigate} currentUser={currentUser} onLogout={onLogout} />
-
-      <Hero />
-
-      <SearchBar search={search} setSearch={setSearch} />
-
-      <section className="event-section">
-        <h2 className="section-title">🏃 กิจกรรมที่เปิดรับสมัคร</h2>
-
-        {loading ? (
-          <p className="empty-text">กำลังโหลด...</p>
-        ) : ongoingEvents.length === 0 ? (
-          <p className="empty-text">ยังไม่มีกิจกรรมที่เปิดรับสมัคร</p>
-        ) : (
-          <div className="grid">
-            {ongoingEvents.map((event) => (
-              <EventCard key={event.id} event={event} onSelect={onSelectEvent} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className="event-section">
-        <h2 className="section-title">🏁 หมดเขตรับสมัครแล้ว</h2>
-
-        {loading ? (
-          <p className="empty-text">กำลังโหลด...</p>
-        ) : finishedEvents.length === 0 ? (
-          <p className="empty-text">ยังไม่มีกิจกรรมที่หมดเขต</p>
-        ) : (
-          <div className="grid">
-            {finishedEvents.map((event) => (
-              <EventCard key={event.id} event={event} onSelect={onSelectEvent} disabled={true} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      <Footer />
-    </>
-  );
-}
-
-export default Home;
+GatewayCorrelationId: 
