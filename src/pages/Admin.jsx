@@ -128,7 +128,7 @@ function Admin({ onNavigate, onLogoClick, currentUser, onLogout }) {
       />
 
       <div className="admin-page">
-        <h2 className="admin-title">1. รอการอนุมัติ (สลิปตรวจสอบผ่านแล้ว)</h2>
+        <h2 className="admin-title">รอการอนุมัติ (สลิปตรวจสอบผ่านแล้ว)</h2>
 
         {loading ? (
           <p className="empty-text">กำลังโหลด...</p>
@@ -140,7 +140,7 @@ function Admin({ onNavigate, onLogoClick, currentUser, onLogout }) {
           </div>
         )}
 
-        <h2 className="admin-title admin-section-spacing">2. รอการตรวจสอบและอนุมัติสลิป</h2>
+        <h2 className="admin-title admin-section-spacing">รอการตรวจสอบและอนุมัติสลิป</h2>
 
         {loading ? (
           <p className="empty-text">กำลังโหลด...</p>
@@ -152,7 +152,7 @@ function Admin({ onNavigate, onLogoClick, currentUser, onLogout }) {
           </div>
         )}
 
-        <h2 className="admin-title admin-section-spacing">3. อนุมัติส่งผลกิจกรรม</h2>
+        <h2 className="admin-title admin-section-spacing">อนุมัติส่งผลกิจกรรม</h2>
 
         {loading ? (
           <p className="empty-text">กำลังโหลด...</p>
