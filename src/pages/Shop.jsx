@@ -50,9 +50,10 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
         return;
       }
 
-      alert(`สั่งซื้อ "${product.name}" จำนวน ${quantity} ชิ้น เรียบร้อยแล้ว`);
+      alert(`สั่งซื้อ "${product.name}" จำนวน ${quantity} ชิ้น เรียบร้อยแล้ว กรุณาชำระเงิน`);
       setBuyingId(null);
       setQuantity(1);
+      onNavigate("shop-payment");
     } catch (err) {
       alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     } finally {
