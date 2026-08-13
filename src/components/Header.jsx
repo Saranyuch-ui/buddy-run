@@ -5,6 +5,7 @@ function Header({ onLogoClick, onNavigate, currentUser, onLogout }) {
 
   const navItems = [
     { key: "home", label: "หน้าแรก" },
+    { key: "shop", label: "ร้านค้า" },
     { key: "payment", label: "ชำระเงิน" },
     { key: "submit-result", label: "ส่งผลกิจกรรม" },
     { key: "contact", label: "ติดต่อเรา" },
