@@ -70,6 +70,22 @@ export default {
       return handleCreateOrder(request, env);
     }
 
+    if (url.pathname === "/api/orders" && request.method === "GET") {
+      return handleGetUserOrders(request, env);
+    }
+
+    if (url.pathname === "/api/orders/pay" && request.method === "POST") {
+      return handlePayOrder(request, env);
+    }
+
+    if (url.pathname === "/api/admin/shop-pending" && request.method === "GET") {
+      return handleGetPendingOrders(request, env);
+    }
+
+    if (url.pathname === "/api/admin/review-order" && request.method === "POST") {
+      return handleReviewOrder(request, env);
+    }
+
     return env.ASSETS.fetch(request);
   },
 };
@@ -408,7 +424,6 @@ async function handlePayRegistration(request, env) {
     );
   }
 
-  // ทุกกรณีต้องผ่านแอดมินอนุมัติเสมอ - แค่แยกสถานะให้รู้ว่าตรวจสอบมาแล้วด้วย OCR หรือยัง
   const newStatus = verifiedByOcr ? "pending_ocr_approval" : "pending_verification";
   const slipDataUrl = await fileToBase64DataUrl(file);
 
@@ -842,6 +857,161 @@ async function handleCreateOrder(request, env) {
   } catch (err) {
     return Response.json(
       { success: false, error: "สั่งซื้อไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
+}
+
+async function handleGetUserOrders(request, env) {
+  const url = new URL(request.url);
+  const userId = url.searchParams.get("userId");
+
+  if (!userId) {
+    return Response.json({ success: false, error: "ไม่พบ userId" }, { status: 400 });
+  }
+
+  const { results } = await env.DB.prepare(
+    "SELECT id, user_id, product_id, product_name, price, quantity, total, status, paid_amount, slip_image, created_at FROM orders WHERE user_id = ? ORDER BY created_at DESC"
+  )
+    .bind(userId)
+    .all();
+
+  return Response.json({ success: true, orders: results });
+}
+
+async function handlePayOrder(request, env) {
+  const formData = await request.formData();
+
+  const orderId = formData.get("orderId");
+  const amount = Number(formData.get("amount"));
+  const file = formData.get("slip");
+  const verifiedByOcr = formData.get("verifiedByOcr") === "true";
+
+  if (!orderId || !amount || !file) {
+    return Response.json(
+      { success: false, error: "ข้อมูลไม่ครบถ้วน กรุณาแนบสลิปและกรอกยอดเงิน" },
+      { status: 400 }
+    );
+  }
+
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+  if (!allowedTypes.includes(file.type)) {
+    return Response.json(
+      { success: false, error: "รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WEBP) เท่านั้น" },
+      { status: 400 }
+    );
+  }
+
+  if (file.size > 2 * 1024 * 1024) {
+    return Response.json(
+      { success: false, error: "ไฟล์ใหญ่เกินไป (จำกัดไม่เกิน 2MB)" },
+      { status: 400 }
+    );
+  }
+
+  const order = await env.DB.prepare("SELECT * FROM orders WHERE id = ?")
+    .bind(orderId)
+    .first();
+
+  if (!order) {
+    return Response.json(
+      { success: false, error: "ไม่พบคำสั่งซื้อนี้" },
+      { status: 404 }
+    );
+  }
+
+  if (order.status === "paid") {
+    return Response.json(
+      { success: false, error: "คำสั่งซื้อนี้ชำระเงินแล้ว" },
+      { status: 400 }
+    );
+  }
+
+  if (amount < order.total) {
+    return Response.json(
+      { success: false, error: `ยอดชำระต้องไม่ต่ำกว่า ${order.total.toLocaleString()} บาท` },
+      { status: 400 }
+    );
+  }
+
+  const newStatus = verifiedByOcr ? "pending_ocr_approval" : "pending_verification";
+  const slipDataUrl = await fileToBase64DataUrl(file);
+
+  try {
+    await env.DB.prepare(
+      "UPDATE orders SET status = ?, paid_amount = ?, slip_image = ? WHERE id = ?"
+    )
+      .bind(newStatus, amount, slipDataUrl, orderId)
+      .run();
+
+    return Response.json({ success: true, status: newStatus });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "อัปเดตสถานะไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
+}
+
+async function handleGetPendingOrders(request, env) {
+  const url = new URL(request.url);
+  const adminUserId = url.searchParams.get("adminUserId");
+
+  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
+    return Response.json(
+      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
+      { status: 403 }
+    );
+  }
+
+  const { results } = await env.DB.prepare(
+    `SELECT o.*, u.email AS user_email, u.first_name AS user_first_name, u.last_name AS user_last_name
+     FROM orders o
+     JOIN users u ON o.user_id = u.id
+     WHERE o.status IN ('pending_verification', 'pending_ocr_approval')
+     ORDER BY o.created_at ASC`
+  ).all();
+
+  return Response.json({ success: true, orders: results });
+}
+
+async function handleReviewOrder(request, env) {
+  const body = await request.json();
+  const { adminUserId, orderId, action } = body;
+
+  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
+    return Response.json(
+      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
+      { status: 403 }
+    );
+  }
+
+  if (!orderId || !["approve", "reject"].includes(action)) {
+    return Response.json(
+      { success: false, error: "ข้อมูลไม่ครบถ้วน" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    if (action === "approve") {
+      await env.DB.prepare(
+        "UPDATE orders SET status = 'paid', slip_image = NULL WHERE id = ?"
+      )
+        .bind(orderId)
+        .run();
+    } else {
+      await env.DB.prepare(
+        "UPDATE orders SET status = 'pending' WHERE id = ?"
+      )
+        .bind(orderId)
+        .run();
+    }
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "อัปเดตสถานะไม่สำเร็จ กรุณาลองใหม่" },
       { status: 500 }
     );
   }
