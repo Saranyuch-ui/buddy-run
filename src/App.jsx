@@ -11,6 +11,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminEvents from "./pages/AdminEvents";
 import AdminMembers from "./pages/AdminMembers";
 import Shop from "./pages/Shop";
+import ShopPayment from "./pages/ShopPayment";
 import SubmitResult from "./pages/SubmitResult";
 
 function ComingSoon({ title, onNavigate, onLogoClick, currentUser, onLogout }) {
@@ -164,6 +165,18 @@ function App() {
   if (page === "shop") {
     return (
       <Shop
+        onNavigate={setPage}
+        onLogoClick={goHome}
+        isLoggedIn={isLoggedIn}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
+  if (page === "shop-payment") {
+    return (
+      <ShopPayment
         onNavigate={setPage}
         onLogoClick={goHome}
         isLoggedIn={isLoggedIn}
