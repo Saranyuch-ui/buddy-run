@@ -62,6 +62,14 @@ export default {
       return handleGetMembers(request, env);
     }
 
+    if (url.pathname === "/api/products" && request.method === "GET") {
+      return handleGetProducts(env);
+    }
+
+    if (url.pathname === "/api/orders" && request.method === "POST") {
+      return handleCreateOrder(request, env);
+    }
+
     return env.ASSETS.fetch(request);
   },
 };
@@ -786,4 +794,55 @@ async function handleGetMembers(request, env) {
   ).all();
 
   return Response.json({ success: true, members: results });
+}
+
+async function handleGetProducts(env) {
+  const { results } = await env.DB.prepare(
+    "SELECT id, name, price, description, image FROM products ORDER BY created_at DESC"
+  ).all();
+
+  return Response.json({ success: true, products: results });
+}
+
+async function handleCreateOrder(request, env) {
+  const body = await request.json();
+  const { userId, productId, quantity } = body;
+
+  if (!userId || !productId || !quantity || quantity < 1) {
+    return Response.json(
+      { success: false, error: "ข้อมูลไม่ครบถ้วน" },
+      { status: 400 }
+    );
+  }
+
+  const product = await env.DB.prepare(
+    "SELECT id, name, price FROM products WHERE id = ?"
+  )
+    .bind(productId)
+    .first();
+
+  if (!product) {
+    return Response.json(
+      { success: false, error: "ไม่พบสินค้านี้" },
+      { status: 404 }
+    );
+  }
+
+  const total = product.price * quantity;
+
+  try {
+    await env.DB.prepare(
+      `INSERT INTO orders (user_id, product_id, product_name, price, quantity, total, status)
+       VALUES (?, ?, ?, ?, ?, ?, 'pending')`
+    )
+      .bind(userId, product.id, product.name, product.price, quantity, total)
+      .run();
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "สั่งซื้อไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
 }
