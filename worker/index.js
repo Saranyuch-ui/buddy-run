@@ -74,6 +74,26 @@ export default {
       return handleGetUserOrders(request, env);
     }
 
+    if (url.pathname === "/api/orders" && request.method === "DELETE") {
+      return handleCancelOrder(request, env);
+    }
+
+    if (url.pathname === "/api/cart" && request.method === "GET") {
+      return handleGetCart(request, env);
+    }
+
+    if (url.pathname === "/api/cart" && request.method === "POST") {
+      return handleAddToCart(request, env);
+    }
+
+    if (url.pathname === "/api/cart" && request.method === "DELETE") {
+      return handleRemoveFromCart(request, env);
+    }
+
+    if (url.pathname === "/api/cart/checkout" && request.method === "POST") {
+      return handleCheckoutCart(request, env);
+    }
+
     if (url.pathname === "/api/orders/pay" && request.method === "POST") {
       return handlePayOrder(request, env);
     }
@@ -821,11 +841,11 @@ async function handleGetProducts(env) {
 
 async function handleCreateOrder(request, env) {
   const body = await request.json();
-  const { userId, productId, quantity } = body;
+  const { userId, productId, quantity, size } = body;
 
-  if (!userId || !productId || !quantity || quantity < 1) {
+  if (!userId || !productId || !quantity || quantity < 1 || !size) {
     return Response.json(
-      { success: false, error: "ข้อมูลไม่ครบถ้วน" },
+      { success: false, error: "กรุณาเลือกไซส์และจำนวนสินค้าให้ครบ" },
       { status: 400 }
     );
   }
@@ -847,10 +867,10 @@ async function handleCreateOrder(request, env) {
 
   try {
     await env.DB.prepare(
-      `INSERT INTO orders (user_id, product_id, product_name, price, quantity, total, status)
-       VALUES (?, ?, ?, ?, ?, ?, 'pending')`
+      `INSERT INTO orders (user_id, product_id, product_name, price, quantity, total, status, size)
+       VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`
     )
-      .bind(userId, product.id, product.name, product.price, quantity, total)
+      .bind(userId, product.id, product.name, product.price, quantity, total, size)
       .run();
 
     return Response.json({ success: true });
@@ -871,7 +891,7 @@ async function handleGetUserOrders(request, env) {
   }
 
   const { results } = await env.DB.prepare(
-    "SELECT id, user_id, product_id, product_name, price, quantity, total, status, paid_amount, slip_image, created_at FROM orders WHERE user_id = ? ORDER BY created_at DESC"
+    "SELECT id, user_id, product_id, product_name, price, quantity, total, status, paid_amount, slip_image, size, created_at FROM orders WHERE user_id = ? ORDER BY created_at DESC"
   )
     .bind(userId)
     .all();
@@ -1012,6 +1032,166 @@ async function handleReviewOrder(request, env) {
   } catch (err) {
     return Response.json(
       { success: false, error: "อัปเดตสถานะไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
+}
+
+async function handleCancelOrder(request, env) {
+  const body = await request.json();
+  const { userId, orderId } = body;
+
+  if (!userId || !orderId) {
+    return Response.json({ success: false, error: "ข้อมูลไม่ครบถ้วน" }, { status: 400 });
+  }
+
+  const order = await env.DB.prepare("SELECT * FROM orders WHERE id = ?")
+    .bind(orderId)
+    .first();
+
+  if (!order) {
+    return Response.json({ success: false, error: "ไม่พบคำสั่งซื้อนี้" }, { status: 404 });
+  }
+
+  if (String(order.user_id) !== String(userId)) {
+    return Response.json({ success: false, error: "ไม่มีสิทธิ์ทำรายการนี้" }, { status: 403 });
+  }
+
+  if (order.status !== "pending") {
+    return Response.json(
+      { success: false, error: "ไม่สามารถยกเลิกคำสั่งซื้อนี้ได้แล้ว" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    await env.DB.prepare("DELETE FROM orders WHERE id = ?").bind(orderId).run();
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "ยกเลิกคำสั่งซื้อไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
+}
+
+async function handleGetCart(request, env) {
+  const url = new URL(request.url);
+  const userId = url.searchParams.get("userId");
+
+  if (!userId) {
+    return Response.json({ success: false, error: "ไม่พบ userId" }, { status: 400 });
+  }
+
+  const { results } = await env.DB.prepare(
+    "SELECT * FROM cart_items WHERE user_id = ? ORDER BY created_at DESC"
+  )
+    .bind(userId)
+    .all();
+
+  return Response.json({ success: true, cartItems: results });
+}
+
+async function handleAddToCart(request, env) {
+  const body = await request.json();
+  const { userId, productId, quantity, size } = body;
+
+  if (!userId || !productId || !quantity || quantity < 1 || !size) {
+    return Response.json(
+      { success: false, error: "กรุณาเลือกไซส์และจำนวนสินค้าให้ครบ" },
+      { status: 400 }
+    );
+  }
+
+  const product = await env.DB.prepare(
+    "SELECT id, name, price FROM products WHERE id = ?"
+  )
+    .bind(productId)
+    .first();
+
+  if (!product) {
+    return Response.json({ success: false, error: "ไม่พบสินค้านี้" }, { status: 404 });
+  }
+
+  try {
+    await env.DB.prepare(
+      `INSERT INTO cart_items (user_id, product_id, product_name, price, size, quantity)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    )
+      .bind(userId, product.id, product.name, product.price, size, quantity)
+      .run();
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "เพิ่มสินค้าลงตะกร้าไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
+}
+
+async function handleRemoveFromCart(request, env) {
+  const body = await request.json();
+  const { userId, cartItemId } = body;
+
+  if (!userId || !cartItemId) {
+    return Response.json({ success: false, error: "ข้อมูลไม่ครบถ้วน" }, { status: 400 });
+  }
+
+  const item = await env.DB.prepare("SELECT * FROM cart_items WHERE id = ?")
+    .bind(cartItemId)
+    .first();
+
+  if (!item || String(item.user_id) !== String(userId)) {
+    return Response.json({ success: false, error: "ไม่มีสิทธิ์ทำรายการนี้" }, { status: 403 });
+  }
+
+  try {
+    await env.DB.prepare("DELETE FROM cart_items WHERE id = ?").bind(cartItemId).run();
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "ลบสินค้าออกจากตะกร้าไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
+}
+
+async function handleCheckoutCart(request, env) {
+  const body = await request.json();
+  const { userId } = body;
+
+  if (!userId) {
+    return Response.json({ success: false, error: "ไม่พบ userId" }, { status: 400 });
+  }
+
+  const { results: items } = await env.DB.prepare(
+    "SELECT * FROM cart_items WHERE user_id = ?"
+  )
+    .bind(userId)
+    .all();
+
+  if (!items || items.length === 0) {
+    return Response.json({ success: false, error: "ตะกร้าว่างเปล่า" }, { status: 400 });
+  }
+
+  try {
+    for (const item of items) {
+      const total = item.price * item.quantity;
+      await env.DB.prepare(
+        `INSERT INTO orders (user_id, product_id, product_name, price, quantity, total, status, size)
+         VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`
+      )
+        .bind(userId, item.product_id, item.product_name, item.price, item.quantity, total, item.size)
+        .run();
+    }
+
+    await env.DB.prepare("DELETE FROM cart_items WHERE user_id = ?").bind(userId).run();
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "ดำเนินการชำระเงินไม่สำเร็จ กรุณาลองใหม่" },
       { status: 500 }
     );
   }
