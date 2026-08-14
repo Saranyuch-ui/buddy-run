@@ -120,6 +120,29 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
     }
   };
 
+  const handleCancelOrder = async (orderId) => {
+    if (!confirm("ยืนยันยกเลิกคำสั่งซื้อนี้?")) return;
+
+    try {
+      const res = await fetch("/api/orders", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: currentUser.id, orderId }),
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.error || "ยกเลิกไม่สำเร็จ");
+        return;
+      }
+
+      setOrders(orders.filter((o) => o.id !== orderId));
+    } catch (err) {
+      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+    }
+  };
+
   const handlePay = async (order) => {
     const amountNum = Number(amount);
 
@@ -194,10 +217,18 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
               <div key={order.id} className="payment-item">
                 <div className="payment-info">
                   <h4>{order.product_name}</h4>
-                  <p>จำนวน {order.quantity} ชิ้น</p>
+                  <p>ไซส์ {order.size || "-"} — จำนวน {order.quantity} ชิ้น</p>
                   <p className="payment-price">
                     ยอดที่ต้องชำระ: {order.total.toLocaleString()} บาท
                   </p>
+                  {payingId !== order.id && (
+                    <button
+                      className="cancel-order-btn"
+                      onClick={() => handleCancelOrder(order.id)}
+                    >
+                      ยกเลิกคำสั่งซื้อ
+                    </button>
+                  )}
                 </div>
 
                 {payingId === order.id ? (
