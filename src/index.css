@@ -1139,17 +1139,26 @@ body {
 .shop-size-btn {
     width: 40px;
     height: 36px;
-    border: 1px solid #ccc;
-    background: white;
+    border: 1px solid #d1d5db;
+    background: #e5e7eb;
+    color: #374151;
     border-radius: 6px;
     cursor: pointer;
     font-size: 0.85rem;
+}
+
+.shop-size-btn:hover {
+    background: #d1d5db;
 }
 
 .shop-size-selected {
     background: #2563eb;
     color: white;
     border-color: #2563eb;
+}
+
+.shop-size-selected:hover {
+    background: #1d4ed8;
 }
 
 .shop-btn-row {
