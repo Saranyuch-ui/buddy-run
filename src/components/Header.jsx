@@ -8,6 +8,7 @@ function Header({ onLogoClick, onNavigate, currentUser, onLogout }) {
     { key: "shop", label: "ร้านค้า" },
     { key: "payment", label: "ชำระเงิน" },
     { key: "submit-result", label: "ส่งผลกิจกรรม" },
+    { key: "cart", label: "ตะกร้า" },
     { key: "contact", label: "ติดต่อเรา" },
   ];
 
