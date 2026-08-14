@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import Header from "../components/Header";
 
+const SIZES = ["S", "M", "L", "XL"];
+
 function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [buyingId, setBuyingId] = useState(null);
-  const [quantity, setQuantity] = useState(1);
+  const [selection, setSelection] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -18,17 +19,74 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
       .catch(() => setLoading(false));
   }, []);
 
-  const startBuy = (product) => {
+  const getSelection = (productId) =>
+    selection[productId] || { size: "", quantity: 1 };
+
+  const setSize = (productId, size) => {
+    setSelection({
+      ...selection,
+      [productId]: { ...getSelection(productId), size },
+    });
+  };
+
+  const setQuantity = (productId, quantity) => {
+    setSelection({
+      ...selection,
+      [productId]: { ...getSelection(productId), quantity: Math.max(1, quantity) },
+    });
+  };
+
+  const requireLoginAndSize = (product) => {
     if (!isLoggedIn) {
       alert("กรุณาเข้าสู่ระบบก่อนสั่งซื้อสินค้า");
       onNavigate("login");
-      return;
+      return false;
     }
-    setBuyingId(product.id);
-    setQuantity(1);
+    const sel = getSelection(product.id);
+    if (!sel.size) {
+      alert("กรุณาเลือกไซส์ก่อน");
+      return false;
+    }
+    return true;
   };
 
-  const handleConfirmOrder = async (product) => {
+  const handleAddToCart = async (product) => {
+    if (!requireLoginAndSize(product)) return;
+
+    const sel = getSelection(product.id);
+    setSubmitting(true);
+
+    try {
+      const res = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          productId: product.id,
+          quantity: sel.quantity,
+          size: sel.size,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.error || "เพิ่มสินค้าลงตะกร้าไม่สำเร็จ");
+        return;
+      }
+
+      alert(`เพิ่ม "${product.name}" (ไซส์ ${sel.size}) ลงตะกร้าแล้ว`);
+    } catch (err) {
+      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleBuyNow = async (product) => {
+    if (!requireLoginAndSize(product)) return;
+
+    const sel = getSelection(product.id);
     setSubmitting(true);
 
     try {
@@ -38,7 +96,8 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
         body: JSON.stringify({
           userId: currentUser.id,
           productId: product.id,
-          quantity,
+          quantity: sel.quantity,
+          size: sel.size,
         }),
       });
 
@@ -46,13 +105,9 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
 
       if (!data.success) {
         alert(data.error || "สั่งซื้อไม่สำเร็จ");
-        setSubmitting(false);
         return;
       }
 
-      alert(`สั่งซื้อ "${product.name}" จำนวน ${quantity} ชิ้น เรียบร้อยแล้ว กรุณาชำระเงิน`);
-      setBuyingId(null);
-      setQuantity(1);
       onNavigate("shop-payment");
     } catch (err) {
       alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
@@ -79,49 +134,64 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
           <p className="empty-text">ยังไม่มีสินค้า</p>
         ) : (
           <div className="grid">
-            {products.map((product) => (
-              <div key={product.id} className="card">
-                <img src={product.image} alt={product.name} />
+            {products.map((product) => {
+              const sel = getSelection(product.id);
+              return (
+                <div key={product.id} className="card">
+                  <img src={product.image} alt={product.name} />
 
-                <div className="card-body">
-                  <h3>{product.name}</h3>
-                  <p>{product.description}</p>
-                  <p className="package-price">{product.price.toLocaleString()} บาท</p>
+                  <div className="card-body">
+                    <h3>{product.name}</h3>
+                    <p>{product.description}</p>
+                    <p className="package-price">{product.price.toLocaleString()} บาท</p>
 
-                  {buyingId === product.id ? (
-                    <div className="shop-buy-form">
-                      <div className="shop-qty-row">
-                        <label>จำนวน</label>
-                        <input
-                          type="number"
-                          min="1"
-                          value={quantity}
-                          onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
-                        />
+                    <div className="shop-size-row">
+                      <label>ไซส์</label>
+                      <div className="shop-size-options">
+                        {SIZES.map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            className={
+                              "shop-size-btn" + (sel.size === s ? " shop-size-selected" : "")
+                            }
+                            onClick={() => setSize(product.id, s)}
+                          >
+                            {s}
+                          </button>
+                        ))}
                       </div>
-                      <p className="admin-paid">
-                        รวม: {(product.price * quantity).toLocaleString()} บาท
-                      </p>
+                    </div>
+
+                    <div className="shop-qty-row">
+                      <label>จำนวน</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={sel.quantity}
+                        onChange={(e) => setQuantity(product.id, Number(e.target.value))}
+                      />
+                    </div>
+
+                    <div className="shop-btn-row">
                       <button
-                        onClick={() => handleConfirmOrder(product)}
+                        className="shop-cart-btn"
+                        onClick={() => handleAddToCart(product)}
                         disabled={submitting}
                       >
-                        {submitting ? "กำลังสั่งซื้อ..." : "ยืนยันสั่งซื้อ"}
+                        ใส่ตะกร้า
                       </button>
                       <button
-                        className="auth-secondary-btn"
-                        onClick={() => setBuyingId(null)}
+                        onClick={() => handleBuyNow(product)}
                         disabled={submitting}
                       >
-                        ยกเลิก
+                        ซื้อสินค้า
                       </button>
                     </div>
-                  ) : (
-                    <button onClick={() => startBuy(product)}>ซื้อสินค้า</button>
-                  )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
