@@ -106,6 +106,10 @@ export default {
       return handleReviewOrder(request, env);
     }
 
+    if (url.pathname === "/api/nav-counts" && request.method === "GET") {
+      return handleGetNavCounts(request, env);
+    }
+
     return env.ASSETS.fetch(request);
   },
 };
@@ -1195,4 +1199,38 @@ async function handleCheckoutCart(request, env) {
       { status: 500 }
     );
   }
+}
+
+async function handleGetNavCounts(request, env) {
+  const url = new URL(request.url);
+  const userId = url.searchParams.get("userId");
+
+  if (!userId) {
+    return Response.json({ success: false, error: "ไม่พบ userId" }, { status: 400 });
+  }
+
+  const unpaidCount = await env.DB.prepare(
+    "SELECT COUNT(*) AS c FROM registrations WHERE user_id = ? AND status = 'confirmed'"
+  )
+    .bind(userId)
+    .first();
+
+  const resultPendingCount = await env.DB.prepare(
+    "SELECT COUNT(*) AS c FROM registrations WHERE user_id = ? AND status = 'paid'"
+  )
+    .bind(userId)
+    .first();
+
+  const cartCount = await env.DB.prepare(
+    "SELECT COUNT(*) AS c FROM cart_items WHERE user_id = ?"
+  )
+    .bind(userId)
+    .first();
+
+  return Response.json({
+    success: true,
+    unpaid: unpaidCount.c,
+    resultPending: resultPendingCount.c,
+    cart: cartCount.c,
+  });
 }
