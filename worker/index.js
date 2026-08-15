@@ -1069,7 +1069,16 @@ async function handleCancelOrder(request, env) {
   }
 
   try {
+    // ยกเลิกแล้ว -> ย้ายรายการกลับไปที่ตะกร้าแทนการลบทิ้ง
+    await env.DB.prepare(
+      `INSERT INTO cart_items (user_id, product_id, product_name, price, size, quantity)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    )
+      .bind(order.user_id, order.product_id, order.product_name, order.price, order.size, order.quantity)
+      .run();
+
     await env.DB.prepare("DELETE FROM orders WHERE id = ?").bind(orderId).run();
+
     return Response.json({ success: true });
   } catch (err) {
     return Response.json(
@@ -1163,20 +1172,24 @@ async function handleRemoveFromCart(request, env) {
 
 async function handleCheckoutCart(request, env) {
   const body = await request.json();
-  const { userId } = body;
+  const { userId, cartItemIds } = body;
 
-  if (!userId) {
-    return Response.json({ success: false, error: "ไม่พบ userId" }, { status: 400 });
+  if (!userId || !Array.isArray(cartItemIds) || cartItemIds.length === 0) {
+    return Response.json(
+      { success: false, error: "กรุณาเลือกรายการที่ต้องการชำระ" },
+      { status: 400 }
+    );
   }
 
+  const placeholders = cartItemIds.map(() => "?").join(",");
   const { results: items } = await env.DB.prepare(
-    "SELECT * FROM cart_items WHERE user_id = ?"
+    `SELECT * FROM cart_items WHERE user_id = ? AND id IN (${placeholders})`
   )
-    .bind(userId)
+    .bind(userId, ...cartItemIds)
     .all();
 
   if (!items || items.length === 0) {
-    return Response.json({ success: false, error: "ตะกร้าว่างเปล่า" }, { status: 400 });
+    return Response.json({ success: false, error: "ไม่พบรายการที่เลือก" }, { status: 400 });
   }
 
   try {
@@ -1188,9 +1201,9 @@ async function handleCheckoutCart(request, env) {
       )
         .bind(userId, item.product_id, item.product_name, item.price, item.quantity, total, item.size)
         .run();
-    }
 
-    await env.DB.prepare("DELETE FROM cart_items WHERE user_id = ?").bind(userId).run();
+      await env.DB.prepare("DELETE FROM cart_items WHERE id = ?").bind(item.id).run();
+    }
 
     return Response.json({ success: true });
   } catch (err) {
