@@ -3,6 +3,7 @@ import Header from "../components/Header";
 
 function Cart({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
   const [cartItems, setCartItems] = useState([]);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState(null);
   const [checkingOut, setCheckingOut] = useState(false);
@@ -12,7 +13,10 @@ function Cart({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
     fetch(`/api/cart?userId=${currentUser.id}`)
       .then((res) => res.json())
       .then((data) => {
-        if (data.success) setCartItems(data.cartItems);
+        if (data.success) {
+          setCartItems(data.cartItems);
+          setSelectedIds(data.cartItems.map((i) => i.id));
+        }
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -39,6 +43,12 @@ function Cart({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
     );
   }
 
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
   const handleRemove = async (cartItemId) => {
     setRemovingId(cartItemId);
 
@@ -58,6 +68,7 @@ function Cart({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
       }
 
       setCartItems(cartItems.filter((i) => i.id !== cartItemId));
+      setSelectedIds(selectedIds.filter((id) => id !== cartItemId));
     } catch (err) {
       alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     } finally {
@@ -66,13 +77,18 @@ function Cart({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
   };
 
   const handleCheckout = async () => {
+    if (selectedIds.length === 0) {
+      alert("กรุณาเลือกรายการที่ต้องการชำระ");
+      return;
+    }
+
     setCheckingOut(true);
 
     try {
       const res = await fetch("/api/cart/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: currentUser.id }),
+        body: JSON.stringify({ userId: currentUser.id, cartItemIds: selectedIds }),
       });
 
       const data = await res.json();
@@ -90,7 +106,9 @@ function Cart({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
     }
   };
 
-  const grandTotal = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const selectedTotal = cartItems
+    .filter((i) => selectedIds.includes(i.id))
+    .reduce((sum, i) => sum + i.price * i.quantity, 0);
 
   return (
     <>
@@ -113,13 +131,20 @@ function Cart({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
             <div className="payment-list">
               {cartItems.map((item) => (
                 <div key={item.id} className="payment-item">
-                  <div className="payment-info">
-                    <h4>{item.product_name}</h4>
-                    <p>ไซส์ {item.size} — จำนวน {item.quantity} ชิ้น</p>
-                    <p className="payment-price">
-                      {(item.price * item.quantity).toLocaleString()} บาท
-                    </p>
-                  </div>
+                  <label className="cart-checkbox-row">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(item.id)}
+                      onChange={() => toggleSelect(item.id)}
+                    />
+                    <div className="payment-info">
+                      <h4>{item.product_name}</h4>
+                      <p>ไซส์ {item.size} — จำนวน {item.quantity} ชิ้น</p>
+                      <p className="payment-price">
+                        {(item.price * item.quantity).toLocaleString()} บาท
+                      </p>
+                    </div>
+                  </label>
                   <button
                     className="reject-btn"
                     onClick={() => handleRemove(item.id)}
@@ -132,11 +157,13 @@ function Cart({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
             </div>
 
             <div className="cart-summary">
-              <p className="cart-total">รวมทั้งหมด: {grandTotal.toLocaleString()} บาท</p>
+              <p className="cart-total">
+                รวมที่เลือก ({selectedIds.length} รายการ): {selectedTotal.toLocaleString()} บาท
+              </p>
               <button
                 className="auth-submit-btn"
                 onClick={handleCheckout}
-                disabled={checkingOut}
+                disabled={checkingOut || selectedIds.length === 0}
               >
                 {checkingOut ? "กำลังดำเนินการ..." : "ดำเนินการชำระเงิน"}
               </button>
