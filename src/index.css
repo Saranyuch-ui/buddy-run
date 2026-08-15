@@ -1234,3 +1234,18 @@ body {
     justify-content: center;
     padding: 0 4px;
 }
+
+.cart-checkbox-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    flex: 1;
+}
+
+.cart-checkbox-row input[type="checkbox"] {
+    margin-top: 5px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
