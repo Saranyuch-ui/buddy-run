@@ -1,14 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function Header({ onLogoClick, onNavigate, currentUser, onLogout }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [counts, setCounts] = useState({ unpaid: 0, resultPending: 0, cart: 0 });
+
+  useEffect(() => {
+    if (!currentUser) {
+      setCounts({ unpaid: 0, resultPending: 0, cart: 0 });
+      return;
+    }
+
+    fetch(`/api/nav-counts?userId=${currentUser.id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setCounts({
+            unpaid: data.unpaid,
+            resultPending: data.resultPending,
+            cart: data.cart,
+          });
+        }
+      })
+      .catch(() => {});
+  }, [currentUser]);
 
   const navItems = [
     { key: "home", label: "หน้าแรก" },
     { key: "shop", label: "ร้านค้า" },
-    { key: "payment", label: "ชำระเงิน" },
-    { key: "submit-result", label: "ส่งผลกิจกรรม" },
-    { key: "cart", label: "ตะกร้า" },
+    { key: "payment", label: "ชำระเงิน", badge: counts.unpaid },
+    { key: "submit-result", label: "ส่งผลกิจกรรม", badge: counts.resultPending },
+    { key: "cart", label: "ตะกร้า", badge: counts.cart },
     { key: "contact", label: "ติดต่อเรา" },
   ];
 
@@ -31,10 +52,11 @@ function Header({ onLogoClick, onNavigate, currentUser, onLogout }) {
           {navItems.map((item) => (
             <button
               key={item.key}
-              className="nav-btn"
+              className="nav-btn nav-btn-with-badge"
               onClick={() => onNavigate && onNavigate(item.key)}
             >
               {item.label}
+              {item.badge > 0 && <span className="nav-badge">{item.badge}</span>}
             </button>
           ))}
 
