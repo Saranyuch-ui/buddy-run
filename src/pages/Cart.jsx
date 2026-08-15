@@ -15,7 +15,7 @@ function Cart({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
       .then((data) => {
         if (data.success) {
           setCartItems(data.cartItems);
-          setSelectedIds(data.cartItems.map((i) => i.id));
+          setSelectedIds([]);
         }
         setLoading(false);
       })
