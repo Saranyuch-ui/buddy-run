@@ -1249,3 +1249,15 @@ body {
     height: 18px;
     cursor: pointer;
 }
+
+.shop-summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 0.9rem;
+}
+
+.shop-summary-row:last-of-type {
+    border-bottom: none;
+}
