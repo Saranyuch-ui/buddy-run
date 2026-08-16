@@ -20,6 +20,7 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
   const [ocrMessage, setOcrMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [paidSuccess, setPaidSuccess] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -32,6 +33,38 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
       })
       .catch(() => setLoading(false));
   }, [isLoggedIn, currentUser]);
+
+  const unpaidOrders = orders.filter((o) => o.status === "pending");
+
+  // ย้ายคำสั่งซื้อที่ยังไม่จ่ายกลับตะกร้าแบบเงียบๆ (ไม่มี confirm) - ใช้ตอนออกจากหน้านี้โดยไม่ได้จ่ายเงิน/ไม่ได้กดยกเลิกเอง
+  const cancelAllSilently = async () => {
+    if (!currentUser || paidSuccess || unpaidOrders.length === 0) return;
+
+    try {
+      await fetch("/api/orders/cancel-all", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: currentUser.id }),
+      });
+    } catch (err) {
+      // เงียบไว้ ไม่ต้องแจ้งเตือนผู้ใช้ตอนออกจากหน้า
+    }
+  };
+
+  const handleLeaveNavigate = async (page) => {
+    await cancelAllSilently();
+    onNavigate(page);
+  };
+
+  const handleLeaveLogoClick = async () => {
+    await cancelAllSilently();
+    if (onLogoClick) onLogoClick();
+  };
+
+  const handleLeaveLogout = async () => {
+    await cancelAllSilently();
+    onLogout();
+  };
 
   if (!isLoggedIn) {
     return (
@@ -48,7 +81,6 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
     );
   }
 
-  const unpaidOrders = orders.filter((o) => o.status === "pending");
   const grandTotal = unpaidOrders.reduce((sum, o) => sum + o.total, 0);
 
   const handleFileChange = async (e) => {
@@ -126,6 +158,7 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
         return;
       }
 
+      setPaidSuccess(true);
       alert("ส่งข้อมูลการชำระเงินเรียบร้อยแล้ว รอการตรวจสอบและอนุมัติ");
       setOrders(orders.filter((o) => o.status !== "pending"));
       setSlipFile(null);
@@ -173,10 +206,10 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
   return (
     <>
       <Header
-        onNavigate={onNavigate}
-        onLogoClick={onLogoClick}
+        onNavigate={handleLeaveNavigate}
+        onLogoClick={handleLeaveLogoClick}
         currentUser={currentUser}
-        onLogout={onLogout}
+        onLogout={handleLeaveLogout}
       />
 
       <div className="payment-page">
