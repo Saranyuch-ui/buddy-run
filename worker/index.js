@@ -98,6 +98,14 @@ export default {
       return handlePayOrder(request, env);
     }
 
+    if (url.pathname === "/api/orders/pay-all" && request.method === "POST") {
+      return handlePayAllOrders(request, env);
+    }
+
+    if (url.pathname === "/api/orders/cancel-all" && request.method === "POST") {
+      return handleCancelAllOrders(request, env);
+    }
+
     if (url.pathname === "/api/admin/shop-pending" && request.method === "GET") {
       return handleGetPendingOrders(request, env);
     }
@@ -1246,4 +1254,116 @@ async function handleGetNavCounts(request, env) {
     resultPending: resultPendingCount.c,
     cart: cartCount.c,
   });
+}
+
+async function handlePayAllOrders(request, env) {
+  const formData = await request.formData();
+
+  const userId = formData.get("userId");
+  const amount = Number(formData.get("amount"));
+  const file = formData.get("slip");
+  const verifiedByOcr = formData.get("verifiedByOcr") === "true";
+
+  if (!userId || !amount || !file) {
+    return Response.json(
+      { success: false, error: "ข้อมูลไม่ครบถ้วน กรุณาแนบสลิปและกรอกยอดเงิน" },
+      { status: 400 }
+    );
+  }
+
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+  if (!allowedTypes.includes(file.type)) {
+    return Response.json(
+      { success: false, error: "รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WEBP) เท่านั้น" },
+      { status: 400 }
+    );
+  }
+
+  if (file.size > 2 * 1024 * 1024) {
+    return Response.json(
+      { success: false, error: "ไฟล์ใหญ่เกินไป (จำกัดไม่เกิน 2MB)" },
+      { status: 400 }
+    );
+  }
+
+  const { results: orders } = await env.DB.prepare(
+    "SELECT * FROM orders WHERE user_id = ? AND status = 'pending'"
+  )
+    .bind(userId)
+    .all();
+
+  if (!orders || orders.length === 0) {
+    return Response.json(
+      { success: false, error: "ไม่มีคำสั่งซื้อที่รอชำระเงิน" },
+      { status: 400 }
+    );
+  }
+
+  const grandTotal = orders.reduce((sum, o) => sum + o.total, 0);
+
+  if (amount < grandTotal) {
+    return Response.json(
+      { success: false, error: `ยอดชำระต้องไม่ต่ำกว่า ${grandTotal.toLocaleString()} บาท` },
+      { status: 400 }
+    );
+  }
+
+  const newStatus = verifiedByOcr ? "pending_ocr_approval" : "pending_verification";
+  const slipDataUrl = await fileToBase64DataUrl(file);
+
+  try {
+    for (const order of orders) {
+      await env.DB.prepare(
+        "UPDATE orders SET status = ?, paid_amount = ?, slip_image = ? WHERE id = ?"
+      )
+        .bind(newStatus, order.total, slipDataUrl, order.id)
+        .run();
+    }
+
+    return Response.json({ success: true, status: newStatus });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "อัปเดตสถานะไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
+}
+
+async function handleCancelAllOrders(request, env) {
+  const body = await request.json();
+  const { userId } = body;
+
+  if (!userId) {
+    return Response.json({ success: false, error: "ไม่พบ userId" }, { status: 400 });
+  }
+
+  const { results: orders } = await env.DB.prepare(
+    "SELECT * FROM orders WHERE user_id = ? AND status = 'pending'"
+  )
+    .bind(userId)
+    .all();
+
+  if (!orders || orders.length === 0) {
+    return Response.json({ success: false, error: "ไม่มีคำสั่งซื้อที่รอชำระเงิน" }, { status: 400 });
+  }
+
+  try {
+    for (const order of orders) {
+      await env.DB.prepare(
+        `INSERT INTO cart_items (user_id, product_id, product_name, price, size, quantity)
+         VALUES (?, ?, ?, ?, ?, ?)`
+      )
+        .bind(order.user_id, order.product_id, order.product_name, order.price, order.size, order.quantity)
+        .run();
+
+      await env.DB.prepare("DELETE FROM orders WHERE id = ?").bind(order.id).run();
+    }
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "ยกเลิกคำสั่งซื้อไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
 }
