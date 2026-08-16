@@ -9,16 +9,9 @@ function extractAmountFromText(text) {
   return Math.max(...numbers);
 }
 
-async function dataUrlToFile(dataUrl, filename) {
-  const res = await fetch(dataUrl);
-  const blob = await res.blob();
-  return new File([blob], filename, { type: blob.type });
-}
-
 function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [payingId, setPayingId] = useState(null);
   const [amount, setAmount] = useState("");
   const [amountLocked, setAmountLocked] = useState(false);
   const [slipFile, setSlipFile] = useState(null);
@@ -26,6 +19,7 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
   const [ocrProcessing, setOcrProcessing] = useState(false);
   const [ocrMessage, setOcrMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -55,32 +49,9 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
   }
 
   const unpaidOrders = orders.filter((o) => o.status === "pending");
+  const grandTotal = unpaidOrders.reduce((sum, o) => sum + o.total, 0);
 
-  const startPay = async (order) => {
-    setPayingId(order.id);
-    setOcrMessage("");
-
-    if (order.slip_image) {
-      setSlipPreview(order.slip_image);
-      setAmount(order.paid_amount ? order.paid_amount.toString() : "");
-      setAmountLocked(false);
-      setOcrMessage("📎 นี่คือสลิปที่เคยแนบไว้ก่อนหน้านี้ สามารถส่งใหม่หรือแนบไฟล์อื่นแทนได้");
-
-      try {
-        const file = await dataUrlToFile(order.slip_image, "previous-slip.jpg");
-        setSlipFile(file);
-      } catch (err) {
-        setSlipFile(null);
-      }
-    } else {
-      setAmount("");
-      setAmountLocked(false);
-      setSlipFile(null);
-      setSlipPreview(null);
-    }
-  };
-
-  const handleFileChange = async (e, order) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -95,7 +66,7 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
       const result = await Tesseract.recognize(file, "eng");
       const detectedAmount = extractAmountFromText(result.data.text);
 
-      if (detectedAmount && detectedAmount >= order.total) {
+      if (detectedAmount && detectedAmount >= grandTotal) {
         setAmount(detectedAmount.toString());
         setAmountLocked(true);
         setOcrMessage(`✅ อ่านยอดจากสลิปได้: ${detectedAmount.toLocaleString()} บาท`);
@@ -103,7 +74,7 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
         setAmount(detectedAmount.toString());
         setAmountLocked(true);
         setOcrMessage(
-          `⚠️ อ่านยอดได้ ${detectedAmount.toLocaleString()} บาท ซึ่งต่ำกว่ายอดที่ต้องชำระ (${order.total.toLocaleString()} บาท)`
+          `⚠️ อ่านยอดได้ ${detectedAmount.toLocaleString()} บาท ซึ่งต่ำกว่ายอดที่ต้องชำระ (${grandTotal.toLocaleString()} บาท)`
         );
       } else {
         setAmount("");
@@ -120,34 +91,11 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
     }
   };
 
-  const handleCancelOrder = async (orderId) => {
-    if (!confirm("ยืนยันยกเลิกคำสั่งซื้อนี้?")) return;
-
-    try {
-      const res = await fetch("/api/orders", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: currentUser.id, orderId }),
-      });
-
-      const data = await res.json();
-
-      if (!data.success) {
-        alert(data.error || "ยกเลิกไม่สำเร็จ");
-        return;
-      }
-
-      setOrders(orders.filter((o) => o.id !== orderId));
-    } catch (err) {
-      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
-    }
-  };
-
-  const handlePay = async (order) => {
+  const handlePay = async () => {
     const amountNum = Number(amount);
 
-    if (isNaN(amountNum) || amountNum < order.total) {
-      alert(`ยอดชำระต้องไม่ต่ำกว่า ${order.total.toLocaleString()} บาท`);
+    if (isNaN(amountNum) || amountNum < grandTotal) {
+      alert(`ยอดชำระต้องไม่ต่ำกว่า ${grandTotal.toLocaleString()} บาท`);
       return;
     }
 
@@ -160,12 +108,12 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
 
     try {
       const formData = new FormData();
-      formData.append("orderId", order.id);
+      formData.append("userId", currentUser.id);
       formData.append("amount", amountNum);
       formData.append("slip", slipFile);
       formData.append("verifiedByOcr", amountLocked ? "true" : "false");
 
-      const res = await fetch("/api/orders/pay", {
+      const res = await fetch("/api/orders/pay-all", {
         method: "POST",
         body: formData,
       });
@@ -178,20 +126,46 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
         return;
       }
 
-      setOrders(
-        orders.map((o) =>
-          o.id === order.id ? { ...o, status: data.status, paid_amount: amountNum } : o
-        )
-      );
-      setPayingId(null);
+      alert("ส่งข้อมูลการชำระเงินเรียบร้อยแล้ว รอการตรวจสอบและอนุมัติ");
+      setOrders(orders.filter((o) => o.status !== "pending"));
       setSlipFile(null);
       setSlipPreview(null);
+      setAmount("");
       setAmountLocked(false);
-      alert("ส่งข้อมูลการชำระเงินเรียบร้อยแล้ว รอการตรวจสอบและอนุมัติ");
+      setOcrMessage("");
     } catch (err) {
       alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleCancelAll = async () => {
+    if (!confirm("ยืนยันยกเลิกคำสั่งซื้อทั้งหมด? สินค้าจะถูกย้ายกลับไปที่ตะกร้า")) return;
+
+    setCancelling(true);
+
+    try {
+      const res = await fetch("/api/orders/cancel-all", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: currentUser.id }),
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.error || "ยกเลิกไม่สำเร็จ");
+        setCancelling(false);
+        return;
+      }
+
+      setOrders(orders.filter((o) => o.status !== "pending"));
+      alert("ยกเลิกคำสั่งซื้อเรียบร้อยแล้ว สินค้าถูกย้ายกลับไปที่ตะกร้า");
+    } catch (err) {
+      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -212,85 +186,64 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
         ) : unpaidOrders.length === 0 ? (
           <p className="empty-text">ไม่มีคำสั่งซื้อที่รอชำระเงิน</p>
         ) : (
-          <div className="payment-list">
-            {unpaidOrders.map((order) => (
-              <div key={order.id} className="payment-item">
-                <div className="payment-info">
-                  <h4>{order.product_name}</h4>
-                  <p>ไซส์ {order.size || "-"} — จำนวน {order.quantity} ชิ้น</p>
-                  <p className="payment-price">
-                    ยอดที่ต้องชำระ: {order.total.toLocaleString()} บาท
-                  </p>
-                  {payingId !== order.id && (
-                    <button
-                      className="cancel-order-btn"
-                      onClick={() => handleCancelOrder(order.id)}
-                    >
-                      ยกเลิกคำสั่งซื้อ
-                    </button>
-                  )}
+          <>
+            <div className="cart-summary">
+              {unpaidOrders.map((order) => (
+                <div key={order.id} className="shop-summary-row">
+                  <span>
+                    {order.product_name} (ไซส์ {order.size || "-"}) × {order.quantity}
+                  </span>
+                  <span>{order.total.toLocaleString()} บาท</span>
                 </div>
+              ))}
+              <p className="cart-total">ยอดรวมทั้งหมด: {grandTotal.toLocaleString()} บาท</p>
+            </div>
 
-                {payingId === order.id ? (
-                  <div className="payment-form">
-                    <label>แนบสลิปการโอนเงิน</label>
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      onChange={(e) => handleFileChange(e, order)}
-                    />
+            <div className="payment-form" style={{ marginTop: 20 }}>
+              <label>แนบสลิปการโอนเงิน</label>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleFileChange}
+              />
 
-                    {slipPreview && (
-                      <img
-                        src={slipPreview}
-                        alt="ตัวอย่างสลิป"
-                        className="slip-preview"
-                      />
-                    )}
+              {slipPreview && (
+                <img src={slipPreview} alt="ตัวอย่างสลิป" className="slip-preview" />
+              )}
 
-                    {ocrProcessing && (
-                      <p className="ocr-status">🔍 กำลังอ่านยอดจากสลิป...</p>
-                    )}
+              {ocrProcessing && <p className="ocr-status">🔍 กำลังอ่านยอดจากสลิป...</p>}
 
-                    {ocrMessage && !ocrProcessing && (
-                      <p className="ocr-status">{ocrMessage}</p>
-                    )}
+              {ocrMessage && !ocrProcessing && <p className="ocr-status">{ocrMessage}</p>}
 
-                    <label>จำนวนเงินที่โอน (บาท)</label>
-                    <input
-                      type="number"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      min={order.total}
-                      disabled={amountLocked}
-                      placeholder="แนบสลิปเพื่อให้ระบบอ่านยอดอัตโนมัติ"
-                    />
+              <label>จำนวนเงินที่โอน (บาท)</label>
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                min={grandTotal}
+                disabled={amountLocked}
+                placeholder="แนบสลิปเพื่อให้ระบบอ่านยอดอัตโนมัติ"
+              />
 
-                    <div className="payment-actions">
-                      <button
-                        className="auth-submit-btn"
-                        onClick={() => handlePay(order)}
-                        disabled={submitting || ocrProcessing}
-                      >
-                        {submitting ? "กำลังตรวจสอบ..." : "ยืนยันการชำระเงิน"}
-                      </button>
-                      <button
-                        className="auth-secondary-btn"
-                        onClick={() => setPayingId(null)}
-                        disabled={submitting}
-                      >
-                        ยกเลิก
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <button className="pay-btn" onClick={() => startPay(order)}>
-                    ชำระเงิน
-                  </button>
-                )}
+              <div className="payment-actions">
+                <button
+                  className="auth-submit-btn"
+                  onClick={handlePay}
+                  disabled={submitting || cancelling || ocrProcessing}
+                >
+                  {submitting ? "กำลังตรวจสอบ..." : "ชำระเงิน"}
+                </button>
+                <button
+                  className="reject-btn"
+                  onClick={handleCancelAll}
+                  disabled={submitting || cancelling}
+                  style={{ flex: 1 }}
+                >
+                  {cancelling ? "กำลังยกเลิก..." : "ยกเลิกคำสั่งซื้อ"}
+                </button>
               </div>
-            ))}
-          </div>
+            </div>
+          </>
         )}
       </div>
     </>
