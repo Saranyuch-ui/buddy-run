@@ -162,6 +162,7 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
 
       setOrders(orders.filter((o) => o.status !== "pending"));
       alert("ยกเลิกคำสั่งซื้อเรียบร้อยแล้ว สินค้าถูกย้ายกลับไปที่ตะกร้า");
+      onNavigate("cart");
     } catch (err) {
       alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     } finally {
