@@ -426,5 +426,9 @@ function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
             </div>
           );
         })()}
+      </div>
+    </>
+  );
+}
 
 export default Profile;
