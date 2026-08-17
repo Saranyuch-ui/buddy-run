@@ -340,34 +340,91 @@ function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
           </div>
         )}
 
-        {activeTab === "events" && (
-          <div className="profile-card">
-            <h2>ประวัติร่วมกิจกรรม</h2>
-            {regLoading ? (
-              <p className="empty-text">กำลังโหลด...</p>
-            ) : registrations.length === 0 ? (
-              <p className="empty-text">ยังไม่มีประวัติการร่วมกิจกรรม</p>
-            ) : (
-              <div className="reg-list">{registrations.map(renderRegItem)}</div>
-            )}
-          </div>
-        )}
+        {activeTab === "events" && (() => {
+          const paymentGroup = registrations.filter((r) =>
+            ["confirmed", "pending_ocr_approval", "pending_verification"].includes(r.status)
+          );
+          const resultGroup = registrations.filter(
+            (r) => r.status === "paid" || r.status === "result_pending"
+          );
+          const historyGroup = registrations.filter(
+            (r) =>
+              r.status === "completed" ||
+              (["confirmed", "pending_ocr_approval", "pending_verification", "paid", "result_pending"].includes(
+                r.status
+              ) &&
+                isEventExpired(r))
+          );
 
-        {activeTab === "orders" && (
-          <div className="profile-card">
-            <h2>ประวัติการสั่งซื้อ</h2>
-            {orderLoading ? (
-              <p className="empty-text">กำลังโหลด...</p>
-            ) : orders.length === 0 ? (
-              <p className="empty-text">ยังไม่มีประวัติการสั่งซื้อ</p>
-            ) : (
-              <div className="reg-list">{orders.map(renderOrderItem)}</div>
-            )}
-          </div>
-        )}
-      </div>
-    </>
-  );
-}
+          return (
+            <div className="profile-card">
+              <h2>ประวัติร่วมกิจกรรม</h2>
+
+              {regLoading ? (
+                <p className="empty-text">กำลังโหลด...</p>
+              ) : registrations.length === 0 ? (
+                <p className="empty-text">ยังไม่มีประวัติการร่วมกิจกรรม</p>
+              ) : (
+                <>
+                  <h3 className="form-section-title">ชำระเงิน</h3>
+                  {paymentGroup.length === 0 ? (
+                    <p className="empty-text">ไม่มีรายการในหมวดนี้</p>
+                  ) : (
+                    <div className="reg-list">{paymentGroup.map(renderRegItem)}</div>
+                  )}
+
+                  <h3 className="form-section-title">ส่งผลกิจกรรม</h3>
+                  {resultGroup.length === 0 ? (
+                    <p className="empty-text">ไม่มีรายการในหมวดนี้</p>
+                  ) : (
+                    <div className="reg-list">{resultGroup.map(renderRegItem)}</div>
+                  )}
+
+                  <h3 className="form-section-title">ประวัติกิจกรรม</h3>
+                  {historyGroup.length === 0 ? (
+                    <p className="empty-text">ไม่มีรายการในหมวดนี้</p>
+                  ) : (
+                    <div className="reg-list">{historyGroup.map(renderRegItem)}</div>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })()}
+
+        {activeTab === "orders" && (() => {
+          const orderPaymentGroup = orders.filter((o) =>
+            ["pending", "pending_ocr_approval", "pending_verification"].includes(o.status)
+          );
+          const orderHistoryGroup = orders.filter((o) => o.status === "paid");
+
+          return (
+            <div className="profile-card">
+              <h2>ประวัติการสั่งซื้อ</h2>
+
+              {orderLoading ? (
+                <p className="empty-text">กำลังโหลด...</p>
+              ) : orders.length === 0 ? (
+                <p className="empty-text">ยังไม่มีประวัติการสั่งซื้อ</p>
+              ) : (
+                <>
+                  <h3 className="form-section-title">ชำระเงิน</h3>
+                  {orderPaymentGroup.length === 0 ? (
+                    <p className="empty-text">ไม่มีรายการในหมวดนี้</p>
+                  ) : (
+                    <div className="reg-list">{orderPaymentGroup.map(renderOrderItem)}</div>
+                  )}
+
+                  <h3 className="form-section-title">ประวัติการสั่งซื้อ</h3>
+                  {orderHistoryGroup.length === 0 ? (
+                    <p className="empty-text">ไม่มีรายการในหมวดนี้</p>
+                  ) : (
+                    <div className="reg-list">{orderHistoryGroup.map(renderOrderItem)}</div>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })()}
 
 export default Profile;
