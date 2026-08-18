@@ -106,13 +106,6 @@ function AdminDashboard({ onNavigate, onLogoClick, currentUser, onLogout }) {
         <h2 className="admin-title">Dashboard</h2>
 
         <div className="dash-cards">
-          <div
-            className="dash-card dash-card-clickable"
-            onClick={() => onNavigate("admin-members")}
-          >
-            <p className="dash-card-label">สมาชิกทั้งหมด</p>
-            <p className="dash-card-value">{data.totalMembers.toLocaleString()}</p>
-          </div>
           <div className="dash-card">
             <p className="dash-card-label">กิจกรรมที่เปิด</p>
             <p className="dash-card-value">{data.activeEvents.toLocaleString()}</p>
@@ -208,9 +201,16 @@ function AdminDashboard({ onNavigate, onLogoClick, currentUser, onLogout }) {
             </div>
           </div>
 
-          <div className="dash-chart-card">
-            <h3>สมาชิกใหม่</h3>
+          <div
+            className="dash-chart-card dash-card-clickable"
+            onClick={() => onNavigate("admin-members")}
+          >
+            <h3>สมาชิก</h3>
             <div className="mini-stat-row">
+              <div className="mini-stat">
+                <p className="mini-stat-label">ทั้งหมด</p>
+                <p className="mini-stat-value">{data.totalMembers}</p>
+              </div>
               <div className="mini-stat">
                 <p className="mini-stat-label">วันนี้</p>
                 <p className="mini-stat-value">{data.newMembers.today}</p>
