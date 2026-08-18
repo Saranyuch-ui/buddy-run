@@ -55,6 +55,10 @@ function AdminMembers({ onNavigate, onLogoClick, currentUser, onLogout }) {
       />
 
       <div className="admin-page">
+        <button className="back-btn" onClick={() => onNavigate("admin-dashboard")}>
+          ← กลับไป Dashboard
+        </button>
+
         <div className="admin-events-header">
           <h2 className="admin-title">สมาชิกทั้งหมด ({members.length})</h2>
         </div>
