@@ -8,6 +8,7 @@ function AdminDashboard({ onNavigate, onLogoClick, currentUser, onLogout }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("month");
+  const [periodShop, setPeriodShop] = useState("month");
 
   const [error, setError] = useState("");
 
@@ -16,7 +17,9 @@ function AdminDashboard({ onNavigate, onLogoClick, currentUser, onLogout }) {
 
     setLoading(true);
     setError("");
-    fetch(`/api/admin/dashboard?adminUserId=${currentUser.id}&period=${period}`)
+    fetch(
+      `/api/admin/dashboard?adminUserId=${currentUser.id}&period=${period}&periodShop=${periodShop}`
+    )
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -30,7 +33,7 @@ function AdminDashboard({ onNavigate, onLogoClick, currentUser, onLogout }) {
         setError("เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง");
         setLoading(false);
       });
-  }, [currentUser, period]);
+  }, [currentUser, period, periodShop]);
 
   if (!currentUser || !currentUser.is_admin) {
     return (
@@ -134,7 +137,7 @@ function AdminDashboard({ onNavigate, onLogoClick, currentUser, onLogout }) {
           </div>
           <div className="dash-card">
             <div className="dash-card-header-row">
-              <p className="dash-card-label">รายได้</p>
+              <p className="dash-card-label">รายได้ Event</p>
               <select
                 className="dash-period-select"
                 value={period}
@@ -145,6 +148,20 @@ function AdminDashboard({ onNavigate, onLogoClick, currentUser, onLogout }) {
               </select>
             </div>
             <p className="dash-card-value">฿{data.revenue.toLocaleString()}</p>
+          </div>
+          <div className="dash-card">
+            <div className="dash-card-header-row">
+              <p className="dash-card-label">รายได้ Shop</p>
+              <select
+                className="dash-period-select"
+                value={periodShop}
+                onChange={(e) => setPeriodShop(e.target.value)}
+              >
+                <option value="today">วันนี้</option>
+                <option value="month">เดือนนี้</option>
+              </select>
+            </div>
+            <p className="dash-card-value">฿{data.shopRevenue.toLocaleString()}</p>
           </div>
         </div>
 
