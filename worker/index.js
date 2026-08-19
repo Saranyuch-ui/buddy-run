@@ -727,6 +727,7 @@ async function handleGetDashboard(request, env) {
   const url = new URL(request.url);
   const adminUserId = url.searchParams.get("adminUserId");
   const period = url.searchParams.get("period") || "month";
+  const periodShop = url.searchParams.get("periodShop") || "month";
 
   if (!adminUserId || !(await isAdmin(env, adminUserId))) {
     return Response.json(
@@ -750,6 +751,12 @@ async function handleGetDashboard(request, env) {
       ? "SELECT COALESCE(SUM(paid_amount),0) AS s FROM registrations WHERE paid_at IS NOT NULL AND date(paid_at) = date('now')"
       : "SELECT COALESCE(SUM(paid_amount),0) AS s FROM registrations WHERE paid_at IS NOT NULL AND strftime('%Y-%m', paid_at) = strftime('%Y-%m', 'now')";
   const revenue = await env.DB.prepare(revenueQuery).first();
+
+  const shopRevenueQuery =
+    periodShop === "today"
+      ? "SELECT COALESCE(SUM(paid_amount),0) AS s FROM orders WHERE paid_at IS NOT NULL AND date(paid_at) = date('now')"
+      : "SELECT COALESCE(SUM(paid_amount),0) AS s FROM orders WHERE paid_at IS NOT NULL AND strftime('%Y-%m', paid_at) = strftime('%Y-%m', 'now')";
+  const shopRevenue = await env.DB.prepare(shopRevenueQuery).first();
 
   const pendingPayment = await env.DB.prepare(
     "SELECT COUNT(*) AS c FROM registrations WHERE status = 'confirmed'"
@@ -809,6 +816,8 @@ async function handleGetDashboard(request, env) {
     todaySignups: todaySignups.c,
     revenue: revenue.s,
     revenuePeriod: period,
+    shopRevenue: shopRevenue.s,
+    shopRevenuePeriod: periodShop,
     pendingPayment: pendingPayment.c,
     pendingSlip: pendingSlip.c,
     pendingResult: pendingResult.c,
@@ -1028,7 +1037,7 @@ async function handleReviewOrder(request, env) {
   try {
     if (action === "approve") {
       await env.DB.prepare(
-        "UPDATE orders SET status = 'paid', slip_image = NULL WHERE id = ?"
+        "UPDATE orders SET status = 'paid', slip_image = NULL, paid_at = datetime('now') WHERE id = ?"
       )
         .bind(orderId)
         .run();
