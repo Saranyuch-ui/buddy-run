@@ -115,6 +115,24 @@ function AdminDashboard({ onNavigate, onLogoClick, currentUser, onLogout }) {
             <p className="dash-card-value">{data.todaySignups.toLocaleString()}</p>
           </div>
           <div className="dash-card">
+            <p className="dash-card-label">รอชำระเงิน</p>
+            <p className="dash-card-value">{data.pendingPayment.toLocaleString()}</p>
+          </div>
+          <div
+            className="dash-card dash-card-clickable"
+            onClick={() => onNavigate("admin")}
+          >
+            <p className="dash-card-label">รอตรวจสอบสลิป</p>
+            <p className="dash-card-value">{data.pendingSlip.toLocaleString()}</p>
+          </div>
+          <div
+            className="dash-card dash-card-clickable"
+            onClick={() => onNavigate("admin")}
+          >
+            <p className="dash-card-label">รอตรวจสอบผลวิ่ง</p>
+            <p className="dash-card-value">{data.pendingResult.toLocaleString()}</p>
+          </div>
+          <div className="dash-card">
             <div className="dash-card-header-row">
               <p className="dash-card-label">รายได้</p>
               <select
@@ -127,18 +145,6 @@ function AdminDashboard({ onNavigate, onLogoClick, currentUser, onLogout }) {
               </select>
             </div>
             <p className="dash-card-value">฿{data.revenue.toLocaleString()}</p>
-          </div>
-          <div className="dash-card">
-            <p className="dash-card-label">รอชำระเงิน</p>
-            <p className="dash-card-value">{data.pendingPayment.toLocaleString()}</p>
-          </div>
-          <div className="dash-card">
-            <p className="dash-card-label">รอตรวจสอบสลิป</p>
-            <p className="dash-card-value">{data.pendingSlip.toLocaleString()}</p>
-          </div>
-          <div className="dash-card">
-            <p className="dash-card-label">รอตรวจสอบผลวิ่ง</p>
-            <p className="dash-card-value">{data.pendingResult.toLocaleString()}</p>
           </div>
         </div>
 
