@@ -359,8 +359,8 @@ async function handleCreateRegistration(request, env) {
   try {
     await env.DB.prepare(
       `INSERT INTO registrations
-        (user_id, event_id, package_id, event_title, package_name, price, status, event_end_date)
-       VALUES (?, ?, ?, ?, ?, ?, 'confirmed', ?)`
+        (user_id, event_id, package_id, event_title, package_name, price, status, event_end_date, reg_end_date)
+       VALUES (?, ?, ?, ?, ?, ?, 'confirmed', ?, ?)`
     )
       .bind(
         body.userId,
@@ -369,7 +369,8 @@ async function handleCreateRegistration(request, env) {
         body.eventTitle,
         body.packageName,
         body.price,
-        body.eventEndDate || null
+        body.eventEndDate || null,
+        body.regEndDate || null
       )
       .run();
 
@@ -381,7 +382,6 @@ async function handleCreateRegistration(request, env) {
     );
   }
 }
-
 async function handleGetRegistrations(request, env) {
   const url = new URL(request.url);
   const userId = url.searchParams.get("userId");
@@ -391,7 +391,7 @@ async function handleGetRegistrations(request, env) {
   }
 
   const { results } = await env.DB.prepare(
-    "SELECT id, user_id, event_id, package_id, status, created_at, event_title, package_name, price, paid_amount, slip_image, result_image, event_end_date FROM registrations WHERE user_id = ? ORDER BY created_at DESC"
+    "SELECT id, user_id, event_id, package_id, status, created_at, event_title, package_name, price, paid_amount, slip_image, result_image, event_end_date, reg_end_date FROM registrations WHERE user_id = ? ORDER BY created_at DESC"
   )
     .bind(userId)
     .all();
