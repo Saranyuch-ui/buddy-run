@@ -44,6 +44,7 @@ function Detail({ event, onBack, onNavigate, isLoggedIn, currentUser, onLogout }
           packageName: pkg.name,
           price: pkg.price,
           eventEndDate: event.resultEndISO,
+          regEndDate: event.regEndISO,
         }),
       });
 
