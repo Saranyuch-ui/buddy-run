@@ -341,8 +341,15 @@ function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
         )}
 
         {activeTab === "events" && (() => {
-          const paymentGroup = registrations.filter((r) =>
-            ["confirmed", "pending_ocr_approval", "pending_verification"].includes(r.status)
+          const isRegExpired = (r) => {
+            if (!r.reg_end_date) return false;
+            return new Date(r.reg_end_date) < new Date();
+          };
+
+          const paymentGroup = registrations.filter(
+            (r) =>
+              ["confirmed", "pending_ocr_approval", "pending_verification"].includes(r.status) &&
+              !(r.status === "confirmed" && isRegExpired(r))
           );
           const resultGroup = registrations.filter(
             (r) => r.status === "paid" || r.status === "result_pending"
@@ -350,7 +357,8 @@ function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
           const historyGroup = registrations.filter(
             (r) =>
               r.status === "completed" ||
-              (["confirmed", "pending_ocr_approval", "pending_verification", "paid", "result_pending"].includes(
+              (r.status === "confirmed" && isRegExpired(r)) ||
+              (["pending_ocr_approval", "pending_verification", "paid", "result_pending"].includes(
                 r.status
               ) &&
                 isEventExpired(r))
