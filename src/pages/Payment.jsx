@@ -54,7 +54,12 @@ function Payment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout })
     );
   }
 
-  const unpaidRegs = registrations.filter((r) => r.status === "confirmed");
+  const today = new Date();
+  const unpaidRegs = registrations.filter(
+    (r) =>
+      r.status === "confirmed" &&
+      (!r.reg_end_date || new Date(r.reg_end_date) >= today)
+  );
 
   const startPay = async (reg) => {
     setPayingId(reg.id);
