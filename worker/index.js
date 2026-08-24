@@ -1240,11 +1240,12 @@ async function handleGetNavCounts(request, env) {
   }
 
   const unpaidCount = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM registrations WHERE user_id = ? AND status = 'confirmed'"
+    `SELECT COUNT(*) AS c FROM registrations
+     WHERE user_id = ? AND status = 'confirmed'
+     AND (reg_end_date IS NULL OR reg_end_date >= date('now'))`
   )
     .bind(userId)
     .first();
-
   const resultPendingCount = await env.DB.prepare(
     "SELECT COUNT(*) AS c FROM registrations WHERE user_id = ? AND status = 'paid'"
   )
