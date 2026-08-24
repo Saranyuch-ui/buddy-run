@@ -152,14 +152,16 @@ function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
     );
   }
 
-  const renderRegItem = (reg) => (
+  const renderRegItem = (reg, forceGray) => (
     <div key={reg.id} className="reg-item">
       <div>
         <h4>{reg.event_title}</h4>
         <p>{reg.package_name} — {reg.price?.toLocaleString()} บาท</p>
         <p className="reg-date">ลงทะเบียนเมื่อ: {reg.created_at}</p>
       </div>
-      <span className={`reg-status reg-status-${getRegStatusClass(reg)}`}>
+      <span
+        className={`reg-status ${forceGray ? "reg-status-expired" : `reg-status-${getRegStatusClass(reg)}`}`}
+      >
         {getRegLabel(reg)}
       </span>
     </div>
