@@ -394,7 +394,9 @@ function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
                   {historyGroup.length === 0 ? (
                     <p className="empty-text">ไม่มีรายการในหมวดนี้</p>
                   ) : (
-                    <div className="reg-list">{historyGroup.map(renderRegItem)}</div>
+                    <div className="reg-list">
+                      {historyGroup.map((reg) => renderRegItem(reg, true))}
+                    </div>
                   )}
                 </>
               )}
