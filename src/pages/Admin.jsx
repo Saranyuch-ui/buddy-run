@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import Header from "../components/Header";
 
-function Admin({ onNavigate, onLogoClick, currentUser, onLogout }) {
-  const [activeTab, setActiveTab] = useState("event");
+function Admin({ onNavigate, onLogoClick, currentUser, onLogout, initialTab }) {
+  const [activeTab, setActiveTab] = useState(initialTab || "event");
 
   const [regPending, setRegPending] = useState([]);
   const [regLoading, setRegLoading] = useState(true);
