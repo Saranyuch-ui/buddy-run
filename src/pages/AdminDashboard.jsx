@@ -130,6 +130,13 @@ function AdminDashboard({ onNavigate, onLogoClick, currentUser, onLogout }) {
           </div>
           <div
             className="dash-card dash-card-clickable"
+            onClick={() => onNavigate("admin-shop")}
+          >
+            <p className="dash-card-label">รอตรวจสอบสลิป Shop</p>
+            <p className="dash-card-value">{data.pendingShopSlip.toLocaleString()}</p>
+          </div>
+          <div
+            className="dash-card dash-card-clickable"
             onClick={() => onNavigate("admin")}
           >
             <p className="dash-card-label">รอตรวจสอบผลวิ่ง</p>
@@ -216,6 +223,10 @@ function AdminDashboard({ onNavigate, onLogoClick, currentUser, onLogout }) {
               <div className="pending-action-item">
                 <span>ตรวจสอบสลิป</span>
                 <span className="pending-action-count">{data.pendingSlip}</span>
+              </div>
+              <div className="pending-action-item">
+                <span>ตรวจสอบสลิป Shop</span>
+                <span className="pending-action-count">{data.pendingShopSlip}</span>
               </div>
               <div className="pending-action-item">
                 <span>ตรวจผลกิจกรรม</span>
