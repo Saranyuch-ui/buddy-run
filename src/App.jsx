@@ -126,6 +126,19 @@ function App() {
         onLogoClick={goHome}
         currentUser={currentUser}
         onLogout={handleLogout}
+        initialTab="event"
+      />
+    );
+  }
+
+  if (page === "admin-shop") {
+    return (
+      <Admin
+        onNavigate={setPage}
+        onLogoClick={goHome}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+        initialTab="shop"
       />
     );
   }
