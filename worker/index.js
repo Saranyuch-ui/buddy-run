@@ -766,6 +766,10 @@ async function handleGetDashboard(request, env) {
     "SELECT COUNT(*) AS c FROM registrations WHERE status IN ('pending_verification', 'pending_ocr_approval')"
   ).first();
 
+  const pendingShopSlip = await env.DB.prepare(
+    "SELECT COUNT(*) AS c FROM orders WHERE status IN ('pending_verification', 'pending_ocr_approval')"
+  ).first();
+
   const pendingResult = await env.DB.prepare(
     "SELECT COUNT(*) AS c FROM registrations WHERE status = 'result_pending'"
   ).first();
@@ -820,6 +824,7 @@ async function handleGetDashboard(request, env) {
     shopRevenuePeriod: periodShop,
     pendingPayment: pendingPayment.c,
     pendingSlip: pendingSlip.c,
+    pendingShopSlip: pendingShopSlip.c,
     pendingResult: pendingResult.c,
     weeklySignups: weeklySignupsRaw,
     monthlyRevenue: monthlyRevenueRaw,
