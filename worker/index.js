@@ -782,13 +782,32 @@ async function handleGetDashboard(request, env) {
      ORDER BY d ASC`
   ).all();
 
-  const { results: monthlyRevenueRaw } = await env.DB.prepare(
+  const { results: monthlyRevenueEventRaw } = await env.DB.prepare(
     `SELECT strftime('%m', paid_at) AS m, SUM(paid_amount) AS s
      FROM registrations
      WHERE paid_at IS NOT NULL AND strftime('%Y', paid_at) = strftime('%Y', 'now')
      GROUP BY m
      ORDER BY m ASC`
   ).all();
+
+  const { results: monthlyRevenueShopRaw } = await env.DB.prepare(
+    `SELECT strftime('%m', paid_at) AS m, SUM(paid_amount) AS s
+     FROM orders
+     WHERE paid_at IS NOT NULL AND strftime('%Y', paid_at) = strftime('%Y', 'now')
+     GROUP BY m
+     ORDER BY m ASC`
+  ).all();
+
+  const monthlyRevenueMap = {};
+  monthlyRevenueEventRaw.forEach((row) => {
+    monthlyRevenueMap[row.m] = (monthlyRevenueMap[row.m] || 0) + (row.s || 0);
+  });
+  monthlyRevenueShopRaw.forEach((row) => {
+    monthlyRevenueMap[row.m] = (monthlyRevenueMap[row.m] || 0) + (row.s || 0);
+  });
+  const monthlyRevenueRaw = Object.keys(monthlyRevenueMap)
+    .sort()
+    .map((m) => ({ m, s: monthlyRevenueMap[m] }));
 
   const newMembersToday = await env.DB.prepare(
     "SELECT COUNT(*) AS c FROM users WHERE date(created_at) = date('now')"
