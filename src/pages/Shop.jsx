@@ -8,6 +8,7 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
   const [loading, setLoading] = useState(true);
   const [selection, setSelection] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [activeCategory, setActiveCategory] = useState("all");
 
   useEffect(() => {
     fetch("/api/products")
@@ -18,6 +19,15 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
       })
       .catch(() => setLoading(false));
   }, []);
+
+  const categories = Array.from(
+    new Set(products.map((p) => p.category).filter(Boolean))
+  );
+
+  const filteredProducts =
+    activeCategory === "all"
+      ? products
+      : products.filter((p) => p.category === activeCategory);
 
   const getSelection = (productId) =>
     selection[productId] || { size: "", quantity: 1 };
@@ -133,65 +143,94 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
         ) : products.length === 0 ? (
           <p className="empty-text">ยังไม่มีสินค้า</p>
         ) : (
-          <div className="grid">
-            {products.map((product) => {
-              const sel = getSelection(product.id);
-              return (
-                <div key={product.id} className="card">
-                  <img src={product.image} alt={product.name} />
+          <div className="shop-layout">
+            <div className="shop-sidebar">
+              <h3 className="shop-sidebar-title">หมวดหมู่</h3>
+              <button
+                className={
+                  "shop-category-btn" + (activeCategory === "all" ? " shop-category-active" : "")
+                }
+                onClick={() => setActiveCategory("all")}
+              >
+                ทั้งหมด
+              </button>
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  className={
+                    "shop-category-btn" + (activeCategory === cat ? " shop-category-active" : "")
+                  }
+                  onClick={() => setActiveCategory(cat)}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
 
-                  <div className="card-body">
-                    <h3>{product.name}</h3>
-                    <p>{product.description}</p>
-                    <p className="package-price">{product.price.toLocaleString()} บาท</p>
+            <div className="grid shop-product-grid">
+              {filteredProducts.map((product) => {
+                const sel = getSelection(product.id);
+                return (
+                  <div key={product.id} className="card">
+                    <img src={product.image} alt={product.name} />
 
-                    <div className="shop-size-row">
-                      <label>ไซส์</label>
-                      <div className="shop-size-options">
-                        {SIZES.map((s) => (
-                          <button
-                            key={s}
-                            type="button"
-                            className={
-                              "shop-size-btn" + (sel.size === s ? " shop-size-selected" : "")
-                            }
-                            onClick={() => setSize(product.id, s)}
-                          >
-                            {s}
-                          </button>
-                        ))}
+                    <div className="card-body">
+                      <h3>{product.name}</h3>
+                      <p>{product.description}</p>
+                      <p className="package-price">{product.price.toLocaleString()} บาท</p>
+
+                      <div className="shop-size-row">
+                        <label>ไซส์</label>
+                        <div className="shop-size-options">
+                          {SIZES.map((s) => (
+                            <button
+                              key={s}
+                              type="button"
+                              className={
+                                "shop-size-btn" + (sel.size === s ? " shop-size-selected" : "")
+                              }
+                              onClick={() => setSize(product.id, s)}
+                            >
+                              {s}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="shop-qty-row">
+                        <label>จำนวน</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={sel.quantity}
+                          onChange={(e) => setQuantity(product.id, Number(e.target.value))}
+                        />
+                      </div>
+
+                      <div className="shop-btn-row">
+                        <button
+                          className="shop-cart-btn"
+                          onClick={() => handleAddToCart(product)}
+                          disabled={submitting}
+                        >
+                          ใส่ตะกร้า
+                        </button>
+                        <button
+                          onClick={() => handleBuyNow(product)}
+                          disabled={submitting}
+                        >
+                          ซื้อสินค้า
+                        </button>
                       </div>
                     </div>
-
-                    <div className="shop-qty-row">
-                      <label>จำนวน</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={sel.quantity}
-                        onChange={(e) => setQuantity(product.id, Number(e.target.value))}
-                      />
-                    </div>
-
-                    <div className="shop-btn-row">
-                      <button
-                        className="shop-cart-btn"
-                        onClick={() => handleAddToCart(product)}
-                        disabled={submitting}
-                      >
-                        ใส่ตะกร้า
-                      </button>
-                      <button
-                        onClick={() => handleBuyNow(product)}
-                        disabled={submitting}
-                      >
-                        ซื้อสินค้า
-                      </button>
-                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+
+              {filteredProducts.length === 0 && (
+                <p className="empty-text">ไม่มีสินค้าในหมวดนี้</p>
+              )}
+            </div>
           </div>
         )}
       </section>
