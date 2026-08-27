@@ -1261,3 +1261,63 @@ body {
 .shop-summary-row:last-of-type {
     border-bottom: none;
 }
+
+.shop-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.shop-sidebar {
+    width: 200px;
+    flex-shrink: 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,.08);
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.shop-sidebar-title {
+    font-size: 1rem;
+    margin-bottom: 5px;
+}
+
+.shop-category-btn {
+    text-align: left;
+    padding: 10px 12px;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+.shop-category-btn:hover {
+    background: #f4f7fb;
+}
+
+.shop-category-active {
+    background: #2563eb;
+    color: white;
+}
+
+.shop-product-grid {
+    flex: 1;
+    margin: 0;
+}
+
+@media (max-width: 700px) {
+    .shop-layout {
+        flex-direction: column;
+    }
+
+    .shop-sidebar {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+}
