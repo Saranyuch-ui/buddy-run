@@ -878,7 +878,7 @@ async function handleGetMembers(request, env) {
 
 async function handleGetProducts(env) {
   const { results } = await env.DB.prepare(
-    "SELECT id, name, price, description, image FROM products ORDER BY created_at DESC"
+    "SELECT id, name, price, description, image, category FROM products ORDER BY created_at DESC"
   ).all();
 
   return Response.json({ success: true, products: results });
