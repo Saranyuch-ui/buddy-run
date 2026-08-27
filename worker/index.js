@@ -66,6 +66,14 @@ export default {
       return handleGetProducts(env);
     }
 
+    if (url.pathname === "/api/admin/products" && request.method === "POST") {
+      return handleCreateProduct(request, env);
+    }
+
+    if (url.pathname === "/api/admin/products" && request.method === "DELETE") {
+      return handleDeleteProduct(request, env);
+    }
+
     if (url.pathname === "/api/orders" && request.method === "POST") {
       return handleCreateOrder(request, env);
     }
@@ -1397,6 +1405,89 @@ async function handleCancelAllOrders(request, env) {
   } catch (err) {
     return Response.json(
       { success: false, error: "ยกเลิกคำสั่งซื้อไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
+}
+
+async function handleCreateProduct(request, env) {
+  const formData = await request.formData();
+  const adminUserId = formData.get("adminUserId");
+
+  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
+    return Response.json(
+      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
+      { status: 403 }
+    );
+  }
+
+  const name = formData.get("name");
+  const price = Number(formData.get("price"));
+  const description = formData.get("description");
+  const category = formData.get("category");
+  const file = formData.get("image");
+
+  if (!name || !price || price <= 0 || !category || !file) {
+    return Response.json(
+      { success: false, error: "กรุณากรอกข้อมูลให้ครบถ้วน" },
+      { status: 400 }
+    );
+  }
+
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+  if (!allowedTypes.includes(file.type)) {
+    return Response.json(
+      { success: false, error: "รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WEBP) เท่านั้น" },
+      { status: 400 }
+    );
+  }
+
+  if (file.size > 2 * 1024 * 1024) {
+    return Response.json(
+      { success: false, error: "ไฟล์ใหญ่เกินไป (จำกัดไม่เกิน 2MB)" },
+      { status: 400 }
+    );
+  }
+
+  const imageDataUrl = await fileToBase64DataUrl(file);
+
+  try {
+    await env.DB.prepare(
+      "INSERT INTO products (name, price, description, image, category) VALUES (?, ?, ?, ?, ?)"
+    )
+      .bind(name, price, description, imageDataUrl, category)
+      .run();
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "เพิ่มสินค้าไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
+}
+
+async function handleDeleteProduct(request, env) {
+  const body = await request.json();
+  const { adminUserId, productId } = body;
+
+  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
+    return Response.json(
+      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
+      { status: 403 }
+    );
+  }
+
+  if (!productId) {
+    return Response.json({ success: false, error: "ไม่พบ productId" }, { status: 400 });
+  }
+
+  try {
+    await env.DB.prepare("DELETE FROM products WHERE id = ?").bind(productId).run();
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "ลบสินค้าไม่สำเร็จ กรุณาลองใหม่" },
       { status: 500 }
     );
   }
