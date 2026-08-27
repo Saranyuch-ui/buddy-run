@@ -113,6 +113,17 @@ function Header({ onLogoClick, onNavigate, currentUser, onLogout }) {
                       🏁 จัดการกิจกรรม
                     </button>
                   )}
+                  {currentUser.is_admin === 1 && (
+                    <button
+                      className="dropdown-item"
+                      onClick={() => {
+                        setDropdownOpen(false);
+                        onNavigate("admin-products");
+                      }}
+                    >
+                      🛍️ จัดการสินค้า
+                    </button>
+                  )}
                   <button
                     className="dropdown-item"
                     onClick={() => {
