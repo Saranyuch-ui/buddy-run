@@ -10,6 +10,7 @@ import Admin from "./pages/Admin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminEvents from "./pages/AdminEvents";
 import AdminMembers from "./pages/AdminMembers";
+import AdminProducts from "./pages/AdminProducts";
 import Shop from "./pages/Shop";
 import ShopPayment from "./pages/ShopPayment";
 import Cart from "./pages/Cart";
@@ -168,6 +169,17 @@ function App() {
   if (page === "admin-members") {
     return (
       <AdminMembers
+        onNavigate={setPage}
+        onLogoClick={goHome}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
+  if (page === "admin-products") {
+    return (
+      <AdminProducts
         onNavigate={setPage}
         onLogoClick={goHome}
         currentUser={currentUser}
