@@ -5,6 +5,7 @@ function AdminEvents({ onNavigate, onLogoClick, currentUser, onLogout }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({
     title: "",
     challenge: "",
@@ -77,6 +78,24 @@ function AdminEvents({ onNavigate, onLogoClick, currentUser, onLogout }) {
     setImageFile(null);
     setImagePreview(null);
     setShowForm(false);
+    setEditingId(null);
+  };
+
+  const startEdit = (ev) => {
+    setForm({
+      title: ev.title || "",
+      challenge: ev.description || "",
+      location: ev.location || "",
+      distance: ev.distance || "",
+      regStartDate: ev.reg_start_date || "",
+      regEndDate: ev.reg_end_date || "",
+      resultStartDate: ev.result_start_date || "",
+      resultEndDate: ev.result_end_date || "",
+    });
+    setImageFile(null);
+    setImagePreview(ev.image || null);
+    setEditingId(ev.id);
+    setShowForm(true);
   };
 
   const handleSubmit = async (e) => {
@@ -91,10 +110,9 @@ function AdminEvents({ onNavigate, onLogoClick, currentUser, onLogout }) {
       form.regEndDate,
       form.resultStartDate,
       form.resultEndDate,
-      imageFile,
     ];
 
-    if (required.some((v) => !v)) {
+    if (required.some((v) => !v) || (!editingId && !imageFile)) {
       alert("กรุณากรอกข้อมูลให้ครบทุกช่อง (รวมถึงรูปภาพ)");
       return;
     }
@@ -112,24 +130,27 @@ function AdminEvents({ onNavigate, onLogoClick, currentUser, onLogout }) {
       formData.append("regEndDate", form.regEndDate);
       formData.append("resultStartDate", form.resultStartDate);
       formData.append("resultEndDate", form.resultEndDate);
-      formData.append("image", imageFile);
+      if (imageFile) formData.append("image", imageFile);
 
-      const res = await fetch("/api/admin/events", {
-        method: "POST",
-        body: formData,
-      });
+      let res;
+      if (editingId) {
+        formData.append("eventId", editingId);
+        res = await fetch("/api/admin/events", { method: "PUT", body: formData });
+      } else {
+        res = await fetch("/api/admin/events", { method: "POST", body: formData });
+      }
 
       const data = await res.json();
 
       if (!data.success) {
-        alert(data.error || "เพิ่มกิจกรรมไม่สำเร็จ");
+        alert(data.error || (editingId ? "แก้ไขกิจกรรมไม่สำเร็จ" : "เพิ่มกิจกรรมไม่สำเร็จ"));
         setSubmitting(false);
         return;
       }
 
       resetForm();
       loadEvents();
-      alert("เพิ่มกิจกรรมเรียบร้อยแล้ว");
+      alert(editingId ? "แก้ไขกิจกรรมเรียบร้อยแล้ว" : "เพิ่มกิจกรรมเรียบร้อยแล้ว");
     } catch (err) {
       alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     } finally {
@@ -182,6 +203,9 @@ function AdminEvents({ onNavigate, onLogoClick, currentUser, onLogout }) {
         <p>📍 {ev.location} — 🏃 {ev.distance}</p>
       </div>
       <div className="admin-actions">
+        <button className="edit-btn" onClick={() => startEdit(ev)}>
+          ✏️ แก้ไข
+        </button>
         <button
           className="reject-btn"
           onClick={() => handleDelete(ev.id)}
@@ -205,14 +229,21 @@ function AdminEvents({ onNavigate, onLogoClick, currentUser, onLogout }) {
       <div className="admin-page">
         <div className="admin-events-header">
           <h2 className="admin-title">จัดการกิจกรรม</h2>
-          <button className="pay-btn" onClick={() => setShowForm(!showForm)}>
+          <button
+            className="pay-btn"
+            onClick={() => (showForm ? resetForm() : setShowForm(true))}
+          >
             {showForm ? "ปิดฟอร์ม" : "+ เพิ่มกิจกรรม"}
           </button>
         </div>
 
         {showForm && (
           <form className="auth-form event-form" onSubmit={handleSubmit}>
-            <label>รูปภาพกิจกรรม</label>
+            <h3 className="form-section-title">
+              {editingId ? "แก้ไขกิจกรรม" : "เพิ่มกิจกรรมใหม่"}
+            </h3>
+
+            <label>รูปภาพกิจกรรม{editingId ? " (ไม่บังคับ ถ้าไม่เปลี่ยนจะใช้รูปเดิม)" : ""}</label>
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"
@@ -258,9 +289,19 @@ function AdminEvents({ onNavigate, onLogoClick, currentUser, onLogout }) {
               </div>
             </div>
 
-            <button type="submit" className="auth-submit-btn" disabled={submitting}>
-              {submitting ? "กำลังบันทึก..." : "บันทึกกิจกรรม"}
-            </button>
+            <div className="payment-actions">
+              <button type="submit" className="auth-submit-btn" disabled={submitting}>
+                {submitting ? "กำลังบันทึก..." : editingId ? "บันทึกการแก้ไข" : "บันทึกกิจกรรม"}
+              </button>
+              <button
+                type="button"
+                className="auth-secondary-btn"
+                onClick={resetForm}
+                disabled={submitting}
+              >
+                ยกเลิก
+              </button>
+            </div>
           </form>
         )}
 
