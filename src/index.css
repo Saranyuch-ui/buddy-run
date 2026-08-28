@@ -753,6 +753,7 @@ body {
 .admin-actions {
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .approve-btn {
