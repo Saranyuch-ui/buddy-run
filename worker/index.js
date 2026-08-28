@@ -22,6 +22,10 @@ export default {
       return handleDeleteEvent(request, env);
     }
 
+    if (url.pathname === "/api/admin/events" && request.method === "PUT") {
+      return handleUpdateEvent(request, env);
+    }
+
     if (url.pathname === "/api/registrations" && request.method === "POST") {
       return handleCreateRegistration(request, env);
     }
@@ -72,6 +76,10 @@ export default {
 
     if (url.pathname === "/api/admin/products" && request.method === "DELETE") {
       return handleDeleteProduct(request, env);
+    }
+
+    if (url.pathname === "/api/admin/products" && request.method === "PUT") {
+      return handleUpdateProduct(request, env);
     }
 
     if (url.pathname === "/api/orders" && request.method === "POST") {
@@ -1488,6 +1496,189 @@ async function handleDeleteProduct(request, env) {
   } catch (err) {
     return Response.json(
       { success: false, error: "ลบสินค้าไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
+}
+
+async function handleUpdateEvent(request, env) {
+  const formData = await request.formData();
+  const adminUserId = formData.get("adminUserId");
+
+  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
+    return Response.json(
+      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
+      { status: 403 }
+    );
+  }
+
+  const eventId = formData.get("eventId");
+  const title = formData.get("title");
+  const challenge = formData.get("challenge");
+  const location = formData.get("location");
+  const distance = formData.get("distance");
+  const regStartDate = formData.get("regStartDate");
+  const regEndDate = formData.get("regEndDate");
+  const resultStartDate = formData.get("resultStartDate");
+  const resultEndDate = formData.get("resultEndDate");
+  const file = formData.get("image");
+
+  if (
+    !eventId ||
+    !title ||
+    !challenge ||
+    !location ||
+    !distance ||
+    !regStartDate ||
+    !regEndDate ||
+    !resultStartDate ||
+    !resultEndDate
+  ) {
+    return Response.json(
+      { success: false, error: "กรุณากรอกข้อมูลให้ครบถ้วน" },
+      { status: 400 }
+    );
+  }
+
+  let imageDataUrl = null;
+
+  if (file && file.size > 0) {
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      return Response.json(
+        { success: false, error: "รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WEBP) เท่านั้น" },
+        { status: 400 }
+      );
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      return Response.json(
+        { success: false, error: "ไฟล์ใหญ่เกินไป (จำกัดไม่เกิน 2MB)" },
+        { status: 400 }
+      );
+    }
+    imageDataUrl = await fileToBase64DataUrl(file);
+  }
+
+  try {
+    if (imageDataUrl) {
+      await env.DB.prepare(
+        `UPDATE events SET
+          title = ?, event_date = ?, end_date = ?, location = ?, distance = ?,
+          image = ?, description = ?, reg_start_date = ?, reg_end_date = ?,
+          result_start_date = ?, result_end_date = ?
+         WHERE id = ?`
+      )
+        .bind(
+          title,
+          regStartDate,
+          resultEndDate,
+          location,
+          distance,
+          imageDataUrl,
+          challenge,
+          regStartDate,
+          regEndDate,
+          resultStartDate,
+          resultEndDate,
+          eventId
+        )
+        .run();
+    } else {
+      await env.DB.prepare(
+        `UPDATE events SET
+          title = ?, event_date = ?, end_date = ?, location = ?, distance = ?,
+          description = ?, reg_start_date = ?, reg_end_date = ?,
+          result_start_date = ?, result_end_date = ?
+         WHERE id = ?`
+      )
+        .bind(
+          title,
+          regStartDate,
+          resultEndDate,
+          location,
+          distance,
+          challenge,
+          regStartDate,
+          regEndDate,
+          resultStartDate,
+          resultEndDate,
+          eventId
+        )
+        .run();
+    }
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "แก้ไขกิจกรรมไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
+}
+
+async function handleUpdateProduct(request, env) {
+  const formData = await request.formData();
+  const adminUserId = formData.get("adminUserId");
+
+  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
+    return Response.json(
+      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
+      { status: 403 }
+    );
+  }
+
+  const productId = formData.get("productId");
+  const name = formData.get("name");
+  const price = Number(formData.get("price"));
+  const description = formData.get("description");
+  const category = formData.get("category");
+  const file = formData.get("image");
+
+  if (!productId || !name || !price || price <= 0 || !category) {
+    return Response.json(
+      { success: false, error: "กรุณากรอกข้อมูลให้ครบถ้วน" },
+      { status: 400 }
+    );
+  }
+
+  let imageDataUrl = null;
+
+  if (file && file.size > 0) {
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      return Response.json(
+        { success: false, error: "รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WEBP) เท่านั้น" },
+        { status: 400 }
+      );
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      return Response.json(
+        { success: false, error: "ไฟล์ใหญ่เกินไป (จำกัดไม่เกิน 2MB)" },
+        { status: 400 }
+      );
+    }
+    imageDataUrl = await fileToBase64DataUrl(file);
+  }
+
+  try {
+    if (imageDataUrl) {
+      await env.DB.prepare(
+        "UPDATE products SET name = ?, price = ?, description = ?, category = ?, image = ? WHERE id = ?"
+      )
+        .bind(name, price, description, category, imageDataUrl, productId)
+        .run();
+    } else {
+      await env.DB.prepare(
+        "UPDATE products SET name = ?, price = ?, description = ?, category = ? WHERE id = ?"
+      )
+        .bind(name, price, description, category, productId)
+        .run();
+    }
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "แก้ไขสินค้าไม่สำเร็จ กรุณาลองใหม่" },
       { status: 500 }
     );
   }
