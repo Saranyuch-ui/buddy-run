@@ -5,6 +5,7 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({
     name: "",
     price: "",
@@ -64,12 +65,26 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
     setImageFile(null);
     setImagePreview(null);
     setShowForm(false);
+    setEditingId(null);
+  };
+
+  const startEdit = (p) => {
+    setForm({
+      name: p.name || "",
+      price: String(p.price ?? ""),
+      description: p.description || "",
+      category: p.category || "",
+    });
+    setImageFile(null);
+    setImagePreview(p.image || null);
+    setEditingId(p.id);
+    setShowForm(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.name || !form.price || !form.category || !imageFile) {
+    if (!form.name || !form.price || !form.category || (!editingId && !imageFile)) {
       alert("กรุณากรอกข้อมูลให้ครบ (รวมถึงรูปภาพ)");
       return;
     }
@@ -83,24 +98,27 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
       formData.append("price", form.price);
       formData.append("description", form.description);
       formData.append("category", form.category);
-      formData.append("image", imageFile);
+      if (imageFile) formData.append("image", imageFile);
 
-      const res = await fetch("/api/admin/products", {
-        method: "POST",
-        body: formData,
-      });
+      let res;
+      if (editingId) {
+        formData.append("productId", editingId);
+        res = await fetch("/api/admin/products", { method: "PUT", body: formData });
+      } else {
+        res = await fetch("/api/admin/products", { method: "POST", body: formData });
+      }
 
       const data = await res.json();
 
       if (!data.success) {
-        alert(data.error || "เพิ่มสินค้าไม่สำเร็จ");
+        alert(data.error || (editingId ? "แก้ไขสินค้าไม่สำเร็จ" : "เพิ่มสินค้าไม่สำเร็จ"));
         setSubmitting(false);
         return;
       }
 
       resetForm();
       loadProducts();
-      alert("เพิ่มสินค้าเรียบร้อยแล้ว");
+      alert(editingId ? "แก้ไขสินค้าเรียบร้อยแล้ว" : "เพิ่มสินค้าเรียบร้อยแล้ว");
     } catch (err) {
       alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     } finally {
@@ -148,14 +166,21 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
       <div className="admin-page">
         <div className="admin-events-header">
           <h2 className="admin-title">จัดการสินค้า</h2>
-          <button className="pay-btn" onClick={() => setShowForm(!showForm)}>
+          <button
+            className="pay-btn"
+            onClick={() => (showForm ? resetForm() : setShowForm(true))}
+          >
             {showForm ? "ปิดฟอร์ม" : "+ เพิ่มสินค้า"}
           </button>
         </div>
 
         {showForm && (
           <form className="auth-form event-form" onSubmit={handleSubmit}>
-            <label>รูปภาพสินค้า</label>
+            <h3 className="form-section-title">
+              {editingId ? "แก้ไขสินค้า" : "เพิ่มสินค้าใหม่"}
+            </h3>
+
+            <label>รูปภาพสินค้า{editingId ? " (ไม่บังคับ ถ้าไม่เปลี่ยนจะใช้รูปเดิม)" : ""}</label>
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"
@@ -186,9 +211,19 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
             <label>รายละเอียดสินค้า</label>
             <input value={form.description} onChange={handleChange("description")} />
 
-            <button type="submit" className="auth-submit-btn" disabled={submitting}>
-              {submitting ? "กำลังบันทึก..." : "บันทึกสินค้า"}
-            </button>
+            <div className="payment-actions">
+              <button type="submit" className="auth-submit-btn" disabled={submitting}>
+                {submitting ? "กำลังบันทึก..." : editingId ? "บันทึกการแก้ไข" : "บันทึกสินค้า"}
+              </button>
+              <button
+                type="button"
+                className="auth-secondary-btn"
+                onClick={resetForm}
+                disabled={submitting}
+              >
+                ยกเลิก
+              </button>
+            </div>
           </form>
         )}
 
@@ -208,6 +243,9 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
                   <p>{p.description}</p>
                 </div>
                 <div className="admin-actions">
+                  <button className="edit-btn" onClick={() => startEdit(p)}>
+                    ✏️ แก้ไข
+                  </button>
                   <button
                     className="reject-btn"
                     onClick={() => handleDelete(p.id)}
