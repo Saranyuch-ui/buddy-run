@@ -30,10 +30,26 @@ function Detail({ event, onBack, onNavigate, isLoggedIn, currentUser, onLogout }
 
     const pkg = packages.find((p) => p.id === selectedPackage);
 
-    setSubmitting(true);
+const confirmed = window.confirm(
+  `ยืนยันการลงทะเบียนกิจกรรม
 
-    try {
-      const res = await fetch("/api/registrations", {
+กิจกรรม: ${event.title}
+แพ็กเกจ: ${pkg.name}
+ราคา: ${pkg.price.toLocaleString()} บาท
+
+เมื่อลงทะเบียนแล้ว ระบบจะนำท่านไปยังขั้นตอนการชำระเงิน
+
+ต้องการดำเนินการต่อหรือไม่`
+);
+
+if (!confirmed) {
+  return;
+}
+
+setSubmitting(true);
+
+try {
+  const res = await fetch("/api/registrations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
