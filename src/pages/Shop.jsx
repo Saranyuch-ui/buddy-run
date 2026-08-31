@@ -171,7 +171,6 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
               {filteredProducts.map((product) => {
                 const sel = getSelection(product.id);
                 return (
-                  return (
   <div key={product.id} className="card">
 
     <img
