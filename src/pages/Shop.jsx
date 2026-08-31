@@ -172,9 +172,10 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
                 const sel = getSelection(product.id);
                 return (
   <div key={product.id} className="card">
+<img
+  srcmage}
 
-    <img
-      src={product.imagessName="card-body">
+<div className="card-body">
 
       <div className="shop-content">
         <h3>{product.name}</h3>
