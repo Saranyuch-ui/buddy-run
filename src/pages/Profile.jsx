@@ -5,7 +5,7 @@ const REG_STATUS_LABELS = {
   confirmed: "รอชำระเงิน",
   pending_ocr_approval: "รอการอนุมัติ",
   pending_verification: "รอการตรวจสอบและอนุมัติ",
-  paid: "ชำระเงินเรียบร้อย",
+  paid: "รอส่งผลกิจกรรม",
   result_pending: "รอการอนุมัติผลกิจกรรม",
   completed: "ส่งผลกิจกรรมแล้ว",
 };
