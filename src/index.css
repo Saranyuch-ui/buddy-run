@@ -1322,3 +1322,35 @@ body {
         flex-wrap: wrap;
     }
 }
+
+.shop-content {
+    flex: 1;
+}
+
+.shop-actions {
+    margin-top: auto;
+}
+
+.shop-product-grid .card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.shop-product-grid .card-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.shop-product-grid .card-body h3 {
+    min-height: 70px;
+}
+
+.shop-product-grid .card-body p:not(.package-price) {
+    min-height: 60px;
+}
+
+.shop-product-grid .package-price {
+    min-height: 35px;
+}
