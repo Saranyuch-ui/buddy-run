@@ -173,7 +173,8 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
                 return (
   <div key={product.id} className="card">
 <img
-  srcmage}
+  src={product.image}
+  alt
 
 <div className="card-body">
 
