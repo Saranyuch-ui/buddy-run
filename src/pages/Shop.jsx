@@ -172,74 +172,75 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
                 const sel = getSelection(product.id);
                 return (
                   <div key={product.id} className="card">
-                    <img src={product.image} alt={product.name} />
+  {product.image}
 
-                    <div className="card-body">
+  <div className="card-body">
 
-  <div className="shop-content">
-    <h3>{product.name}</h3>
+    <div className="shop-content">
+      <h3>{product.name}</h3>
 
-    <p>{product.description}</p>
+      <p>{product.description}</p>
 
-    <p className="package-price">
-      {product.price.toLocaleString()} บาท
-    </p>
-  </div>
+      <p className="package-price">
+        {product.price.toLocaleString()} บาท
+      </p>
+    </div>
 
-  <div className="shop-actions">
+    <div className="shop-actions">
 
-    <div className="shop-size-row">
-      <label>ไซส์</label>
+      <div className="shop-size-row">
+        <label>ไซส์</label>
 
-      <div className="shop-size-options">
-        {SIZES.map((s) => (
-          <button
-            key={s}
-            type="button"
-            className={
-              "shop-size-btn" +
-              (sel.size === s ? " shop-size-selected" : "")
-            }
-            onClick={() => setSize(product.id, s)}
-          >
-            {s}
-          </button>
-        ))}
+        <div className="shop-size-options">
+          {SIZES.map((s) => (
+            <button
+              key={s}
+              type="button"
+              className={
+                "shop-size-btn" +
+                (sel.size === s ? " shop-size-selected" : "")
+              }
+              onClick={() => setSize(product.id, s)}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
       </div>
-    </div>
 
-    <div className="shop-qty-row">
-      <label>จำนวน</label>
+      <div className="shop-qty-row">
+        <label>จำนวน</label>
 
-      <input
-        type="number"
-        min="1"
-        value={sel.quantity}
-        onChange={(e) =>
-          setQuantity(product.id, Number(e.target.value))
-        }
-      />
-    </div>
+        <input
+          type="number"
+          min="1"
+          value={sel.quantity}
+          onChange={(e) =>
+            setQuantity(product.id, Number(e.target.value))
+          }
+        />
+      </div>
 
-    <div className="shop-btn-row">
-      <button
-        className="shop-cart-btn"
-        onClick={() => handleAddToCart(product)}
-        disabled={submitting}
-      >
-        ใส่ตะกร้า
-      </button>
+      <div className="shop-btn-row">
+        <button
+          className="shop-cart-btn"
+          onClick={() => handleAddToCart(product)}
+          disabled={submitting}
+        >
+          ใส่ตะกร้า
+        </button>
 
-      <button
-        onClick={() => handleBuyNow(product)}
-        disabled={submitting}
-      >
-        ซื้อสินค้า
-      </button>
+        <button
+          onClick={() => handleBuyNow(product)}
+          disabled={submitting}
+        >
+          ซื้อสินค้า
+        </button>
+      </div>
+
     </div>
 
   </div>
-
 </div>
                       <div className="shop-qty-row">
                         <label>จำนวน</label>
