@@ -175,15 +175,12 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
                     <img src={product.image} alt={product.name} />
 
                     <div className="card-body">
-                      <h3>{product.name}</h3>
-                      <p>{product.description}</p>
-                      <p className="package-price">{product.price.toLocaleString()} บาท</p>
-
-                      <div className="card-body">
 
   <div className="shop-content">
     <h3>{product.name}</h3>
+
     <p>{product.description}</p>
+
     <p className="package-price">
       {product.price.toLocaleString()} บาท
     </p>
@@ -193,6 +190,7 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
 
     <div className="shop-size-row">
       <label>ไซส์</label>
+
       <div className="shop-size-options">
         {SIZES.map((s) => (
           <button
@@ -212,6 +210,7 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
 
     <div className="shop-qty-row">
       <label>จำนวน</label>
+
       <input
         type="number"
         min="1"
@@ -242,7 +241,6 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
   </div>
 
 </div>
-
                       <div className="shop-qty-row">
                         <label>จำนวน</label>
                         <input
