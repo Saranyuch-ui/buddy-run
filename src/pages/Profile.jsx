@@ -17,34 +17,25 @@ const ORDER_STATUS_LABELS = {
   paid: "ชำระเงินเรียบร้อย",
 };
 
-function isEventExpired(reg) {
-  if (!reg.event_end_date) return false;
-  return new Date(reg.event_end_date) < new Date();
+function isExpired(reg) {
+  if (reg.status === "confirmed") {
+    return !!reg.reg_end_date && new Date(reg.reg_end_date) < new Date();
+  }
+  if (["pending_ocr_approval", "pending_verification", "paid", "result_pending"].includes(reg.status)) {
+    return !!reg.event_end_date && new Date(reg.event_end_date) < new Date();
+  }
+  return false;
 }
 
 function getRegLabel(reg) {
   if (reg.status === "completed") return "ส่งผลกิจกรรมแล้ว";
-
-  if (
-    ["confirmed", "pending_ocr_approval", "pending_verification", "paid"].includes(reg.status) &&
-    isEventExpired(reg)
-  ) {
-    return "หมดเวลากิจกรรม";
-  }
-
+  if (isExpired(reg)) return "หมดเวลากิจกรรม";
   return REG_STATUS_LABELS[reg.status] || reg.status;
 }
 
 function getRegStatusClass(reg) {
   if (reg.status === "completed") return "completed";
-
-  if (
-    ["confirmed", "pending_ocr_approval", "pending_verification", "paid"].includes(reg.status) &&
-    isEventExpired(reg)
-  ) {
-    return "expired";
-  }
-
+  if (isExpired(reg)) return "expired";
   return reg.status;
 }
 
@@ -152,16 +143,14 @@ function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
     );
   }
 
-  const renderRegItem = (reg, forceGray) => (
+  const renderRegItem = (reg) => (
     <div key={reg.id} className="reg-item">
       <div>
         <h4>{reg.event_title}</h4>
         <p>{reg.package_name} — {reg.price?.toLocaleString()} บาท</p>
         <p className="reg-date">ลงทะเบียนเมื่อ: {reg.created_at}</p>
       </div>
-      <span
-        className={`reg-status ${forceGray ? "reg-status-expired" : `reg-status-${getRegStatusClass(reg)}`}`}
-      >
+      <span className={`reg-status reg-status-${getRegStatusClass(reg)}`}>
         {getRegLabel(reg)}
       </span>
     </div>
@@ -343,27 +332,16 @@ function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
         )}
 
         {activeTab === "events" && (() => {
-          const isRegExpired = (r) => {
-            if (!r.reg_end_date) return false;
-            return new Date(r.reg_end_date) < new Date();
-          };
-
           const paymentGroup = registrations.filter(
             (r) =>
               ["confirmed", "pending_ocr_approval", "pending_verification"].includes(r.status) &&
-              !(r.status === "confirmed" && isRegExpired(r))
+              !isExpired(r)
           );
           const resultGroup = registrations.filter(
-            (r) => r.status === "paid" || r.status === "result_pending"
+            (r) => ["paid", "result_pending"].includes(r.status) && !isExpired(r)
           );
           const historyGroup = registrations.filter(
-            (r) =>
-              r.status === "completed" ||
-              (r.status === "confirmed" && isRegExpired(r)) ||
-              (["pending_ocr_approval", "pending_verification", "paid", "result_pending"].includes(
-                r.status
-              ) &&
-                isEventExpired(r))
+            (r) => r.status === "completed" || isExpired(r)
           );
 
           return (
@@ -394,9 +372,7 @@ function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
                   {historyGroup.length === 0 ? (
                     <p className="empty-text">ไม่มีรายการในหมวดนี้</p>
                   ) : (
-                    <div className="reg-list">
-                      {historyGroup.map((reg) => renderRegItem(reg, true))}
-                    </div>
+                    <div className="reg-list">{historyGroup.map(renderRegItem)}</div>
                   )}
                 </>
               )}
