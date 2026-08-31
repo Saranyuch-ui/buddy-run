@@ -171,21 +171,21 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
               {filteredProducts.map((product) => {
                 const sel = getSelection(product.id);
                 return (
-                  <div key={product.id} className="card">
+                  return (
+  <div key={product.id} className="card">
 
-  {product.image}
+    <img
+      src={product.imagessName="card-body">
 
-  <div className="card-body">
+      <div className="shop-content">
+        <h3>{product.name}</h3>
 
-    <div className="shop-content">
-      <h3>{product.name}</h3>
+        <p>{product.description}</p>
 
-      <p>{product.description}</p>
-
-      <p className="package-price">
-        {product.price.toLocaleString()} บาท
-      </p>
-    </div>
+        <p className="package-price">
+          {product.price.toLocaleString()} บาท
+        </p>
+      </div>
 
     <div className="shop-actions">
 
