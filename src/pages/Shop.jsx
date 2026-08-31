@@ -242,33 +242,7 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
 
   </div>
 </div>
-                      <div className="shop-qty-row">
-                        <label>จำนวน</label>
-                        <input
-                          type="number"
-                          min="1"
-                          value={sel.quantity}
-                          onChange={(e) => setQuantity(product.id, Number(e.target.value))}
-                        />
-                      </div>
-
-                      <div className="shop-btn-row">
-                        <button
-                          className="shop-cart-btn"
-                          onClick={() => handleAddToCart(product)}
-                          disabled={submitting}
-                        >
-                          ใส่ตะกร้า
-                        </button>
-                        <button
-                          onClick={() => handleBuyNow(product)}
-                          disabled={submitting}
-                        >
-                          ซื้อสินค้า
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                      
                 );
               })}
 
