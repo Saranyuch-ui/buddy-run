@@ -172,6 +172,7 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
                 const sel = getSelection(product.id);
                 return (
                   <div key={product.id} className="card">
+
   {product.image}
 
   <div className="card-body">
