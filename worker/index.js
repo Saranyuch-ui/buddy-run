@@ -375,8 +375,8 @@ async function handleCreateRegistration(request, env) {
   try {
     await env.DB.prepare(
       `INSERT INTO registrations
-        (user_id, event_id, package_id, event_title, package_name, price, status, event_end_date, reg_end_date)
-       VALUES (?, ?, ?, ?, ?, ?, 'confirmed', ?, ?)`
+        (user_id, event_id, package_id, event_title, package_name, price, status, event_end_date, reg_end_date, result_start_date)
+       VALUES (?, ?, ?, ?, ?, ?, 'confirmed', ?, ?, ?)`
     )
       .bind(
         body.userId,
@@ -386,9 +386,19 @@ async function handleCreateRegistration(request, env) {
         body.packageName,
         body.price,
         body.eventEndDate || null,
-        body.regEndDate || null
+        body.regEndDate || null,
+        body.resultStartDate || null
       )
       .run();
+
+    // ส่งอีเมลแจ้งเตือน - ไม่ให้ล้มเหลวตรงนี้กระทบผลลัพธ์การลงทะเบียน
+    if (body.userEmail) {
+      try {
+        await sendRegistrationEmail(env, body.userEmail, body.eventTitle, body.packageName, body.price);
+      } catch (emailErr) {
+        console.log("ส่งอีเมลไม่สำเร็จ:", emailErr);
+      }
+    }
 
     return Response.json({ success: true });
   } catch (err) {
@@ -397,6 +407,37 @@ async function handleCreateRegistration(request, env) {
       { status: 500 }
     );
   }
+}
+
+async function sendRegistrationEmail(env, toEmail, eventTitle, packageName, price) {
+  if (!env.RESEND_API_KEY) return;
+
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: "Buddy Run <onboarding@resend.dev>",
+      to: [toEmail],
+      subject: `ลงทะเบียนสำเร็จ - ${eventTitle}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
+          <h2 style="color: #2563eb;">🏃 Buddy Run</h2>
+          <p>ลงทะเบียนกิจกรรมสำเร็จแล้ว!</p>
+          <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+            <tr><td style="padding: 8px 0; color: #6b7280;">กิจกรรม</td><td style="padding: 8px 0; font-weight: bold;">${eventTitle}</td></tr>
+            <tr><td style="padding: 8px 0; color: #6b7280;">แพ็กเกจ</td><td style="padding: 8px 0; font-weight: bold;">${packageName}</td></tr>
+            <tr><td style="padding: 8px 0; color: #6b7280;">ราคา</td><td style="padding: 8px 0; font-weight: bold;">${price.toLocaleString()} บาท</td></tr>
+          </table>
+          <p style="margin-top: 20px; color: #6b7280; font-size: 0.9rem;">
+            กรุณาชำระเงินภายในระยะเวลาที่กำหนด โดยเข้าไปที่หน้า "ชำระเงิน" บนเว็บไซต์
+          </p>
+        </div>
+      `,
+    }),
+  });
 }
 async function handleGetRegistrations(request, env) {
   const url = new URL(request.url);
