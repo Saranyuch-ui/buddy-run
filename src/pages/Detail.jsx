@@ -61,6 +61,8 @@ try {
           price: pkg.price,
           eventEndDate: event.resultEndISO,
           regEndDate: event.regEndISO,
+          resultStartDate: event.resultStartISO,
+          userEmail: currentUser.email,
         }),
       });
 
