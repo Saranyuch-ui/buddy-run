@@ -408,6 +408,7 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
               </div>
             ))}
           </div>
+  </>
         )}
     </div>
   </>
