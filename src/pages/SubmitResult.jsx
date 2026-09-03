@@ -43,7 +43,14 @@ function SubmitResult({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogo
     );
   }
 
-  const readyToSubmit = registrations.filter((r) => r.status === "paid");
+  const todayStr = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD" (UTC) — ให้ตรงกับ backend
+  const paidRegs = registrations.filter((r) => r.status === "paid");
+  const readyToSubmit = paidRegs.filter(
+    (r) => r.result_start_date && r.result_start_date.slice(0, 10) <= todayStr
+  );
+  const notYetOpen = paidRegs.filter(
+    (r) => !r.result_start_date || r.result_start_date.slice(0, 10) > todayStr
+  );
 
   const startSubmit = async (reg) => {
     setSubmittingId(reg.id);
@@ -131,10 +138,28 @@ function SubmitResult({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogo
 
         {loading ? (
           <p className="empty-text">กำลังโหลด...</p>
-        ) : readyToSubmit.length === 0 ? (
+        ) : readyToSubmit.length === 0 && notYetOpen.length === 0 ? (
           <p className="empty-text">ไม่มีกิจกรรมที่พร้อมส่งผล</p>
         ) : (
           <div className="payment-list">
+            {notYetOpen.map((reg) => (
+              <div key={reg.id} className="payment-item">
+                <div className="payment-info">
+                  <h4>{reg.event_title}</h4>
+                  <p>{reg.package_name}</p>
+                  <p className="ocr-status">
+                    ⏳ ยังไม่ถึงวันเริ่มส่งผลกิจกรรม
+                    {reg.result_start_date
+                      ? ` (เริ่มวันที่ ${reg.result_start_date.slice(0, 10)})`
+                      : ""}
+                  </p>
+                </div>
+                <button className="pay-btn" disabled>
+                  ส่งผลกิจกรรม
+                </button>
+              </div>
+            ))}
+
             {readyToSubmit.map((reg) => (
               <div key={reg.id} className="payment-item">
                 <div className="payment-info">
