@@ -82,6 +82,18 @@ export default {
       return handleUpdateProduct(request, env);
     }
 
+    if (url.pathname === "/api/admin/categories" && request.method === "GET") {
+      return handleGetCategories(request, env);
+    }
+
+    if (url.pathname === "/api/admin/categories" && request.method === "POST") {
+      return handleCreateCategory(request, env);
+    }
+
+    if (url.pathname === "/api/admin/categories" && request.method === "DELETE") {
+      return handleDeleteCategory(request, env);
+    }
+
     if (url.pathname === "/api/orders" && request.method === "POST") {
       return handleCreateOrder(request, env);
     }
@@ -972,6 +984,83 @@ async function handleGetProducts(env) {
   ).all();
 
   return Response.json({ success: true, products: results });
+}
+
+async function handleGetCategories(request, env) {
+  const url = new URL(request.url);
+  const adminUserId = url.searchParams.get("adminUserId");
+
+  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
+    return Response.json(
+      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
+      { status: 403 }
+    );
+  }
+
+  const { results } = await env.DB.prepare(
+    "SELECT id, name FROM categories ORDER BY name ASC"
+  ).all();
+
+  return Response.json({ success: true, categories: results });
+}
+
+async function handleCreateCategory(request, env) {
+  const body = await request.json();
+  const { adminUserId, name } = body;
+
+  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
+    return Response.json(
+      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
+      { status: 403 }
+    );
+  }
+
+  const trimmedName = (name || "").trim();
+  if (!trimmedName) {
+    return Response.json(
+      { success: false, error: "กรุณากรอกชื่อหมวดหมู่" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    await env.DB.prepare("INSERT INTO categories (name) VALUES (?)")
+      .bind(trimmedName)
+      .run();
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "หมวดหมู่นี้มีอยู่แล้ว หรือเพิ่มไม่สำเร็จ" },
+      { status: 400 }
+    );
+  }
+}
+
+async function handleDeleteCategory(request, env) {
+  const body = await request.json();
+  const { adminUserId, categoryId } = body;
+
+  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
+    return Response.json(
+      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
+      { status: 403 }
+    );
+  }
+
+  if (!categoryId) {
+    return Response.json({ success: false, error: "ไม่พบ categoryId" }, { status: 400 });
+  }
+
+  try {
+    await env.DB.prepare("DELETE FROM categories WHERE id = ?").bind(categoryId).run();
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "ลบหมวดหมู่ไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
 }
 
 async function handleCreateOrder(request, env) {
