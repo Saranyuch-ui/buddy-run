@@ -54,11 +54,11 @@ function Payment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout })
     );
   }
 
-  const today = new Date();
+    const todayStr = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD" (UTC) — ให้ตรงกับ date('now') ฝั่ง worker
   const unpaidRegs = registrations.filter(
     (r) =>
       r.status === "confirmed" &&
-      (!r.reg_end_date || new Date(r.reg_end_date) >= today)
+      (!r.reg_end_date || r.reg_end_date.slice(0, 10) >= todayStr)
   );
 
   const startPay = async (reg) => {
