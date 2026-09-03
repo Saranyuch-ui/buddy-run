@@ -375,8 +375,8 @@ async function handleCreateRegistration(request, env) {
   try {
     await env.DB.prepare(
       `INSERT INTO registrations
-        (user_id, event_id, package_id, event_title, package_name, price, status, event_end_date, reg_end_date, result_start_date)
-       VALUES (?, ?, ?, ?, ?, ?, 'confirmed', ?, ?, ?)`
+        (user_id, event_id, package_id, event_title, package_name, price, status, event_end_date, reg_end_date)
+       VALUES (?, ?, ?, ?, ?, ?, 'confirmed', ?, ?)`
     )
       .bind(
         body.userId,
@@ -386,8 +386,7 @@ async function handleCreateRegistration(request, env) {
         body.packageName,
         body.price,
         body.eventEndDate || null,
-        body.regEndDate || null,
-        body.resultStartDate || null
+        body.regEndDate || null
       )
       .run();
 
@@ -402,6 +401,7 @@ async function handleCreateRegistration(request, env) {
 
     return Response.json({ success: true });
   } catch (err) {
+    console.log("ลงทะเบียนล้มเหลว:", err.message || err);
     return Response.json(
       { success: false, error: "ลงทะเบียนไม่สำเร็จ กรุณาลองใหม่" },
       { status: 500 }
