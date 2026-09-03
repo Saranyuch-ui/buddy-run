@@ -410,9 +410,12 @@ async function handleCreateRegistration(request, env) {
 }
 
 async function sendRegistrationEmail(env, toEmail, eventTitle, packageName, price) {
-  if (!env.RESEND_API_KEY) return;
+  if (!env.RESEND_API_KEY) {
+    console.log("ไม่ได้ส่งอีเมล: ไม่พบ secret RESEND_API_KEY (ตั้งค่าด้วย `wrangler secret put RESEND_API_KEY`)");
+    return;
+  }
 
-  await fetch("https://api.resend.com/emails", {
+  const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${env.RESEND_API_KEY}`,
@@ -438,6 +441,11 @@ async function sendRegistrationEmail(env, toEmail, eventTitle, packageName, pric
       `,
     }),
   });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    console.log(`ส่งอีเมลไม่สำเร็จ (Resend ตอบ ${res.status}): ${errText}`);
+  }
 }
 async function handleGetRegistrations(request, env) {
   const url = new URL(request.url);
