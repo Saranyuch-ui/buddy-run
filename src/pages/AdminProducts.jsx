@@ -17,6 +17,12 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
 
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [addingCategory, setAddingCategory] = useState(false);
+  const [deletingCategoryId, setDeletingCategoryId] = useState(null);
+
   const loadProducts = () => {
     setLoading(true);
     fetch("/api/products")
@@ -28,8 +34,20 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
       .catch(() => setLoading(false));
   };
 
+  const loadCategories = () => {
+    setCategoriesLoading(true);
+    fetch(`/api/admin/categories?adminUserId=${currentUser.id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) setCategories(data.categories);
+        setCategoriesLoading(false);
+      })
+      .catch(() => setCategoriesLoading(false));
+  };
+
   useEffect(() => {
     loadProducts();
+    loadCategories();
   }, []);
 
   if (!currentUser || !currentUser.is_admin) {
@@ -154,6 +172,61 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
     }
   };
 
+  const handleAddCategory = async (e) => {
+    e.preventDefault();
+    const trimmed = newCategoryName.trim();
+    if (!trimmed) return;
+
+    setAddingCategory(true);
+
+    try {
+      const res = await fetch("/api/admin/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adminUserId: currentUser.id, name: trimmed }),
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.error || "เพิ่มหมวดหมู่ไม่สำเร็จ");
+        return;
+      }
+
+      setNewCategoryName("");
+      loadCategories();
+    } catch (err) {
+      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setAddingCategory(false);
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId) => {
+    if (!confirm("ยืนยันการลบหมวดหมู่นี้? (สินค้าที่เคยตั้งหมวดหมู่นี้ไว้จะไม่ถูกลบ)")) return;
+
+    setDeletingCategoryId(categoryId);
+
+    try {
+      const res = await fetch("/api/admin/categories", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adminUserId: currentUser.id, categoryId }),
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.error || "ลบหมวดหมู่ไม่สำเร็จ");
+        return;
+      }
+
+      setCategories(categories.filter((c) => c.id !== categoryId));
+    } catch (err) {
+      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setDeletingCategoryId(null);
+    }
+  };
+
   return (
     <>
       <Header
@@ -164,7 +237,49 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
       />
 
       <div className="admin-page">
-        <div className="admin-events-header">
+        <h2 className="admin-title">จัดการหมวดหมู่สินค้า</h2>
+
+        <form className="auth-form event-form" onSubmit={handleAddCategory}>
+          <label>เพิ่มหมวดหมู่ใหม่</label>
+          <div className="payment-actions">
+            <input
+              value={newCategoryName}
+              onChange={(e) => setNewCategoryName(e.target.value)}
+              placeholder="เช่น รองเท้า"
+              style={{ flex: 1 }}
+            />
+            <button type="submit" className="auth-submit-btn" disabled={addingCategory}>
+              {addingCategory ? "กำลังเพิ่ม..." : "+ เพิ่มหมวดหมู่"}
+            </button>
+          </div>
+        </form>
+
+        {categoriesLoading ? (
+          <p className="empty-text">กำลังโหลด...</p>
+        ) : categories.length === 0 ? (
+          <p className="empty-text">ยังไม่มีหมวดหมู่ กรุณาเพิ่มก่อนเพิ่มสินค้า</p>
+        ) : (
+          <div className="admin-list">
+            {categories.map((c) => (
+              <div key={c.id} className="admin-item">
+                <div className="admin-info">
+                  <h4>{c.name}</h4>
+                </div>
+                <div className="admin-actions">
+                  <button
+                    className="reject-btn"
+                    onClick={() => handleDeleteCategory(c.id)}
+                    disabled={deletingCategoryId === c.id}
+                  >
+                    {deletingCategoryId === c.id ? "กำลังลบ..." : "🗑️ ลบ"}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="admin-events-header admin-section-spacing">
           <h2 className="admin-title">จัดการสินค้า</h2>
           <button
             className="pay-btn"
@@ -202,11 +317,18 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
             />
 
             <label>หมวดหมู่</label>
-            <input
-              value={form.category}
-              onChange={handleChange("category")}
-              placeholder="เช่น เสื้อผ้า, อุปกรณ์เสริม"
-            />
+            {categories.length === 0 ? (
+              <p className="ocr-status">⚠️ ยังไม่มีหมวดหมู่ กรุณาเพิ่มหมวดหมู่ด้านบนก่อน</p>
+            ) : (
+              <select value={form.category} onChange={handleChange("category")}>
+                <option value="">— เลือกหมวดหมู่ —</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            )}
 
             <label>รายละเอียดสินค้า</label>
             <input value={form.description} onChange={handleChange("description")} />
