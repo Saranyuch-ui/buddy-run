@@ -456,7 +456,12 @@ async function handleGetRegistrations(request, env) {
   }
 
   const { results } = await env.DB.prepare(
-    "SELECT id, user_id, event_id, package_id, status, created_at, event_title, package_name, price, paid_amount, slip_image, result_image, event_end_date, reg_end_date FROM registrations WHERE user_id = ? ORDER BY created_at DESC"
+    `SELECT r.id, r.user_id, r.event_id, r.package_id, r.status, r.created_at, r.event_title,
+            r.package_name, r.price, r.paid_amount, r.slip_image, r.result_image,
+            r.event_end_date, r.reg_end_date, e.result_start_date, e.result_end_date
+     FROM registrations r
+     LEFT JOIN events e ON r.event_id = e.id
+     WHERE r.user_id = ? ORDER BY r.created_at DESC`
   )
     .bind(userId)
     .all();
@@ -592,6 +597,26 @@ async function handleSubmitResult(request, env) {
   if (reg.status !== "paid") {
     return Response.json(
       { success: false, error: "กิจกรรมนี้ยังไม่พร้อมให้ส่งผล" },
+      { status: 400 }
+    );
+  }
+
+  const event = await env.DB.prepare(
+    "SELECT result_start_date, result_end_date FROM events WHERE id = ?"
+  )
+    .bind(reg.event_id)
+    .first();
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  if (event?.result_start_date && todayStr < event.result_start_date.slice(0, 10)) {
+    return Response.json(
+      { success: false, error: "ยังไม่ถึงวันเริ่มส่งผลกิจกรรม" },
+      { status: 400 }
+    );
+  }
+  if (event?.result_end_date && todayStr > event.result_end_date.slice(0, 10)) {
+    return Response.json(
+      { success: false, error: "หมดเวลาส่งผลกิจกรรมแล้ว" },
       { status: 400 }
     );
   }
