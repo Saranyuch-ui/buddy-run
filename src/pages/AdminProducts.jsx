@@ -22,7 +22,6 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [addingCategory, setAddingCategory] = useState(false);
   const [deletingCategoryId, setDeletingCategoryId] = useState(null);
-  const [activeTab, setActiveTab] = useState("products");
 
   const loadProducts = () => {
     setLoading(true);
@@ -238,30 +237,6 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
       />
 
       <div className="admin-page">
-
-  <div className="admin-tabs">
-    <button
-      className={
-        "admin-tab" +
-        (activeTab === "products" ? " admin-tab-active" : "")
-      }
-      onClick={() => setActiveTab("products")}
-    >
-      จัดการสินค้า
-    </button>
-
-    <button
-      className={
-        "admin-tab" +
-        (activeTab === "categories" ? " admin-tab-active" : "")
-      }
-      onClick={() => setActiveTab("categories")}
-    >
-      จัดการหมวดหมู่สินค้า
-    </button>
-  </div>
-        {activeTab === "categories" && (
-<>
         <h2 className="admin-title">จัดการหมวดหมู่สินค้า</h2>
 
         <form className="auth-form event-form" onSubmit={handleAddCategory}>
@@ -303,11 +278,7 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
             ))}
           </div>
         )}
-  </>
-)}
 
-        {activeTab === "products" && (
-<>
         <div className="admin-events-header admin-section-spacing">
           <h2 className="admin-title">จัดการสินค้า</h2>
           <button
@@ -408,11 +379,10 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
               </div>
             ))}
           </div>
-  </>
         )}
-    </div>
-  </>
-);
+      </div>
+    </>
+  );
 }
 
 export default AdminProducts;
