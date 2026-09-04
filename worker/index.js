@@ -421,7 +421,7 @@ async function handleCreateRegistration(request, env) {
   }
 }
 
-async function sendRegistrationEmail(env, toEmail, eventTitle, packageName, price) {
+async function sendEmail(env, toEmail, subject, bodyHtml) {
   if (!env.RESEND_API_KEY) {
     console.log("ไม่ได้ส่งอีเมล: ไม่พบ secret RESEND_API_KEY (ตั้งค่าด้วย `wrangler secret put RESEND_API_KEY`)");
     return;
@@ -436,19 +436,11 @@ async function sendRegistrationEmail(env, toEmail, eventTitle, packageName, pric
     body: JSON.stringify({
       from: "Buddy Run <onboarding@resend.dev>",
       to: [toEmail],
-      subject: `ลงทะเบียนสำเร็จ - ${eventTitle}`,
+      subject,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
           <h2 style="color: #2563eb;">🏃 Buddy Run</h2>
-          <p>ลงทะเบียนกิจกรรมสำเร็จแล้ว!</p>
-          <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-            <tr><td style="padding: 8px 0; color: #6b7280;">กิจกรรม</td><td style="padding: 8px 0; font-weight: bold;">${eventTitle}</td></tr>
-            <tr><td style="padding: 8px 0; color: #6b7280;">แพ็กเกจ</td><td style="padding: 8px 0; font-weight: bold;">${packageName}</td></tr>
-            <tr><td style="padding: 8px 0; color: #6b7280;">ราคา</td><td style="padding: 8px 0; font-weight: bold;">${price.toLocaleString()} บาท</td></tr>
-          </table>
-          <p style="margin-top: 20px; color: #6b7280; font-size: 0.9rem;">
-            กรุณาชำระเงินภายในระยะเวลาที่กำหนด โดยเข้าไปที่หน้า "ชำระเงิน" บนเว็บไซต์
-          </p>
+          ${bodyHtml}
         </div>
       `,
     }),
@@ -459,6 +451,63 @@ async function sendRegistrationEmail(env, toEmail, eventTitle, packageName, pric
     console.log(`ส่งอีเมลไม่สำเร็จ (Resend ตอบ ${res.status}): ${errText}`);
   }
 }
+
+async function sendRegistrationEmail(env, toEmail, eventTitle, packageName, price) {
+  await sendEmail(
+    env,
+    toEmail,
+    `ลงทะเบียนสำเร็จ - ${eventTitle}`,
+    `
+      <p>ลงทะเบียนกิจกรรมสำเร็จแล้ว!</p>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+        <tr><td style="padding: 8px 0; color: #6b7280;">กิจกรรม</td><td style="padding: 8px 0; font-weight: bold;">${eventTitle}</td></tr>
+        <tr><td style="padding: 8px 0; color: #6b7280;">แพ็กเกจ</td><td style="padding: 8px 0; font-weight: bold;">${packageName}</td></tr>
+        <tr><td style="padding: 8px 0; color: #6b7280;">ราคา</td><td style="padding: 8px 0; font-weight: bold;">${price.toLocaleString()} บาท</td></tr>
+      </table>
+      <p style="margin-top: 20px; color: #6b7280; font-size: 0.9rem;">
+        กรุณาชำระเงินภายในระยะเวลาที่กำหนด โดยเข้าไปที่หน้า "ชำระเงิน" บนเว็บไซต์
+      </p>
+    `
+  );
+}
+
+async function sendPaymentApprovedEmail(env, toEmail, eventTitle, packageName, price) {
+  await sendEmail(
+    env,
+    toEmail,
+    `ยืนยันการชำระเงินสำเร็จ - ${eventTitle}`,
+    `
+      <p>✅ การชำระเงินของคุณได้รับการตรวจสอบและอนุมัติเรียบร้อยแล้ว!</p>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+        <tr><td style="padding: 8px 0; color: #6b7280;">กิจกรรม</td><td style="padding: 8px 0; font-weight: bold;">${eventTitle}</td></tr>
+        <tr><td style="padding: 8px 0; color: #6b7280;">แพ็กเกจ</td><td style="padding: 8px 0; font-weight: bold;">${packageName}</td></tr>
+        <tr><td style="padding: 8px 0; color: #6b7280;">ยอดที่ชำระ</td><td style="padding: 8px 0; font-weight: bold;">${price.toLocaleString()} บาท</td></tr>
+      </table>
+      <p style="margin-top: 20px; color: #6b7280; font-size: 0.9rem;">
+        เมื่อถึงวันเริ่มส่งผลกิจกรรม กรุณาเข้าไปที่หน้า "ส่งผลกิจกรรม" บนเว็บไซต์เพื่อส่งหลักฐานผลการวิ่ง
+      </p>
+    `
+  );
+}
+
+async function sendResultApprovedEmail(env, toEmail, eventTitle, packageName) {
+  await sendEmail(
+    env,
+    toEmail,
+    `อนุมัติผลกิจกรรมเรียบร้อยแล้ว - ${eventTitle}`,
+    `
+      <p>🎉 ผลการวิ่งของคุณได้รับการตรวจสอบและอนุมัติเรียบร้อยแล้ว!</p>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+        <tr><td style="padding: 8px 0; color: #6b7280;">กิจกรรม</td><td style="padding: 8px 0; font-weight: bold;">${eventTitle}</td></tr>
+        <tr><td style="padding: 8px 0; color: #6b7280;">แพ็กเกจ</td><td style="padding: 8px 0; font-weight: bold;">${packageName}</td></tr>
+      </table>
+      <p style="margin-top: 20px; color: #6b7280; font-size: 0.9rem;">
+        ขอบคุณที่เข้าร่วมกิจกรรมกับ Buddy Run! 🏃
+      </p>
+    `
+  );
+}
+
 async function handleGetRegistrations(request, env) {
   const url = new URL(request.url);
   const userId = url.searchParams.get("userId");
@@ -757,7 +806,7 @@ async function handleReviewRegistration(request, env) {
     );
   }
 
-  const reg = await env.DB.prepare("SELECT status FROM registrations WHERE id = ?")
+  const reg = await env.DB.prepare("SELECT * FROM registrations WHERE id = ?")
     .bind(registrationId)
     .first();
 
@@ -782,6 +831,23 @@ async function handleReviewRegistration(request, env) {
         )
           .bind(registrationId)
           .run();
+
+        const user = await env.DB.prepare("SELECT email FROM users WHERE id = ?")
+          .bind(reg.user_id)
+          .first();
+        if (user?.email) {
+          try {
+            await sendPaymentApprovedEmail(
+              env,
+              user.email,
+              reg.event_title,
+              reg.package_name,
+              reg.paid_amount ?? reg.price
+            );
+          } catch (emailErr) {
+            console.log("ส่งอีเมลไม่สำเร็จ:", emailErr);
+          }
+        }
       } else {
         await env.DB.prepare(
           "UPDATE registrations SET status = 'confirmed' WHERE id = ?"
@@ -802,6 +868,17 @@ async function handleReviewRegistration(request, env) {
         )
           .bind(registrationId)
           .run();
+
+        const user = await env.DB.prepare("SELECT email FROM users WHERE id = ?")
+          .bind(reg.user_id)
+          .first();
+        if (user?.email) {
+          try {
+            await sendResultApprovedEmail(env, user.email, reg.event_title, reg.package_name);
+          } catch (emailErr) {
+            console.log("ส่งอีเมลไม่สำเร็จ:", emailErr);
+          }
+        }
       } else {
         await env.DB.prepare(
           "UPDATE registrations SET status = 'paid' WHERE id = ?"
