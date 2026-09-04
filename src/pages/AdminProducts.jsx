@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import Header from "../components/Header";
 
+const SIZE_OPTIONS = ["S", "X", "M", "L", "XL", "XXL", "XXXL"];
+
 function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
   const [activeTab, setActiveTab] = useState("products");
   const [products, setProducts] = useState([]);
@@ -12,6 +14,7 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
     price: "",
     description: "",
     category: "",
+    sizes: [],
   });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -72,6 +75,15 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
     setForm({ ...form, [field]: e.target.value });
   };
 
+  const toggleSize = (size) => {
+    setForm((prev) => ({
+      ...prev,
+      sizes: prev.sizes.includes(size)
+        ? prev.sizes.filter((s) => s !== size)
+        : [...prev.sizes, size],
+    }));
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -80,7 +92,7 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
   };
 
   const resetForm = () => {
-    setForm({ name: "", price: "", description: "", category: "" });
+    setForm({ name: "", price: "", description: "", category: "", sizes: [] });
     setImageFile(null);
     setImagePreview(null);
     setShowForm(false);
@@ -93,6 +105,7 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
       price: String(p.price ?? ""),
       description: p.description || "",
       category: p.category || "",
+      sizes: p.sizes ? p.sizes.split(",").filter(Boolean) : [],
     });
     setImageFile(null);
     setImagePreview(p.image || null);
@@ -103,8 +116,14 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.name || !form.price || !form.category || (!editingId && !imageFile)) {
-      alert("กรุณากรอกข้อมูลให้ครบ (รวมถึงรูปภาพ)");
+    if (
+      !form.name ||
+      !form.price ||
+      !form.category ||
+      form.sizes.length === 0 ||
+      (!editingId && !imageFile)
+    ) {
+      alert("กรุณากรอกข้อมูลให้ครบ (รวมถึงรูปภาพและเลือกไซส์อย่างน้อย 1 ไซส์)");
       return;
     }
 
@@ -117,6 +136,7 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
       formData.append("price", form.price);
       formData.append("description", form.description);
       formData.append("category", form.category);
+      formData.append("sizes", form.sizes.join(","));
       if (imageFile) formData.append("image", imageFile);
 
       let res;
@@ -355,6 +375,28 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
                 <label>รายละเอียดสินค้า</label>
                 <input value={form.description} onChange={handleChange("description")} />
 
+                <label>ไซส์ที่มีขาย</label>
+                <div className="shop-size-options">
+                  {SIZE_OPTIONS.map((s) => (
+                    <label
+                      key={s}
+                      className={
+                        "shop-size-btn" +
+                        (form.sizes.includes(s) ? " shop-size-selected" : "")
+                      }
+                      style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={form.sizes.includes(s)}
+                        onChange={() => toggleSize(s)}
+                        style={{ margin: 0 }}
+                      />
+                      {s}
+                    </label>
+                  ))}
+                </div>
+
                 <div className="payment-actions">
                   <button type="submit" className="auth-submit-btn" disabled={submitting}>
                     {submitting ? "กำลังบันทึก..." : editingId ? "บันทึกการแก้ไข" : "บันทึกสินค้า"}
@@ -384,6 +426,7 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
                     <div className="admin-info">
                       <h4>{p.name}</h4>
                       <p>{p.price.toLocaleString()} บาท — หมวดหมู่: {p.category || "-"}</p>
+                      <p>ไซส์: {p.sizes ? p.sizes.split(",").join(", ") : "-"}</p>
                       <p>{p.description}</p>
                     </div>
                     <div className="admin-actions">
