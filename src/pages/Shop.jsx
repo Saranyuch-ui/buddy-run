@@ -30,6 +30,9 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
   const getSelection = (productId) =>
     selection[productId] || { size: "", quantity: 1 };
 
+  const hasSizes = (product) =>
+    !!(product.sizes && product.sizes.split(",").filter(Boolean).length);
+
   const setSize = (productId, size) => {
     setSelection({
       ...selection,
@@ -50,6 +53,7 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
       onNavigate("login");
       return false;
     }
+    if (!hasSizes(product)) return true;
     const sel = getSelection(product.id);
     if (!sel.size) {
       alert("กรุณาเลือกไซส์ก่อน");
@@ -62,6 +66,7 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
     if (!requireLoginAndSize(product)) return;
 
     const sel = getSelection(product.id);
+    const sizeToSend = hasSizes(product) ? sel.size : "ไม่มีไซส์";
     setSubmitting(true);
 
     try {
@@ -72,7 +77,7 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
           userId: currentUser.id,
           productId: product.id,
           quantity: sel.quantity,
-          size: sel.size,
+          size: sizeToSend,
         }),
       });
 
@@ -83,7 +88,11 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
         return;
       }
 
-      alert(`เพิ่ม "${product.name}" (ไซส์ ${sel.size}) ลงตะกร้าแล้ว`);
+      alert(
+        hasSizes(product)
+          ? `เพิ่ม "${product.name}" (ไซส์ ${sel.size}) ลงตะกร้าแล้ว`
+          : `เพิ่ม "${product.name}" ลงตะกร้าแล้ว`
+      );
     } catch (err) {
       alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     } finally {
@@ -95,6 +104,7 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
     if (!requireLoginAndSize(product)) return;
 
     const sel = getSelection(product.id);
+    const sizeToSend = hasSizes(product) ? sel.size : "ไม่มีไซส์";
     setSubmitting(true);
 
     try {
@@ -105,7 +115,7 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
           userId: currentUser.id,
           productId: product.id,
           quantity: sel.quantity,
-          size: sel.size,
+          size: sizeToSend,
         }),
       });
 
