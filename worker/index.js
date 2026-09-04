@@ -255,7 +255,7 @@ async function handleLogin(request, env) {
 async function handleGetEvents(env) {
   const { results } = await env.DB.prepare(
     `SELECT id, title, location, distance, image, description,
-            reg_start_date, reg_end_date, result_start_date, result_end_date
+            reg_start_date, reg_end_date, result_start_date, result_end_date, shipping_date
      FROM events ORDER BY reg_start_date ASC`
   ).all();
 
@@ -281,6 +281,7 @@ async function handleCreateEvent(request, env) {
   const regEndDate = formData.get("regEndDate");
   const resultStartDate = formData.get("resultStartDate");
   const resultEndDate = formData.get("resultEndDate");
+  const shippingDate = formData.get("shippingDate");
   const file = formData.get("image");
 
   if (
@@ -321,8 +322,8 @@ async function handleCreateEvent(request, env) {
     await env.DB.prepare(
       `INSERT INTO events
         (title, event_date, end_date, location, distance, image, description,
-         reg_start_date, reg_end_date, result_start_date, result_end_date)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         reg_start_date, reg_end_date, result_start_date, result_end_date, shipping_date)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
       .bind(
         title,
@@ -335,7 +336,8 @@ async function handleCreateEvent(request, env) {
         regStartDate,
         regEndDate,
         resultStartDate,
-        resultEndDate
+        resultEndDate,
+        shippingDate || null
       )
       .run();
 
@@ -490,7 +492,7 @@ async function sendPaymentApprovedEmail(env, toEmail, eventTitle, packageName, p
   );
 }
 
-async function sendResultApprovedEmail(env, toEmail, eventTitle, packageName) {
+async function sendResultApprovedEmail(env, toEmail, eventTitle, packageName, shippingDate) {
   await sendEmail(
     env,
     toEmail,
@@ -501,6 +503,11 @@ async function sendResultApprovedEmail(env, toEmail, eventTitle, packageName) {
         <tr><td style="padding: 8px 0; color: #6b7280;">กิจกรรม</td><td style="padding: 8px 0; font-weight: bold;">${eventTitle}</td></tr>
         <tr><td style="padding: 8px 0; color: #6b7280;">แพ็กเกจ</td><td style="padding: 8px 0; font-weight: bold;">${packageName}</td></tr>
       </table>
+      ${
+        shippingDate
+          ? `<p style="margin-top: 15px;">🎁 ของรางวัล จะจัดส่งให้ตามที่อยู่ ในวันที่ ${shippingDate.slice(0, 10)}</p>`
+          : ""
+      }
       <p style="margin-top: 20px; color: #6b7280; font-size: 0.9rem;">
         ขอบคุณที่เข้าร่วมกิจกรรมกับ Buddy Run! 🏃
       </p>
@@ -872,9 +879,18 @@ async function handleReviewRegistration(request, env) {
         const user = await env.DB.prepare("SELECT email FROM users WHERE id = ?")
           .bind(reg.user_id)
           .first();
+        const event = await env.DB.prepare("SELECT shipping_date FROM events WHERE id = ?")
+          .bind(reg.event_id)
+          .first();
         if (user?.email) {
           try {
-            await sendResultApprovedEmail(env, user.email, reg.event_title, reg.package_name);
+            await sendResultApprovedEmail(
+              env,
+              user.email,
+              reg.event_title,
+              reg.package_name,
+              event?.shipping_date
+            );
           } catch (emailErr) {
             console.log("ส่งอีเมลไม่สำเร็จ:", emailErr);
           }
@@ -1762,6 +1778,7 @@ async function handleUpdateEvent(request, env) {
   const regEndDate = formData.get("regEndDate");
   const resultStartDate = formData.get("resultStartDate");
   const resultEndDate = formData.get("resultEndDate");
+  const shippingDate = formData.get("shippingDate");
   const file = formData.get("image");
 
   if (
@@ -1806,7 +1823,7 @@ async function handleUpdateEvent(request, env) {
         `UPDATE events SET
           title = ?, event_date = ?, end_date = ?, location = ?, distance = ?,
           image = ?, description = ?, reg_start_date = ?, reg_end_date = ?,
-          result_start_date = ?, result_end_date = ?
+          result_start_date = ?, result_end_date = ?, shipping_date = ?
          WHERE id = ?`
       )
         .bind(
@@ -1821,6 +1838,7 @@ async function handleUpdateEvent(request, env) {
           regEndDate,
           resultStartDate,
           resultEndDate,
+          shippingDate || null,
           eventId
         )
         .run();
@@ -1829,7 +1847,7 @@ async function handleUpdateEvent(request, env) {
         `UPDATE events SET
           title = ?, event_date = ?, end_date = ?, location = ?, distance = ?,
           description = ?, reg_start_date = ?, reg_end_date = ?,
-          result_start_date = ?, result_end_date = ?
+          result_start_date = ?, result_end_date = ?, shipping_date = ?
          WHERE id = ?`
       )
         .bind(
@@ -1843,6 +1861,7 @@ async function handleUpdateEvent(request, env) {
           regEndDate,
           resultStartDate,
           resultEndDate,
+          shippingDate || null,
           eventId
         )
         .run();
