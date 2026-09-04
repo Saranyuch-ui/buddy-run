@@ -11,6 +11,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminEvents from "./pages/AdminEvents";
 import AdminMembers from "./pages/AdminMembers";
 import AdminProducts from "./pages/AdminProducts";
+import AdminShipping from "./pages/AdminShipping";
 import Shop from "./pages/Shop";
 import ShopPayment from "./pages/ShopPayment";
 import Cart from "./pages/Cart";
@@ -184,6 +185,18 @@ function App() {
         onLogoClick={goHome}
         currentUser={currentUser}
         onLogout={handleLogout}
+      />
+    );
+  }
+
+  if (page === "admin-shipping-events" || page === "admin-shipping-shop") {
+    return (
+      <AdminShipping
+        onNavigate={setPage}
+        onLogoClick={goHome}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+        initialTab={page === "admin-shipping-shop" ? "shop" : "events"}
       />
     );
   }
