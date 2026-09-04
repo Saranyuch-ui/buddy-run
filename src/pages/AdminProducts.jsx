@@ -1,34 +1,14 @@
 import { useState, useEffect } from "react";
 import Header from "../components/Header";
 
-const SIZE_OPTIONS = ["S", "X", "M", "L", "XL", "XXL", "XXXL"];
-
-function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
-  const [activeTab, setActiveTab] = useState("products");
+function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [form, setForm] = useState({
-    name: "",
-    price: "",
-    description: "",
-    category: "",
-    sizes: [],
-  });
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [selection, setSelection] = useState({});
   const [submitting, setSubmitting] = useState(false);
-  const [deletingId, setDeletingId] = useState(null);
+  const [activeCategory, setActiveCategory] = useState("all");
 
-  const [categories, setCategories] = useState([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [addingCategory, setAddingCategory] = useState(false);
-  const [deletingCategoryId, setDeletingCategoryId] = useState(null);
-
-  const loadProducts = () => {
-    setLoading(true);
+  useEffect(() => {
     fetch("/api/products")
       .then((res) => res.json())
       .then((data) => {
@@ -36,122 +16,74 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  };
-
-  const loadCategories = () => {
-    setCategoriesLoading(true);
-    fetch(`/api/admin/categories?adminUserId=${currentUser.id}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) setCategories(data.categories);
-        setCategoriesLoading(false);
-      })
-      .catch(() => setCategoriesLoading(false));
-  };
-
-  useEffect(() => {
-    loadProducts();
-    loadCategories();
   }, []);
 
-  if (!currentUser || !currentUser.is_admin) {
-    return (
-      <>
-        <Header
-          onNavigate={onNavigate}
-          onLogoClick={onLogoClick}
-          currentUser={currentUser}
-          onLogout={onLogout}
-        />
-        <div className="coming-soon">
-          <h2>🚫 ไม่มีสิทธิ์เข้าถึง</h2>
-          <p>หน้านี้สำหรับผู้ดูแลระบบเท่านั้น</p>
-        </div>
-      </>
-    );
-  }
+  const categories = Array.from(
+    new Set(products.map((p) => p.category).filter(Boolean))
+  );
 
-  const handleChange = (field) => (e) => {
-    setForm({ ...form, [field]: e.target.value });
-  };
+  const filteredProducts =
+    activeCategory === "all"
+      ? products
+      : products.filter((p) => p.category === activeCategory);
 
-  const toggleSize = (size) => {
-    setForm((prev) => ({
-      ...prev,
-      sizes: prev.sizes.includes(size)
-        ? prev.sizes.filter((s) => s !== size)
-        : [...prev.sizes, size],
-    }));
-  };
+  const getSelection = (productId) =>
+    selection[productId] || { size: "", quantity: 1 };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-  };
-
-  const resetForm = () => {
-    setForm({ name: "", price: "", description: "", category: "", sizes: [] });
-    setImageFile(null);
-    setImagePreview(null);
-    setShowForm(false);
-    setEditingId(null);
-  };
-
-  const startEdit = (p) => {
-    setForm({
-      name: p.name || "",
-      price: String(p.price ?? ""),
-      description: p.description || "",
-      category: p.category || "",
-      sizes: p.sizes ? p.sizes.split(",").filter(Boolean) : [],
+  const setSize = (productId, size) => {
+    setSelection({
+      ...selection,
+      [productId]: { ...getSelection(productId), size },
     });
-    setImageFile(null);
-    setImagePreview(p.image || null);
-    setEditingId(p.id);
-    setShowForm(true);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const setQuantity = (productId, quantity) => {
+    setSelection({
+      ...selection,
+      [productId]: { ...getSelection(productId), quantity: Math.max(1, quantity) },
+    });
+  };
 
-    if (!form.name || !form.price || !form.category || (!editingId && !imageFile)) {
-      alert("กรุณากรอกข้อมูลให้ครบ (รวมถึงรูปภาพ)");
-      return;
+  const requireLoginAndSize = (product) => {
+    if (!isLoggedIn) {
+      alert("กรุณาเข้าสู่ระบบก่อนสั่งซื้อสินค้า");
+      onNavigate("login");
+      return false;
     }
+    const sel = getSelection(product.id);
+    if (!sel.size) {
+      alert("กรุณาเลือกไซส์ก่อน");
+      return false;
+    }
+    return true;
+  };
 
+  const handleAddToCart = async (product) => {
+    if (!requireLoginAndSize(product)) return;
+
+    const sel = getSelection(product.id);
     setSubmitting(true);
 
     try {
-      const formData = new FormData();
-      formData.append("adminUserId", currentUser.id);
-      formData.append("name", form.name);
-      formData.append("price", form.price);
-      formData.append("description", form.description);
-      formData.append("category", form.category);
-      formData.append("sizes", form.sizes.join(","));
-      if (imageFile) formData.append("image", imageFile);
-
-      let res;
-      if (editingId) {
-        formData.append("productId", editingId);
-        res = await fetch("/api/admin/products", { method: "PUT", body: formData });
-      } else {
-        res = await fetch("/api/admin/products", { method: "POST", body: formData });
-      }
+      const res = await fetch("/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          productId: product.id,
+          quantity: sel.quantity,
+          size: sel.size,
+        }),
+      });
 
       const data = await res.json();
 
       if (!data.success) {
-        alert(data.error || (editingId ? "แก้ไขสินค้าไม่สำเร็จ" : "เพิ่มสินค้าไม่สำเร็จ"));
-        setSubmitting(false);
+        alert(data.error || "เพิ่มสินค้าลงตะกร้าไม่สำเร็จ");
         return;
       }
 
-      resetForm();
-      loadProducts();
-      alert(editingId ? "แก้ไขสินค้าเรียบร้อยแล้ว" : "เพิ่มสินค้าเรียบร้อยแล้ว");
+      alert(`เพิ่ม "${product.name}" (ไซส์ ${sel.size}) ลงตะกร้าแล้ว`);
     } catch (err) {
       alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     } finally {
@@ -159,86 +91,36 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
     }
   };
 
-  const handleDelete = async (productId) => {
-    if (!confirm("ยืนยันการลบสินค้านี้?")) return;
+  const handleBuyNow = async (product) => {
+    if (!requireLoginAndSize(product)) return;
 
-    setDeletingId(productId);
-
-    try {
-      const res = await fetch("/api/admin/products", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ adminUserId: currentUser.id, productId }),
-      });
-
-      const data = await res.json();
-
-      if (!data.success) {
-        alert(data.error || "ลบสินค้าไม่สำเร็จ");
-        setDeletingId(null);
-        return;
-      }
-
-      setProducts(products.filter((p) => p.id !== productId));
-    } catch (err) {
-      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
-  const handleAddCategory = async (e) => {
-    e.preventDefault();
-    const trimmed = newCategoryName.trim();
-    if (!trimmed) return;
-
-    setAddingCategory(true);
+    const sel = getSelection(product.id);
+    setSubmitting(true);
 
     try {
-      const res = await fetch("/api/admin/categories", {
+      const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ adminUserId: currentUser.id, name: trimmed }),
+        body: JSON.stringify({
+          userId: currentUser.id,
+          productId: product.id,
+          quantity: sel.quantity,
+          size: sel.size,
+        }),
       });
+
       const data = await res.json();
 
       if (!data.success) {
-        alert(data.error || "เพิ่มหมวดหมู่ไม่สำเร็จ");
+        alert(data.error || "สั่งซื้อไม่สำเร็จ");
         return;
       }
 
-      setNewCategoryName("");
-      loadCategories();
+      onNavigate("shop-payment");
     } catch (err) {
       alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     } finally {
-      setAddingCategory(false);
-    }
-  };
-
-  const handleDeleteCategory = async (categoryId) => {
-    if (!confirm("ยืนยันการลบหมวดหมู่นี้? (สินค้าที่เคยตั้งหมวดหมู่นี้ไว้จะไม่ถูกลบ)")) return;
-
-    setDeletingCategoryId(categoryId);
-
-    try {
-      const res = await fetch("/api/admin/categories", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ adminUserId: currentUser.id, categoryId }),
-      });
-      const data = await res.json();
-
-      if (!data.success) {
-        alert(data.error || "ลบหมวดหมู่ไม่สำเร็จ");
-        return;
-      }
-
-      setCategories(categories.filter((c) => c.id !== categoryId));
-    } catch (err) {
-      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
-    } finally {
-      setDeletingCategoryId(null);
+      setSubmitting(false);
     }
   };
 
@@ -251,199 +133,130 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
         onLogout={onLogout}
       />
 
-      <div className="admin-page">
-        <div className="admin-tabs">
-          <button
-            className={"admin-tab" + (activeTab === "products" ? " admin-tab-active" : "")}
-            onClick={() => setActiveTab("products")}
-          >
-            จัดการสินค้า
-          </button>
-          <button
-            className={"admin-tab" + (activeTab === "categories" ? " admin-tab-active" : "")}
-            onClick={() => setActiveTab("categories")}
-          >
-            จัดการหมวดหมู่สินค้า
-          </button>
-        </div>
+      <section className="event-section">
+        <h2 className="section-title">🛍️ ร้านค้า Buddy Run</h2>
 
-        {activeTab === "categories" && (
-          <>
-            <form className="auth-form event-form" onSubmit={handleAddCategory}>
-              <label>เพิ่มหมวดหมู่ใหม่</label>
-              <div className="payment-actions">
-                <input
-                  value={newCategoryName}
-                  onChange={(e) => setNewCategoryName(e.target.value)}
-                  placeholder="เช่น รองเท้า"
-                  style={{ flex: 1 }}
-                />
-                <button type="submit" className="auth-submit-btn" disabled={addingCategory}>
-                  {addingCategory ? "กำลังเพิ่ม..." : "+ เพิ่มหมวดหมู่"}
-                </button>
-              </div>
-            </form>
-
-            {categoriesLoading ? (
-              <p className="empty-text">กำลังโหลด...</p>
-            ) : categories.length === 0 ? (
-              <p className="empty-text">ยังไม่มีหมวดหมู่ กรุณาเพิ่มก่อนเพิ่มสินค้า</p>
-            ) : (
-              <div className="admin-list">
-                {categories.map((c) => (
-                  <div key={c.id} className="admin-item">
-                    <div className="admin-info">
-                      <h4>{c.name}</h4>
-                    </div>
-                    <div className="admin-actions">
-                      <button
-                        className="reject-btn"
-                        onClick={() => handleDeleteCategory(c.id)}
-                        disabled={deletingCategoryId === c.id}
-                      >
-                        {deletingCategoryId === c.id ? "กำลังลบ..." : "🗑️ ลบ"}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-
-        {activeTab === "products" && (
-          <>
-            <div className="admin-events-header">
-              <h2 className="admin-title">จัดการสินค้า</h2>
+        {loading ? (
+          <p className="empty-text">กำลังโหลด...</p>
+        ) : products.length === 0 ? (
+          <p className="empty-text">ยังไม่มีสินค้า</p>
+        ) : (
+          <div className="shop-layout">
+            <div className="shop-sidebar">
+              <h3 className="shop-sidebar-title">หมวดหมู่</h3>
               <button
-                className="pay-btn"
-                onClick={() => (showForm ? resetForm() : setShowForm(true))}
+                className={
+                  "shop-category-btn" + (activeCategory === "all" ? " shop-category-active" : "")
+                }
+                onClick={() => setActiveCategory("all")}
               >
-                {showForm ? "ปิดฟอร์ม" : "+ เพิ่มสินค้า"}
+                ทั้งหมด
               </button>
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  className={
+                    "shop-category-btn" + (activeCategory === cat ? " shop-category-active" : "")
+                  }
+                  onClick={() => setActiveCategory(cat)}
+                >
+                  {cat}
+                </button>
+              ))}
             </div>
 
-            {showForm && (
-              <form className="auth-form event-form" onSubmit={handleSubmit}>
-                <h3 className="form-section-title">
-                  {editingId ? "แก้ไขสินค้า" : "เพิ่มสินค้าใหม่"}
-                </h3>
+            <div className="grid shop-product-grid">
+              {filteredProducts.map((product) => {
+                const sel = getSelection(product.id);
+                return (
+  <div key={product.id} className="card">
+<img src={product.image} alt={product.name} />
 
-                <label>รูปภาพสินค้า{editingId ? " (ไม่บังคับ ถ้าไม่เปลี่ยนจะใช้รูปเดิม)" : ""}</label>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={handleFileChange}
-                />
-                {imagePreview && (
-                  <img src={imagePreview} alt="preview" className="slip-preview" />
-                )}
+<div className="card-body">
 
-                <label>ชื่อสินค้า</label>
-                <input value={form.name} onChange={handleChange("name")} />
+      <div className="shop-content">
+        <h3>{product.name}</h3>
 
-                <label>ราคา (บาท)</label>
-                <input
-                  type="number"
-                  min="1"
-                  value={form.price}
-                  onChange={handleChange("price")}
-                />
+        <p>{product.description}</p>
 
-                <label>หมวดหมู่</label>
-                {categories.length === 0 ? (
-                  <p className="ocr-status">
-                    ⚠️ ยังไม่มีหมวดหมู่ กรุณาไปเพิ่มที่แท็บ "จัดการหมวดหมู่สินค้า" ก่อน
-                  </p>
-                ) : (
-                  <select value={form.category} onChange={handleChange("category")}>
-                    <option value="">— เลือกหมวดหมู่ —</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.name}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                )}
-
-                <label>รายละเอียดสินค้า</label>
-                <input value={form.description} onChange={handleChange("description")} />
-
-                <label>ไซส์ที่มีขาย (ถ้าไม่เลือกจะแสดง "ไม่มีไซส์ให้เลือก" ที่หน้าร้านค้า)</label>
-                <div className="shop-size-options">
-                  {SIZE_OPTIONS.map((s) => (
-                    <label
-                      key={s}
-                      className={
-                        "shop-size-btn" +
-                        (form.sizes.includes(s) ? " shop-size-selected" : "")
-                      }
-                      style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={form.sizes.includes(s)}
-                        onChange={() => toggleSize(s)}
-                        style={{ margin: 0 }}
-                      />
-                      {s}
-                    </label>
-                  ))}
-                </div>
-
-                <div className="payment-actions">
-                  <button type="submit" className="auth-submit-btn" disabled={submitting}>
-                    {submitting ? "กำลังบันทึก..." : editingId ? "บันทึกการแก้ไข" : "บันทึกสินค้า"}
-                  </button>
-                  <button
-                    type="button"
-                    className="auth-secondary-btn"
-                    onClick={resetForm}
-                    disabled={submitting}
-                  >
-                    ยกเลิก
-                  </button>
-                </div>
-              </form>
-            )}
-
-            <h2 className="admin-title admin-section-spacing">รายการสินค้าทั้งหมด</h2>
-
-            {loading ? (
-              <p className="empty-text">กำลังโหลด...</p>
-            ) : products.length === 0 ? (
-              <p className="empty-text">ยังไม่มีสินค้า</p>
-            ) : (
-              <div className="admin-list">
-                {products.map((p) => (
-                  <div key={p.id} className="admin-item">
-                    <div className="admin-info">
-                      <h4>{p.name}</h4>
-                      <p>{p.price.toLocaleString()} บาท — หมวดหมู่: {p.category || "-"}</p>
-                      <p>ไซส์: {p.sizes ? p.sizes.split(",").join(", ") : "-"}</p>
-                      <p>{p.description}</p>
-                    </div>
-                    <div className="admin-actions">
-                      <button className="edit-btn" onClick={() => startEdit(p)}>
-                        ✏️ แก้ไข
-                      </button>
-                      <button
-                        className="reject-btn"
-                        onClick={() => handleDelete(p.id)}
-                        disabled={deletingId === p.id}
-                      >
-                        {deletingId === p.id ? "กำลังลบ..." : "🗑️ ลบ"}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
+        <p className="package-price">
+          {product.price.toLocaleString()} บาท
+        </p>
       </div>
+
+    <div className="shop-actions">
+
+      <div className="shop-size-row">
+        <label>ไซส์</label>
+
+        <div className="shop-size-options">
+          {!product.sizes ? (
+            <span className="ocr-status">ไม่มีไซส์ให้เลือก</span>
+          ) : (
+            product.sizes.split(",").filter(Boolean).map((s) => (
+              <button
+                key={s}
+                type="button"
+                className={
+                  "shop-size-btn" +
+                  (sel.size === s ? " shop-size-selected" : "")
+                }
+                onClick={() => setSize(product.id, s)}
+              >
+                {s}
+              </button>
+            ))
+          )}
+        </div>
+      </div>
+
+      <div className="shop-qty-row">
+        <label>จำนวน</label>
+
+        <input
+          type="number"
+          min="1"
+          value={sel.quantity}
+          onChange={(e) =>
+            setQuantity(product.id, Number(e.target.value))
+          }
+        />
+      </div>
+
+      <div className="shop-btn-row">
+        <button
+          className="shop-cart-btn"
+          onClick={() => handleAddToCart(product)}
+          disabled={submitting}
+        >
+          ใส่ตะกร้า
+        </button>
+
+        <button
+          onClick={() => handleBuyNow(product)}
+          disabled={submitting}
+        >
+          ซื้อสินค้า
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+                      
+                );
+              })}
+
+              {filteredProducts.length === 0 && (
+                <p className="empty-text">ไม่มีสินค้าในหมวดนี้</p>
+              )}
+            </div>
+          </div>
+        )}
+      </section>
     </>
   );
 }
 
-export default AdminProducts;
+export default Shop;
