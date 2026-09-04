@@ -1090,6 +1090,8 @@ function formatAddress(u) {
 async function handleGetShippingEvents(request, env) {
   const url = new URL(request.url);
   const adminUserId = url.searchParams.get("adminUserId");
+  const view = url.searchParams.get("view") === "shipped" ? "shipped" : "pending";
+  const search = (url.searchParams.get("search") || "").trim();
 
   if (!adminUserId || !(await isAdmin(env, adminUserId))) {
     return Response.json(
@@ -1098,15 +1100,27 @@ async function handleGetShippingEvents(request, env) {
     );
   }
 
-  const { results } = await env.DB.prepare(
-    `SELECT r.id, r.event_title, r.package_name,
+  const shippedCondition = view === "shipped" ? "r.shipped_at IS NOT NULL" : "r.shipped_at IS NULL";
+  const orderBy = view === "shipped" ? "r.shipped_at DESC" : "r.created_at ASC";
+
+  let query = `SELECT r.id, r.event_title, r.package_name, r.shipped_at,
             u.first_name, u.last_name, u.phone, u.shirt_size,
             u.house_no, u.moo, u.soi, u.road, u.sub_district, u.district, u.province, u.postal_code
      FROM registrations r
      JOIN users u ON r.user_id = u.id
-     WHERE r.status = 'completed' AND r.shipped_at IS NULL
-     ORDER BY r.created_at ASC`
-  ).all();
+     WHERE r.status = 'completed' AND ${shippedCondition}`;
+
+  const params = [];
+  if (search) {
+    query += ` AND (u.first_name LIKE ? OR u.last_name LIKE ? OR u.phone LIKE ? OR r.event_title LIKE ?)`;
+    const term = `%${search}%`;
+    params.push(term, term, term, term);
+  }
+  query += ` ORDER BY ${orderBy}`;
+
+  const { results } = await env.DB.prepare(query)
+    .bind(...params)
+    .all();
 
   const items = results.map((r) => ({
     id: r.id,
@@ -1116,6 +1130,7 @@ async function handleGetShippingEvents(request, env) {
     eventTitle: r.event_title,
     packageName: r.package_name,
     shirtSize: r.shirt_size || "",
+    shippedAt: r.shipped_at,
   }));
 
   return Response.json({ success: true, items });
@@ -1124,6 +1139,8 @@ async function handleGetShippingEvents(request, env) {
 async function handleGetShippingShop(request, env) {
   const url = new URL(request.url);
   const adminUserId = url.searchParams.get("adminUserId");
+  const view = url.searchParams.get("view") === "shipped" ? "shipped" : "pending";
+  const search = (url.searchParams.get("search") || "").trim();
 
   if (!adminUserId || !(await isAdmin(env, adminUserId))) {
     return Response.json(
@@ -1132,15 +1149,27 @@ async function handleGetShippingShop(request, env) {
     );
   }
 
-  const { results } = await env.DB.prepare(
-    `SELECT o.id, o.product_name, o.size, o.quantity,
+  const shippedCondition = view === "shipped" ? "o.shipped_at IS NOT NULL" : "o.shipped_at IS NULL";
+  const orderBy = view === "shipped" ? "o.shipped_at DESC" : "o.created_at ASC";
+
+  let query = `SELECT o.id, o.product_name, o.size, o.quantity, o.shipped_at,
             u.first_name, u.last_name, u.phone,
             u.house_no, u.moo, u.soi, u.road, u.sub_district, u.district, u.province, u.postal_code
      FROM orders o
      JOIN users u ON o.user_id = u.id
-     WHERE o.status = 'paid' AND o.shipped_at IS NULL
-     ORDER BY o.created_at ASC`
-  ).all();
+     WHERE o.status = 'paid' AND ${shippedCondition}`;
+
+  const params = [];
+  if (search) {
+    query += ` AND (u.first_name LIKE ? OR u.last_name LIKE ? OR u.phone LIKE ? OR o.product_name LIKE ?)`;
+    const term = `%${search}%`;
+    params.push(term, term, term, term);
+  }
+  query += ` ORDER BY ${orderBy}`;
+
+  const { results } = await env.DB.prepare(query)
+    .bind(...params)
+    .all();
 
   const items = results.map((o) => ({
     id: o.id,
@@ -1150,6 +1179,7 @@ async function handleGetShippingShop(request, env) {
     productName: o.product_name,
     size: o.size || "",
     quantity: o.quantity,
+    shippedAt: o.shipped_at,
   }));
 
   return Response.json({ success: true, items });
