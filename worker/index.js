@@ -1599,9 +1599,9 @@ async function handleCreateProduct(request, env) {
   const sizes = formData.get("sizes");
   const file = formData.get("image");
 
-  if (!name || !price || price <= 0 || !category || !sizes || !file) {
+  if (!name || !price || price <= 0 || !category || !file) {
     return Response.json(
-      { success: false, error: "กรุณากรอกข้อมูลให้ครบถ้วน (รวมถึงเลือกไซส์อย่างน้อย 1 ไซส์)" },
+      { success: false, error: "กรุณากรอกข้อมูลให้ครบถ้วน" },
       { status: 400 }
     );
   }
@@ -1799,9 +1799,9 @@ async function handleUpdateProduct(request, env) {
   const sizes = formData.get("sizes");
   const file = formData.get("image");
 
-  if (!productId || !name || !price || price <= 0 || !category || !sizes) {
+  if (!productId || !name || !price || price <= 0 || !category) {
     return Response.json(
-      { success: false, error: "กรุณากรอกข้อมูลให้ครบถ้วน (รวมถึงเลือกไซส์อย่างน้อย 1 ไซส์)" },
+      { success: false, error: "กรุณากรอกข้อมูลให้ครบถ้วน" },
       { status: 400 }
     );
   }
