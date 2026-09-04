@@ -210,113 +210,118 @@ function AdminShipping({ onNavigate, onLogoClick, currentUser, onLogout, initial
           </button>
         </div>
 
-        <div className="admin-tabs">
-          <button
-            className={"admin-tab" + (activeTab === "events" ? " admin-tab-active" : "")}
-            onClick={() => switchTab("events")}
-          >
-            กิจกรรม
-          </button>
-          <button
-            className={"admin-tab" + (activeTab === "shop" ? " admin-tab-active" : "")}
-            onClick={() => switchTab("shop")}
-          >
-            ร้านค้า
-          </button>
-        </div>
-
-        <div className="admin-tabs">
-          <button
-            className={"admin-tab" + (viewMode === "pending" ? " admin-tab-active" : "")}
-            onClick={() => switchViewMode("pending")}
-          >
-            รอจัดส่ง
-          </button>
-          <button
-            className={"admin-tab" + (viewMode === "history" ? " admin-tab-active" : "")}
-            onClick={() => switchViewMode("history")}
-          >
-            ประวัติการส่ง
-          </button>
-        </div>
-
-        <form className="payment-actions admin-section-spacing" onSubmit={handleSearchSubmit}>
-          <input
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="ค้นหาชื่อ, เบอร์โทร, กิจกรรม/สินค้า"
-            style={{ flex: 1 }}
-          />
-          <button type="submit" className="auth-secondary-btn">
-            🔍 ค้นหา
-          </button>
-          {search && (
-            <button type="button" className="auth-secondary-btn" onClick={handleClearSearch}>
-              ล้างค้นหา
+        <div className="shop-layout">
+          <div className="shop-sidebar">
+            <h3 className="shop-sidebar-title">หมวด</h3>
+            <button
+              className={"shop-category-btn" + (activeTab === "events" ? " shop-category-active" : "")}
+              onClick={() => switchTab("events")}
+            >
+              กิจกรรม
             </button>
-          )}
-        </form>
+            <button
+              className={"shop-category-btn" + (activeTab === "shop" ? " shop-category-active" : "")}
+              onClick={() => switchTab("shop")}
+            >
+              ร้านค้า
+            </button>
+          </div>
 
-        {loading ? (
-          <p className="empty-text">กำลังโหลด...</p>
-        ) : items.length === 0 ? (
-          <p className="empty-text">
-            {viewMode === "history" ? "ไม่มีประวัติการจัดส่ง" : "ไม่มีรายการที่รอจัดส่ง"}
-          </p>
-        ) : (
-          <>
-            <div className="payment-actions admin-section-spacing">
-              {viewMode === "pending" && (
-                <button className="auth-secondary-btn" onClick={toggleSelectAll}>
-                  {selectedIds.length === items.length ? "ยกเลิกเลือกทั้งหมด" : "เลือกทั้งหมด"}
-                </button>
-              )}
-              <button className="auth-submit-btn" onClick={handleDownloadCsv}>
-                ⬇️ ดาวน์โหลด CSV{selectedIds.length > 0 ? ` (${selectedIds.length} รายการ)` : " (ทั้งหมด)"}
+          <div className="shop-content">
+            <div className="admin-tabs">
+              <button
+                className={"admin-tab" + (viewMode === "pending" ? " admin-tab-active" : "")}
+                onClick={() => switchViewMode("pending")}
+              >
+                รอจัดส่ง
               </button>
-              {viewMode === "pending" && (
-                <button className="pay-btn" onClick={handleMarkShipped} disabled={marking}>
-                  {marking ? "กำลังบันทึก..." : "✅ มาร์กว่าส่งแล้ว"}
-                </button>
-              )}
+              <button
+                className={"admin-tab" + (viewMode === "history" ? " admin-tab-active" : "")}
+                onClick={() => switchViewMode("history")}
+              >
+                ประวัติการส่ง
+              </button>
             </div>
 
-            <div className="admin-list admin-section-spacing">
-              {items.map((item) => (
-                <div key={item.id} className="admin-item">
-                  <div className="admin-info" style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-                    {viewMode === "pending" && (
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.includes(item.id)}
-                        onChange={() => toggleSelect(item.id)}
-                        style={{ marginTop: "4px" }}
-                      />
-                    )}
-                    <div>
-                      <h4>
-                        {item.name}
-                        {activeTab === "events" && item.shirtSize
-                          ? ` — ไซส์เสื้อ ${item.shirtSize}`
-                          : ""}
-                      </h4>
-                      <p>{item.phone || "ไม่มีเบอร์โทร"}</p>
-                      <p>{item.address || "ไม่มีที่อยู่"}</p>
-                      <p>
-                        {activeTab === "events"
-                          ? `${item.eventTitle} — ${item.packageName}`
-                          : `${item.productName}${item.size ? ` (ไซส์ ${item.size})` : ""} x${item.quantity}`}
-                      </p>
-                      {viewMode === "history" && item.shippedAt && (
-                        <p className="ocr-status">จัดส่งเมื่อ {item.shippedAt.slice(0, 10)}</p>
-                      )}
-                    </div>
-                  </div>
+            <form className="payment-actions admin-section-spacing" onSubmit={handleSearchSubmit}>
+              <input
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="ค้นหาชื่อ, เบอร์โทร, กิจกรรม/สินค้า"
+                style={{ flex: 1 }}
+              />
+              <button type="submit" className="auth-secondary-btn">
+                🔍 ค้นหา
+              </button>
+              {search && (
+                <button type="button" className="auth-secondary-btn" onClick={handleClearSearch}>
+                  ล้างค้นหา
+                </button>
+              )}
+            </form>
+
+            {loading ? (
+              <p className="empty-text">กำลังโหลด...</p>
+            ) : items.length === 0 ? (
+              <p className="empty-text">
+                {viewMode === "history" ? "ไม่มีประวัติการจัดส่ง" : "ไม่มีรายการที่รอจัดส่ง"}
+              </p>
+            ) : (
+              <>
+                <div className="payment-actions admin-section-spacing">
+                  {viewMode === "pending" && (
+                    <button className="auth-secondary-btn" onClick={toggleSelectAll}>
+                      {selectedIds.length === items.length ? "ยกเลิกเลือกทั้งหมด" : "เลือกทั้งหมด"}
+                    </button>
+                  )}
+                  <button className="auth-submit-btn" onClick={handleDownloadCsv}>
+                    ⬇️ ดาวน์โหลด CSV{selectedIds.length > 0 ? ` (${selectedIds.length} รายการ)` : " (ทั้งหมด)"}
+                  </button>
+                  {viewMode === "pending" && (
+                    <button className="pay-btn" onClick={handleMarkShipped} disabled={marking}>
+                      {marking ? "กำลังบันทึก..." : "✅ มาร์กว่าส่งแล้ว"}
+                    </button>
+                  )}
                 </div>
-              ))}
-            </div>
-          </>
-        )}
+
+                <div className="admin-list admin-section-spacing">
+                  {items.map((item) => (
+                    <div key={item.id} className="admin-item">
+                      <div className="admin-info" style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
+                        {viewMode === "pending" && (
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(item.id)}
+                            onChange={() => toggleSelect(item.id)}
+                            style={{ marginTop: "4px" }}
+                          />
+                        )}
+                        <div>
+                          <h4>
+                            {item.name}
+                            {activeTab === "events" && item.shirtSize
+                              ? ` — ไซส์เสื้อ ${item.shirtSize}`
+                              : ""}
+                          </h4>
+                          <p>{item.phone || "ไม่มีเบอร์โทร"}</p>
+                          <p>{item.address || "ไม่มีที่อยู่"}</p>
+                          <p>
+                            {activeTab === "events"
+                              ? `${item.eventTitle} — ${item.packageName}`
+                              : `${item.productName}${item.size ? ` (ไซส์ ${item.size})` : ""} x${item.quantity}`}
+                          </p>
+                          {viewMode === "history" && item.shippedAt && (
+                            <p className="ocr-status">จัดส่งเมื่อ {item.shippedAt.slice(0, 10)}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </>
   );
