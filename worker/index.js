@@ -62,6 +62,18 @@ export default {
       return handleGetDashboard(request, env);
     }
 
+    if (url.pathname === "/api/admin/shipping/events" && request.method === "GET") {
+      return handleGetShippingEvents(request, env);
+    }
+
+    if (url.pathname === "/api/admin/shipping/shop" && request.method === "GET") {
+      return handleGetShippingShop(request, env);
+    }
+
+    if (url.pathname === "/api/admin/shipping/mark-shipped" && request.method === "POST") {
+      return handleMarkShipped(request, env);
+    }
+
     if (url.pathname === "/api/admin/members" && request.method === "GET") {
       return handleGetMembers(request, env);
     }
@@ -969,6 +981,14 @@ async function handleGetDashboard(request, env) {
     "SELECT COUNT(*) AS c FROM registrations WHERE status = 'result_pending'"
   ).first();
 
+  const pendingShipmentEvents = await env.DB.prepare(
+    "SELECT COUNT(*) AS c FROM registrations WHERE status = 'completed' AND shipped_at IS NULL"
+  ).first();
+
+  const pendingShipmentShop = await env.DB.prepare(
+    "SELECT COUNT(*) AS c FROM orders WHERE status = 'paid' AND shipped_at IS NULL"
+  ).first();
+
   const { results: weeklySignupsRaw } = await env.DB.prepare(
     `SELECT date(created_at) AS d, COUNT(*) AS c
      FROM registrations
@@ -1040,6 +1060,8 @@ async function handleGetDashboard(request, env) {
     pendingSlip: pendingSlip.c,
     pendingShopSlip: pendingShopSlip.c,
     pendingResult: pendingResult.c,
+    pendingShipmentEvents: pendingShipmentEvents.c,
+    pendingShipmentShop: pendingShipmentShop.c,
     weeklySignups: weeklySignupsRaw,
     monthlyRevenue: monthlyRevenueRaw,
     newMembers: {
@@ -1049,6 +1071,122 @@ async function handleGetDashboard(request, env) {
     },
     activeEventsList,
   });
+}
+
+function formatAddress(u) {
+  const parts = [
+    u.house_no ? `บ้านเลขที่ ${u.house_no}` : "",
+    u.moo ? `หมู่ ${u.moo}` : "",
+    u.soi ? `ซอย${u.soi}` : "",
+    u.road ? `ถนน${u.road}` : "",
+    u.sub_district ? `ตำบล/แขวง${u.sub_district}` : "",
+    u.district ? `อำเภอ/เขต${u.district}` : "",
+    u.province ? `จังหวัด${u.province}` : "",
+    u.postal_code || "",
+  ].filter(Boolean);
+  return parts.join(" ");
+}
+
+async function handleGetShippingEvents(request, env) {
+  const url = new URL(request.url);
+  const adminUserId = url.searchParams.get("adminUserId");
+
+  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
+    return Response.json(
+      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
+      { status: 403 }
+    );
+  }
+
+  const { results } = await env.DB.prepare(
+    `SELECT r.id, r.event_title, r.package_name,
+            u.first_name, u.last_name, u.phone, u.shirt_size,
+            u.house_no, u.moo, u.soi, u.road, u.sub_district, u.district, u.province, u.postal_code
+     FROM registrations r
+     JOIN users u ON r.user_id = u.id
+     WHERE r.status = 'completed' AND r.shipped_at IS NULL
+     ORDER BY r.created_at ASC`
+  ).all();
+
+  const items = results.map((r) => ({
+    id: r.id,
+    name: `${r.first_name || ""} ${r.last_name || ""}`.trim(),
+    phone: r.phone || "",
+    address: formatAddress(r),
+    eventTitle: r.event_title,
+    packageName: r.package_name,
+    shirtSize: r.shirt_size || "",
+  }));
+
+  return Response.json({ success: true, items });
+}
+
+async function handleGetShippingShop(request, env) {
+  const url = new URL(request.url);
+  const adminUserId = url.searchParams.get("adminUserId");
+
+  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
+    return Response.json(
+      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
+      { status: 403 }
+    );
+  }
+
+  const { results } = await env.DB.prepare(
+    `SELECT o.id, o.product_name, o.size, o.quantity,
+            u.first_name, u.last_name, u.phone,
+            u.house_no, u.moo, u.soi, u.road, u.sub_district, u.district, u.province, u.postal_code
+     FROM orders o
+     JOIN users u ON o.user_id = u.id
+     WHERE o.status = 'paid' AND o.shipped_at IS NULL
+     ORDER BY o.created_at ASC`
+  ).all();
+
+  const items = results.map((o) => ({
+    id: o.id,
+    name: `${o.first_name || ""} ${o.last_name || ""}`.trim(),
+    phone: o.phone || "",
+    address: formatAddress(o),
+    productName: o.product_name,
+    size: o.size || "",
+    quantity: o.quantity,
+  }));
+
+  return Response.json({ success: true, items });
+}
+
+async function handleMarkShipped(request, env) {
+  const body = await request.json();
+  const { adminUserId, type, ids } = body;
+
+  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
+    return Response.json(
+      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
+      { status: 403 }
+    );
+  }
+
+  if (!type || !["event", "shop"].includes(type) || !Array.isArray(ids) || ids.length === 0) {
+    return Response.json({ success: false, error: "ข้อมูลไม่ถูกต้อง" }, { status: 400 });
+  }
+
+  const table = type === "event" ? "registrations" : "orders";
+  const placeholders = ids.map(() => "?").join(",");
+
+  try {
+    await env.DB.prepare(
+      `UPDATE ${table} SET shipped_at = datetime('now') WHERE id IN (${placeholders})`
+    )
+      .bind(...ids)
+      .run();
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "อัปเดตสถานะไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
 }
 
 async function handleGetMembers(request, env) {
