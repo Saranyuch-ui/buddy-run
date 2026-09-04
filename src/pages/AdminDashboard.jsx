@@ -172,6 +172,24 @@ function AdminDashboard({ onNavigate, onLogoClick, currentUser, onLogout }) {
           </div>
         </div>
 
+        <h2 className="admin-title admin-section-spacing">Report</h2>
+        <div className="dash-cards">
+          <div
+            className="dash-card dash-card-clickable"
+            onClick={() => onNavigate("admin-shipping-events")}
+          >
+            <p className="dash-card-label">รอจัดส่ง - กิจกรรม</p>
+            <p className="dash-card-value">{data.pendingShipmentEvents.toLocaleString()}</p>
+          </div>
+          <div
+            className="dash-card dash-card-clickable"
+            onClick={() => onNavigate("admin-shipping-shop")}
+          >
+            <p className="dash-card-label">รอจัดส่ง - ร้านค้า</p>
+            <p className="dash-card-value">{data.pendingShipmentShop.toLocaleString()}</p>
+          </div>
+        </div>
+
         <div className="dash-row">
           <div className="dash-chart-card">
             <h3>จำนวนผู้สมัครย้อนหลัง (7 วัน)</h3>
