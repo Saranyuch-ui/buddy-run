@@ -980,7 +980,7 @@ async function handleGetMembers(request, env) {
 
 async function handleGetProducts(env) {
   const { results } = await env.DB.prepare(
-    "SELECT id, name, price, description, image, category FROM products ORDER BY created_at DESC"
+    "SELECT id, name, price, description, image, category, sizes FROM products ORDER BY created_at DESC"
   ).all();
 
   return Response.json({ success: true, products: results });
@@ -1596,11 +1596,12 @@ async function handleCreateProduct(request, env) {
   const price = Number(formData.get("price"));
   const description = formData.get("description");
   const category = formData.get("category");
+  const sizes = formData.get("sizes");
   const file = formData.get("image");
 
-  if (!name || !price || price <= 0 || !category || !file) {
+  if (!name || !price || price <= 0 || !category || !sizes || !file) {
     return Response.json(
-      { success: false, error: "กรุณากรอกข้อมูลให้ครบถ้วน" },
+      { success: false, error: "กรุณากรอกข้อมูลให้ครบถ้วน (รวมถึงเลือกไซส์อย่างน้อย 1 ไซส์)" },
       { status: 400 }
     );
   }
@@ -1624,9 +1625,9 @@ async function handleCreateProduct(request, env) {
 
   try {
     await env.DB.prepare(
-      "INSERT INTO products (name, price, description, image, category) VALUES (?, ?, ?, ?, ?)"
+      "INSERT INTO products (name, price, description, image, category, sizes) VALUES (?, ?, ?, ?, ?, ?)"
     )
-      .bind(name, price, description, imageDataUrl, category)
+      .bind(name, price, description, imageDataUrl, category, sizes)
       .run();
 
     return Response.json({ success: true });
@@ -1795,11 +1796,12 @@ async function handleUpdateProduct(request, env) {
   const price = Number(formData.get("price"));
   const description = formData.get("description");
   const category = formData.get("category");
+  const sizes = formData.get("sizes");
   const file = formData.get("image");
 
-  if (!productId || !name || !price || price <= 0 || !category) {
+  if (!productId || !name || !price || price <= 0 || !category || !sizes) {
     return Response.json(
-      { success: false, error: "กรุณากรอกข้อมูลให้ครบถ้วน" },
+      { success: false, error: "กรุณากรอกข้อมูลให้ครบถ้วน (รวมถึงเลือกไซส์อย่างน้อย 1 ไซส์)" },
       { status: 400 }
     );
   }
@@ -1826,15 +1828,15 @@ async function handleUpdateProduct(request, env) {
   try {
     if (imageDataUrl) {
       await env.DB.prepare(
-        "UPDATE products SET name = ?, price = ?, description = ?, category = ?, image = ? WHERE id = ?"
+        "UPDATE products SET name = ?, price = ?, description = ?, category = ?, sizes = ?, image = ? WHERE id = ?"
       )
-        .bind(name, price, description, category, imageDataUrl, productId)
+        .bind(name, price, description, category, sizes, imageDataUrl, productId)
         .run();
     } else {
       await env.DB.prepare(
-        "UPDATE products SET name = ?, price = ?, description = ?, category = ? WHERE id = ?"
+        "UPDATE products SET name = ?, price = ?, description = ?, category = ?, sizes = ? WHERE id = ?"
       )
-        .bind(name, price, description, category, productId)
+        .bind(name, price, description, category, sizes, productId)
         .run();
     }
 
