@@ -22,6 +22,9 @@ function downloadCsv(filename, csvContent) {
 
 function AdminShipping({ onNavigate, onLogoClick, currentUser, onLogout, initialTab }) {
   const [activeTab, setActiveTab] = useState(initialTab || "events");
+  const [viewMode, setViewMode] = useState("pending"); // "pending" | "history"
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
   const [eventItems, setEventItems] = useState([]);
   const [shopItems, setShopItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,8 +38,15 @@ function AdminShipping({ onNavigate, onLogoClick, currentUser, onLogout, initial
     setSelectedIds([]);
     const endpoint =
       activeTab === "events" ? "/api/admin/shipping/events" : "/api/admin/shipping/shop";
+    const view = viewMode === "history" ? "shipped" : "pending";
 
-    fetch(`${endpoint}?adminUserId=${currentUser.id}`)
+    const params = new URLSearchParams({
+      adminUserId: currentUser.id,
+      view,
+      search,
+    });
+
+    fetch(`${endpoint}?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
@@ -50,7 +60,7 @@ function AdminShipping({ onNavigate, onLogoClick, currentUser, onLogout, initial
 
   useEffect(() => {
     loadData();
-  }, [activeTab]);
+  }, [activeTab, viewMode, search]);
 
   if (!currentUser || !currentUser.is_admin) {
     return (
@@ -80,6 +90,28 @@ function AdminShipping({ onNavigate, onLogoClick, currentUser, onLogout, initial
     else setSelectedIds(items.map((i) => i.id));
   };
 
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    setSearch(searchInput.trim());
+  };
+
+  const handleClearSearch = () => {
+    setSearchInput("");
+    setSearch("");
+  };
+
+  const switchTab = (tab) => {
+    setActiveTab(tab);
+    setSearchInput("");
+    setSearch("");
+  };
+
+  const switchViewMode = (mode) => {
+    setViewMode(mode);
+    setSearchInput("");
+    setSearch("");
+  };
+
   const handleDownloadCsv = () => {
     const rowsToExport =
       selectedIds.length > 0 ? items.filter((i) => selectedIds.includes(i.id)) : items;
@@ -89,7 +121,7 @@ function AdminShipping({ onNavigate, onLogoClick, currentUser, onLogout, initial
       return;
     }
 
-    const headers =
+    const baseHeaders =
       activeTab === "events"
         ? [
             { key: "name", label: "ชื่อ-นามสกุล" },
@@ -108,8 +140,14 @@ function AdminShipping({ onNavigate, onLogoClick, currentUser, onLogout, initial
             { key: "quantity", label: "จำนวน" },
           ];
 
+    const headers =
+      viewMode === "history"
+        ? [...baseHeaders, { key: "shippedAt", label: "วันที่จัดส่ง" }]
+        : baseHeaders;
+
     const filename =
       (activeTab === "events" ? "shipping-events-" : "shipping-shop-") +
+      (viewMode === "history" ? "history-" : "") +
       new Date().toISOString().slice(0, 10) +
       ".csv";
 
@@ -165,51 +203,96 @@ function AdminShipping({ onNavigate, onLogoClick, currentUser, onLogout, initial
       />
 
       <div className="admin-page">
-        <h2 className="admin-title">รายงานจัดเตรียมจัดส่งสินค้า</h2>
+        <div className="admin-events-header">
+          <h2 className="admin-title">รายงานจัดเตรียมจัดส่งสินค้า</h2>
+          <button className="auth-secondary-btn" onClick={() => onNavigate("admin-dashboard")}>
+            ← กลับไปหน้า Dashboard
+          </button>
+        </div>
 
         <div className="admin-tabs">
           <button
             className={"admin-tab" + (activeTab === "events" ? " admin-tab-active" : "")}
-            onClick={() => setActiveTab("events")}
+            onClick={() => switchTab("events")}
           >
             กิจกรรม
           </button>
           <button
             className={"admin-tab" + (activeTab === "shop" ? " admin-tab-active" : "")}
-            onClick={() => setActiveTab("shop")}
+            onClick={() => switchTab("shop")}
           >
             ร้านค้า
           </button>
         </div>
 
+        <div className="admin-tabs">
+          <button
+            className={"admin-tab" + (viewMode === "pending" ? " admin-tab-active" : "")}
+            onClick={() => switchViewMode("pending")}
+          >
+            รอจัดส่ง
+          </button>
+          <button
+            className={"admin-tab" + (viewMode === "history" ? " admin-tab-active" : "")}
+            onClick={() => switchViewMode("history")}
+          >
+            ประวัติการส่ง
+          </button>
+        </div>
+
+        <form className="payment-actions admin-section-spacing" onSubmit={handleSearchSubmit}>
+          <input
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="ค้นหาชื่อ, เบอร์โทร, กิจกรรม/สินค้า"
+            style={{ flex: 1 }}
+          />
+          <button type="submit" className="auth-secondary-btn">
+            🔍 ค้นหา
+          </button>
+          {search && (
+            <button type="button" className="auth-secondary-btn" onClick={handleClearSearch}>
+              ล้างค้นหา
+            </button>
+          )}
+        </form>
+
         {loading ? (
           <p className="empty-text">กำลังโหลด...</p>
         ) : items.length === 0 ? (
-          <p className="empty-text">ไม่มีรายการที่รอจัดส่ง</p>
+          <p className="empty-text">
+            {viewMode === "history" ? "ไม่มีประวัติการจัดส่ง" : "ไม่มีรายการที่รอจัดส่ง"}
+          </p>
         ) : (
           <>
             <div className="payment-actions admin-section-spacing">
-              <button className="auth-secondary-btn" onClick={toggleSelectAll}>
-                {selectedIds.length === items.length ? "ยกเลิกเลือกทั้งหมด" : "เลือกทั้งหมด"}
-              </button>
+              {viewMode === "pending" && (
+                <button className="auth-secondary-btn" onClick={toggleSelectAll}>
+                  {selectedIds.length === items.length ? "ยกเลิกเลือกทั้งหมด" : "เลือกทั้งหมด"}
+                </button>
+              )}
               <button className="auth-submit-btn" onClick={handleDownloadCsv}>
                 ⬇️ ดาวน์โหลด CSV{selectedIds.length > 0 ? ` (${selectedIds.length} รายการ)` : " (ทั้งหมด)"}
               </button>
-              <button className="pay-btn" onClick={handleMarkShipped} disabled={marking}>
-                {marking ? "กำลังบันทึก..." : "✅ มาร์กว่าส่งแล้ว"}
-              </button>
+              {viewMode === "pending" && (
+                <button className="pay-btn" onClick={handleMarkShipped} disabled={marking}>
+                  {marking ? "กำลังบันทึก..." : "✅ มาร์กว่าส่งแล้ว"}
+                </button>
+              )}
             </div>
 
             <div className="admin-list admin-section-spacing">
               {items.map((item) => (
                 <div key={item.id} className="admin-item">
                   <div className="admin-info" style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.includes(item.id)}
-                      onChange={() => toggleSelect(item.id)}
-                      style={{ marginTop: "4px" }}
-                    />
+                    {viewMode === "pending" && (
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(item.id)}
+                        onChange={() => toggleSelect(item.id)}
+                        style={{ marginTop: "4px" }}
+                      />
+                    )}
                     <div>
                       <h4>
                         {item.name}
@@ -224,6 +307,9 @@ function AdminShipping({ onNavigate, onLogoClick, currentUser, onLogout, initial
                           ? `${item.eventTitle} — ${item.packageName}`
                           : `${item.productName}${item.size ? ` (ไซส์ ${item.size})` : ""} x${item.quantity}`}
                       </p>
+                      {viewMode === "history" && item.shippedAt && (
+                        <p className="ocr-status">จัดส่งเมื่อ {item.shippedAt.slice(0, 10)}</p>
+                      )}
                     </div>
                   </div>
                 </div>
