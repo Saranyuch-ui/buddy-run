@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import Header from "../components/Header";
 
-const SIZES = ["S", "M", "L", "XL"];
-
 function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -192,19 +190,23 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
         <label>ไซส์</label>
 
         <div className="shop-size-options">
-          {SIZES.map((s) => (
-            <button
-              key={s}
-              type="button"
-              className={
-                "shop-size-btn" +
-                (sel.size === s ? " shop-size-selected" : "")
-              }
-              onClick={() => setSize(product.id, s)}
-            >
-              {s}
-            </button>
-          ))}
+          {!product.sizes ? (
+            <span className="ocr-status">ไม่มีไซส์ให้เลือก</span>
+          ) : (
+            product.sizes.split(",").filter(Boolean).map((s) => (
+              <button
+                key={s}
+                type="button"
+                className={
+                  "shop-size-btn" +
+                  (sel.size === s ? " shop-size-selected" : "")
+                }
+                onClick={() => setSize(product.id, s)}
+              >
+                {s}
+              </button>
+            ))
+          )}
         </div>
       </div>
 
