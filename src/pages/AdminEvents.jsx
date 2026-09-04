@@ -15,6 +15,7 @@ function AdminEvents({ onNavigate, onLogoClick, currentUser, onLogout }) {
     regEndDate: "",
     resultStartDate: "",
     resultEndDate: "",
+    shippingDate: "",
   });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -74,6 +75,7 @@ function AdminEvents({ onNavigate, onLogoClick, currentUser, onLogout }) {
       regEndDate: "",
       resultStartDate: "",
       resultEndDate: "",
+      shippingDate: "",
     });
     setImageFile(null);
     setImagePreview(null);
@@ -91,6 +93,7 @@ function AdminEvents({ onNavigate, onLogoClick, currentUser, onLogout }) {
       regEndDate: ev.reg_end_date || "",
       resultStartDate: ev.result_start_date || "",
       resultEndDate: ev.result_end_date || "",
+      shippingDate: ev.shipping_date || "",
     });
     setImageFile(null);
     setImagePreview(ev.image || null);
@@ -130,6 +133,7 @@ function AdminEvents({ onNavigate, onLogoClick, currentUser, onLogout }) {
       formData.append("regEndDate", form.regEndDate);
       formData.append("resultStartDate", form.resultStartDate);
       formData.append("resultEndDate", form.resultEndDate);
+      formData.append("shippingDate", form.shippingDate);
       if (imageFile) formData.append("image", imageFile);
 
       let res;
@@ -286,6 +290,10 @@ function AdminEvents({ onNavigate, onLogoClick, currentUser, onLogout }) {
               <div className="field">
                 <label>วันสิ้นสุดส่งผลกิจกรรม</label>
                 <input type="date" value={form.resultEndDate} onChange={handleChange("resultEndDate")} />
+              </div>
+              <div className="field">
+                <label>วันจัดส่งของรางวัล (ไม่บังคับ)</label>
+                <input type="date" value={form.shippingDate} onChange={handleChange("shippingDate")} />
               </div>
             </div>
 
