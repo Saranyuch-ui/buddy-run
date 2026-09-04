@@ -116,14 +116,8 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (
-      !form.name ||
-      !form.price ||
-      !form.category ||
-      form.sizes.length === 0 ||
-      (!editingId && !imageFile)
-    ) {
-      alert("กรุณากรอกข้อมูลให้ครบ (รวมถึงรูปภาพและเลือกไซส์อย่างน้อย 1 ไซส์)");
+    if (!form.name || !form.price || !form.category || (!editingId && !imageFile)) {
+      alert("กรุณากรอกข้อมูลให้ครบ (รวมถึงรูปภาพ)");
       return;
     }
 
@@ -375,7 +369,7 @@ function AdminProducts({ onNavigate, onLogoClick, currentUser, onLogout }) {
                 <label>รายละเอียดสินค้า</label>
                 <input value={form.description} onChange={handleChange("description")} />
 
-                <label>ไซส์ที่มีขาย</label>
+                <label>ไซส์ที่มีขาย (ถ้าไม่เลือกจะแสดง "ไม่มีไซส์ให้เลือก" ที่หน้าร้านค้า)</label>
                 <div className="shop-size-options">
                   {SIZE_OPTIONS.map((s) => (
                     <label
