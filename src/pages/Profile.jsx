@@ -55,6 +55,26 @@ function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
 
+  const [addresses, setAddresses] = useState([]);
+  const [addressLoading, setAddressLoading] = useState(true);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [editingAddressId, setEditingAddressId] = useState(null);
+  const [addressForm, setAddressForm] = useState({
+    label: "",
+    recipientName: "",
+    phone: "",
+    houseNo: "",
+    moo: "",
+    soi: "",
+    road: "",
+    subDistrict: "",
+    district: "",
+    province: "",
+    postalCode: "",
+    isDefault: false,
+  });
+  const [savingAddress, setSavingAddress] = useState(false);
+
   useEffect(() => {
     if (!currentUser) return;
 
@@ -79,7 +99,162 @@ function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
         setOrderLoading(false);
       })
       .catch(() => setOrderLoading(false));
+
+    loadAddresses();
   }, [currentUser]);
+
+  const loadAddresses = () => {
+    setAddressLoading(true);
+    fetch(`/api/addresses?userId=${currentUser.id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) setAddresses(data.addresses);
+        setAddressLoading(false);
+      })
+      .catch(() => setAddressLoading(false));
+  };
+
+  const resetAddressForm = () => {
+    setAddressForm({
+      label: "",
+      recipientName: "",
+      phone: "",
+      houseNo: "",
+      moo: "",
+      soi: "",
+      road: "",
+      subDistrict: "",
+      district: "",
+      province: "",
+      postalCode: "",
+      isDefault: false,
+    });
+    setEditingAddressId(null);
+    setShowAddressForm(false);
+  };
+
+  const startEditAddress = (a) => {
+    setAddressForm({
+      label: a.label || "",
+      recipientName: a.recipient_name || "",
+      phone: a.phone || "",
+      houseNo: a.house_no || "",
+      moo: a.moo || "",
+      soi: a.soi || "",
+      road: a.road || "",
+      subDistrict: a.sub_district || "",
+      district: a.district || "",
+      province: a.province || "",
+      postalCode: a.postal_code || "",
+      isDefault: !!a.is_default,
+    });
+    setEditingAddressId(a.id);
+    setShowAddressForm(true);
+  };
+
+  const handleAddressChange = (field) => (e) => {
+    setAddressForm({ ...addressForm, [field]: e.target.value });
+  };
+
+  const handleSaveAddress = async (e) => {
+    e.preventDefault();
+
+    if (!addressForm.recipientName || !addressForm.phone || !addressForm.province) {
+      alert("กรุณากรอกชื่อผู้รับ เบอร์โทร และจังหวัดอย่างน้อย");
+      return;
+    }
+
+    setSavingAddress(true);
+
+    try {
+      const payload = {
+        userId: currentUser.id,
+        label: addressForm.label,
+        recipientName: addressForm.recipientName,
+        phone: addressForm.phone,
+        houseNo: addressForm.houseNo,
+        moo: addressForm.moo,
+        soi: addressForm.soi,
+        road: addressForm.road,
+        subDistrict: addressForm.subDistrict,
+        district: addressForm.district,
+        province: addressForm.province,
+        postalCode: addressForm.postalCode,
+        isDefault: addressForm.isDefault,
+      };
+
+      let res;
+      if (editingAddressId) {
+        res = await fetch("/api/addresses", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...payload, addressId: editingAddressId }),
+        });
+      } else {
+        res = await fetch("/api/addresses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.error || "บันทึกที่อยู่ไม่สำเร็จ");
+        return;
+      }
+
+      resetAddressForm();
+      loadAddresses();
+    } catch (err) {
+      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setSavingAddress(false);
+    }
+  };
+
+  const handleDeleteAddress = async (addressId) => {
+    if (!confirm("ยืนยันการลบที่อยู่นี้?")) return;
+
+    try {
+      const res = await fetch("/api/addresses", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: currentUser.id, addressId }),
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.error || "ลบที่อยู่ไม่สำเร็จ");
+        return;
+      }
+
+      setAddresses(addresses.filter((a) => a.id !== addressId));
+    } catch (err) {
+      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+    }
+  };
+
+  const handleSetDefaultAddress = async (addressId) => {
+    try {
+      const res = await fetch("/api/addresses/set-default", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: currentUser.id, addressId }),
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.error || "อัปเดตไม่สำเร็จ");
+        return;
+      }
+
+      loadAddresses();
+    } catch (err) {
+      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+    }
+  };
 
   const startEdit = () => {
     setForm({ ...profile });
@@ -328,6 +503,157 @@ function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
                     ยกเลิก
                   </button>
                 </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "info" && (
+          <div className="profile-card">
+            <div className="profile-card-header">
+              <h2>สมุดที่อยู่จัดส่ง</h2>
+              {!showAddressForm && (
+                <button className="edit-btn" onClick={() => setShowAddressForm(true)}>
+                  ➕ เพิ่มที่อยู่ใหม่
+                </button>
+              )}
+            </div>
+
+            {showAddressForm && (
+              <form className="edit-form" onSubmit={handleSaveAddress}>
+                <h3 className="form-section-title">
+                  {editingAddressId ? "แก้ไขที่อยู่" : "เพิ่มที่อยู่ใหม่"}
+                </h3>
+                <div className="edit-form-grid">
+                  <div className="field">
+                    <label>ชื่อที่อยู่ (เช่น บ้าน, ที่ทำงาน)</label>
+                    <input value={addressForm.label} onChange={handleAddressChange("label")} />
+                  </div>
+                  <div className="field">
+                    <label>ชื่อผู้รับ</label>
+                    <input
+                      value={addressForm.recipientName}
+                      onChange={handleAddressChange("recipientName")}
+                    />
+                  </div>
+                  <div className="field">
+                    <label>เบอร์โทรศัพท์</label>
+                    <input value={addressForm.phone} onChange={handleAddressChange("phone")} />
+                  </div>
+                  <div className="field">
+                    <label>บ้านเลขที่</label>
+                    <input value={addressForm.houseNo} onChange={handleAddressChange("houseNo")} />
+                  </div>
+                  <div className="field">
+                    <label>หมู่</label>
+                    <input value={addressForm.moo} onChange={handleAddressChange("moo")} />
+                  </div>
+                  <div className="field">
+                    <label>ซอย</label>
+                    <input value={addressForm.soi} onChange={handleAddressChange("soi")} />
+                  </div>
+                  <div className="field">
+                    <label>ถนน</label>
+                    <input value={addressForm.road} onChange={handleAddressChange("road")} />
+                  </div>
+                  <div className="field">
+                    <label>ตำบล</label>
+                    <input
+                      value={addressForm.subDistrict}
+                      onChange={handleAddressChange("subDistrict")}
+                    />
+                  </div>
+                  <div className="field">
+                    <label>อำเภอ</label>
+                    <input value={addressForm.district} onChange={handleAddressChange("district")} />
+                  </div>
+                  <div className="field">
+                    <label>จังหวัด</label>
+                    <input value={addressForm.province} onChange={handleAddressChange("province")} />
+                  </div>
+                  <div className="field">
+                    <label>รหัสไปรษณีย์</label>
+                    <input
+                      value={addressForm.postalCode}
+                      onChange={handleAddressChange("postalCode")}
+                    />
+                  </div>
+                </div>
+
+                <label style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "10px" }}>
+                  <input
+                    type="checkbox"
+                    checked={addressForm.isDefault}
+                    onChange={(e) =>
+                      setAddressForm({ ...addressForm, isDefault: e.target.checked })
+                    }
+                  />
+                  ตั้งเป็นที่อยู่เริ่มต้น
+                </label>
+
+                <div className="edit-actions">
+                  <button className="auth-submit-btn" type="submit" disabled={savingAddress}>
+                    {savingAddress ? "กำลังบันทึก..." : "บันทึกที่อยู่"}
+                  </button>
+                  <button
+                    type="button"
+                    className="auth-secondary-btn"
+                    onClick={resetAddressForm}
+                    disabled={savingAddress}
+                  >
+                    ยกเลิก
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {addressLoading ? (
+              <p className="empty-text">กำลังโหลด...</p>
+            ) : addresses.length === 0 ? (
+              <p className="empty-text">ยังไม่มีที่อยู่จัดส่ง กรุณาเพิ่มที่อยู่</p>
+            ) : (
+              <div className="admin-list admin-section-spacing">
+                {addresses.map((a) => (
+                  <div key={a.id} className="admin-item">
+                    <div className="admin-info">
+                      <h4>
+                        {a.label || "ที่อยู่จัดส่ง"}
+                        {a.is_default ? " ⭐ (ค่าเริ่มต้น)" : ""}
+                      </h4>
+                      <p>{a.recipient_name} — {a.phone}</p>
+                      <p>
+                        {[
+                          a.house_no && `บ้านเลขที่ ${a.house_no}`,
+                          a.moo && `หมู่ ${a.moo}`,
+                          a.soi && `ซอย${a.soi}`,
+                          a.road && `ถนน${a.road}`,
+                          a.sub_district && `ต.${a.sub_district}`,
+                          a.district && `อ.${a.district}`,
+                          a.province && `จ.${a.province}`,
+                          a.postal_code,
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                      </p>
+                    </div>
+                    <div className="admin-actions">
+                      {!a.is_default && (
+                        <button
+                          className="auth-secondary-btn"
+                          onClick={() => handleSetDefaultAddress(a.id)}
+                        >
+                          ตั้งเป็นค่าเริ่มต้น
+                        </button>
+                      )}
+                      <button className="edit-btn" onClick={() => startEditAddress(a)}>
+                        ✏️ แก้ไข
+                      </button>
+                      <button className="reject-btn" onClick={() => handleDeleteAddress(a.id)}>
+                        🗑️ ลบ
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
