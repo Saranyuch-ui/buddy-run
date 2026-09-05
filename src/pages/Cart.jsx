@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import Header from "../components/Header";
+import AddressSelector from "../components/AddressSelector";
 
 function Cart({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
   const [cartItems, setCartItems] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState(null);
   const [checkingOut, setCheckingOut] = useState(false);
@@ -82,13 +84,22 @@ function Cart({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
       return;
     }
 
+    if (!selectedAddressId) {
+      alert("กรุณาเลือกที่อยู่จัดส่งก่อน");
+      return;
+    }
+
     setCheckingOut(true);
 
     try {
       const res = await fetch("/api/cart/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: currentUser.id, cartItemIds: selectedIds }),
+        body: JSON.stringify({
+          userId: currentUser.id,
+          cartItemIds: selectedIds,
+          addressId: selectedAddressId,
+        }),
       });
 
       const data = await res.json();
@@ -156,6 +167,13 @@ function Cart({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
               ))}
             </div>
 
+            <AddressSelector
+              currentUser={currentUser}
+              selectedAddressId={selectedAddressId}
+              onSelect={setSelectedAddressId}
+              onNavigate={onNavigate}
+            />
+
             <div className="cart-summary">
               <p className="cart-total">
                 รวมที่เลือก ({selectedIds.length} รายการ): {selectedTotal.toLocaleString()} บาท
@@ -163,7 +181,7 @@ function Cart({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
               <button
                 className="auth-submit-btn"
                 onClick={handleCheckout}
-                disabled={checkingOut || selectedIds.length === 0}
+                disabled={checkingOut || selectedIds.length === 0 || !selectedAddressId}
               >
                 {checkingOut ? "กำลังดำเนินการ..." : "ดำเนินการชำระเงิน"}
               </button>
