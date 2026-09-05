@@ -50,6 +50,26 @@ export default {
       return handleUpdateUser(request, env);
     }
 
+    if (url.pathname === "/api/addresses" && request.method === "GET") {
+      return handleGetAddresses(request, env);
+    }
+
+    if (url.pathname === "/api/addresses" && request.method === "POST") {
+      return handleCreateAddress(request, env);
+    }
+
+    if (url.pathname === "/api/addresses" && request.method === "PUT") {
+      return handleUpdateAddress(request, env);
+    }
+
+    if (url.pathname === "/api/addresses" && request.method === "DELETE") {
+      return handleDeleteAddress(request, env);
+    }
+
+    if (url.pathname === "/api/addresses/set-default" && request.method === "POST") {
+      return handleSetDefaultAddress(request, env);
+    }
+
     if (url.pathname === "/api/admin/pending" && request.method === "GET") {
       return handleGetPendingRegistrations(request, env);
     }
@@ -391,18 +411,29 @@ async function handleDeleteEvent(request, env) {
 async function handleCreateRegistration(request, env) {
   const body = await request.json();
 
-  if (!body.userId || !body.eventId || !body.packageId) {
+  if (!body.userId || !body.eventId || !body.packageId || !body.addressId) {
     return Response.json(
-      { success: false, error: "ข้อมูลไม่ครบถ้วน" },
+      { success: false, error: "ข้อมูลไม่ครบถ้วน (กรุณาเลือกที่อยู่จัดส่ง)" },
       { status: 400 }
     );
+  }
+
+  const address = await env.DB.prepare(
+    "SELECT * FROM addresses WHERE id = ? AND user_id = ?"
+  )
+    .bind(body.addressId, body.userId)
+    .first();
+
+  if (!address) {
+    return Response.json({ success: false, error: "ไม่พบที่อยู่จัดส่งที่เลือก" }, { status: 400 });
   }
 
   try {
     await env.DB.prepare(
       `INSERT INTO registrations
-        (user_id, event_id, package_id, event_title, package_name, price, status, event_end_date, reg_end_date)
-       VALUES (?, ?, ?, ?, ?, ?, 'confirmed', ?, ?)`
+        (user_id, event_id, package_id, event_title, package_name, price, status, event_end_date, reg_end_date,
+         shipping_name, shipping_phone, shipping_address)
+       VALUES (?, ?, ?, ?, ?, ?, 'confirmed', ?, ?, ?, ?, ?)`
     )
       .bind(
         body.userId,
@@ -412,7 +443,10 @@ async function handleCreateRegistration(request, env) {
         body.packageName,
         body.price,
         body.eventEndDate || null,
-        body.regEndDate || null
+        body.regEndDate || null,
+        address.recipient_name,
+        address.phone,
+        formatAddress(address)
       )
       .run();
 
@@ -785,6 +819,172 @@ async function handleUpdateUser(request, env) {
   }
 }
 
+async function handleGetAddresses(request, env) {
+  const url = new URL(request.url);
+  const userId = url.searchParams.get("userId");
+
+  if (!userId) {
+    return Response.json({ success: false, error: "ไม่พบ userId" }, { status: 400 });
+  }
+
+  const { results } = await env.DB.prepare(
+    "SELECT * FROM addresses WHERE user_id = ? ORDER BY is_default DESC, created_at ASC"
+  )
+    .bind(userId)
+    .all();
+
+  return Response.json({ success: true, addresses: results });
+}
+
+async function handleCreateAddress(request, env) {
+  const body = await request.json();
+
+  if (!body.userId || !body.recipientName || !body.phone || !body.province) {
+    return Response.json(
+      { success: false, error: "กรุณากรอกข้อมูลที่อยู่ให้ครบถ้วน" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    if (body.isDefault) {
+      await env.DB.prepare("UPDATE addresses SET is_default = 0 WHERE user_id = ?")
+        .bind(body.userId)
+        .run();
+    }
+
+    const existingCount = await env.DB.prepare(
+      "SELECT COUNT(*) AS c FROM addresses WHERE user_id = ?"
+    )
+      .bind(body.userId)
+      .first();
+
+    await env.DB.prepare(
+      `INSERT INTO addresses
+        (user_id, label, recipient_name, phone, house_no, moo, soi, road, sub_district, district, province, postal_code, is_default)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+      .bind(
+        body.userId,
+        body.label || "ที่อยู่จัดส่ง",
+        body.recipientName,
+        body.phone,
+        body.houseNo || "",
+        body.moo || "",
+        body.soi || "",
+        body.road || "",
+        body.subDistrict || "",
+        body.district || "",
+        body.province || "",
+        body.postalCode || "",
+        body.isDefault || existingCount.c === 0 ? 1 : 0
+      )
+      .run();
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "เพิ่มที่อยู่ไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
+}
+
+async function handleUpdateAddress(request, env) {
+  const body = await request.json();
+
+  if (!body.addressId || !body.userId || !body.recipientName || !body.phone || !body.province) {
+    return Response.json(
+      { success: false, error: "กรุณากรอกข้อมูลที่อยู่ให้ครบถ้วน" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    if (body.isDefault) {
+      await env.DB.prepare("UPDATE addresses SET is_default = 0 WHERE user_id = ?")
+        .bind(body.userId)
+        .run();
+    }
+
+    await env.DB.prepare(
+      `UPDATE addresses SET
+        label = ?, recipient_name = ?, phone = ?, house_no = ?, moo = ?, soi = ?, road = ?,
+        sub_district = ?, district = ?, province = ?, postal_code = ?, is_default = ?
+       WHERE id = ? AND user_id = ?`
+    )
+      .bind(
+        body.label || "ที่อยู่จัดส่ง",
+        body.recipientName,
+        body.phone,
+        body.houseNo || "",
+        body.moo || "",
+        body.soi || "",
+        body.road || "",
+        body.subDistrict || "",
+        body.district || "",
+        body.province || "",
+        body.postalCode || "",
+        body.isDefault ? 1 : 0,
+        body.addressId,
+        body.userId
+      )
+      .run();
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "แก้ไขที่อยู่ไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
+}
+
+async function handleDeleteAddress(request, env) {
+  const body = await request.json();
+
+  if (!body.addressId || !body.userId) {
+    return Response.json({ success: false, error: "ข้อมูลไม่ถูกต้อง" }, { status: 400 });
+  }
+
+  try {
+    await env.DB.prepare("DELETE FROM addresses WHERE id = ? AND user_id = ?")
+      .bind(body.addressId, body.userId)
+      .run();
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "ลบที่อยู่ไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
+}
+
+async function handleSetDefaultAddress(request, env) {
+  const body = await request.json();
+
+  if (!body.addressId || !body.userId) {
+    return Response.json({ success: false, error: "ข้อมูลไม่ถูกต้อง" }, { status: 400 });
+  }
+
+  try {
+    await env.DB.prepare("UPDATE addresses SET is_default = 0 WHERE user_id = ?")
+      .bind(body.userId)
+      .run();
+    await env.DB.prepare("UPDATE addresses SET is_default = 1 WHERE id = ? AND user_id = ?")
+      .bind(body.addressId, body.userId)
+      .run();
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "อัปเดตไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
+}
+
 async function handleGetPendingRegistrations(request, env) {
   const url = new URL(request.url);
   const adminUserId = url.searchParams.get("adminUserId");
@@ -1104,6 +1304,7 @@ async function handleGetShippingEvents(request, env) {
   const orderBy = view === "shipped" ? "r.shipped_at DESC" : "r.created_at ASC";
 
   let query = `SELECT r.id, r.event_title, r.package_name, r.shipped_at,
+            r.shipping_name, r.shipping_phone, r.shipping_address,
             u.first_name, u.last_name, u.phone, u.shirt_size,
             u.house_no, u.moo, u.soi, u.road, u.sub_district, u.district, u.province, u.postal_code
      FROM registrations r
@@ -1112,9 +1313,9 @@ async function handleGetShippingEvents(request, env) {
 
   const params = [];
   if (search) {
-    query += ` AND (u.first_name LIKE ? OR u.last_name LIKE ? OR u.phone LIKE ? OR r.event_title LIKE ?)`;
+    query += ` AND (r.shipping_name LIKE ? OR u.first_name LIKE ? OR u.last_name LIKE ? OR r.shipping_phone LIKE ? OR u.phone LIKE ? OR r.event_title LIKE ?)`;
     const term = `%${search}%`;
-    params.push(term, term, term, term);
+    params.push(term, term, term, term, term, term);
   }
   query += ` ORDER BY ${orderBy}`;
 
@@ -1124,9 +1325,9 @@ async function handleGetShippingEvents(request, env) {
 
   const items = results.map((r) => ({
     id: r.id,
-    name: `${r.first_name || ""} ${r.last_name || ""}`.trim(),
-    phone: r.phone || "",
-    address: formatAddress(r),
+    name: r.shipping_name || `${r.first_name || ""} ${r.last_name || ""}`.trim(),
+    phone: r.shipping_phone || r.phone || "",
+    address: r.shipping_address || formatAddress(r),
     eventTitle: r.event_title,
     packageName: r.package_name,
     shirtSize: r.shirt_size || "",
@@ -1153,6 +1354,7 @@ async function handleGetShippingShop(request, env) {
   const orderBy = view === "shipped" ? "o.shipped_at DESC" : "o.created_at ASC";
 
   let query = `SELECT o.id, o.product_name, o.size, o.quantity, o.shipped_at,
+            o.shipping_name, o.shipping_phone, o.shipping_address,
             u.first_name, u.last_name, u.phone,
             u.house_no, u.moo, u.soi, u.road, u.sub_district, u.district, u.province, u.postal_code
      FROM orders o
@@ -1161,9 +1363,9 @@ async function handleGetShippingShop(request, env) {
 
   const params = [];
   if (search) {
-    query += ` AND (u.first_name LIKE ? OR u.last_name LIKE ? OR u.phone LIKE ? OR o.product_name LIKE ?)`;
+    query += ` AND (o.shipping_name LIKE ? OR u.first_name LIKE ? OR u.last_name LIKE ? OR o.shipping_phone LIKE ? OR u.phone LIKE ? OR o.product_name LIKE ?)`;
     const term = `%${search}%`;
-    params.push(term, term, term, term);
+    params.push(term, term, term, term, term, term);
   }
   query += ` ORDER BY ${orderBy}`;
 
@@ -1173,9 +1375,9 @@ async function handleGetShippingShop(request, env) {
 
   const items = results.map((o) => ({
     id: o.id,
-    name: `${o.first_name || ""} ${o.last_name || ""}`.trim(),
-    phone: o.phone || "",
-    address: formatAddress(o),
+    name: o.shipping_name || `${o.first_name || ""} ${o.last_name || ""}`.trim(),
+    phone: o.shipping_phone || o.phone || "",
+    address: o.shipping_address || formatAddress(o),
     productName: o.product_name,
     size: o.size || "",
     quantity: o.quantity,
@@ -1326,11 +1528,11 @@ async function handleDeleteCategory(request, env) {
 
 async function handleCreateOrder(request, env) {
   const body = await request.json();
-  const { userId, productId, quantity, size } = body;
+  const { userId, productId, quantity, size, addressId } = body;
 
-  if (!userId || !productId || !quantity || quantity < 1 || !size) {
+  if (!userId || !productId || !quantity || quantity < 1 || !size || !addressId) {
     return Response.json(
-      { success: false, error: "กรุณาเลือกไซส์และจำนวนสินค้าให้ครบ" },
+      { success: false, error: "กรุณาเลือกไซส์, จำนวนสินค้า และที่อยู่จัดส่งให้ครบ" },
       { status: 400 }
     );
   }
@@ -1348,14 +1550,37 @@ async function handleCreateOrder(request, env) {
     );
   }
 
+  const address = await env.DB.prepare(
+    "SELECT * FROM addresses WHERE id = ? AND user_id = ?"
+  )
+    .bind(addressId, userId)
+    .first();
+
+  if (!address) {
+    return Response.json({ success: false, error: "ไม่พบที่อยู่จัดส่งที่เลือก" }, { status: 400 });
+  }
+
   const total = product.price * quantity;
 
   try {
     await env.DB.prepare(
-      `INSERT INTO orders (user_id, product_id, product_name, price, quantity, total, status, size)
-       VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`
+      `INSERT INTO orders
+        (user_id, product_id, product_name, price, quantity, total, status, size,
+         shipping_name, shipping_phone, shipping_address)
+       VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)`
     )
-      .bind(userId, product.id, product.name, product.price, quantity, total, size)
+      .bind(
+        userId,
+        product.id,
+        product.name,
+        product.price,
+        quantity,
+        total,
+        size,
+        address.recipient_name,
+        address.phone,
+        formatAddress(address)
+      )
       .run();
 
     return Response.json({ success: true });
@@ -1653,13 +1878,23 @@ async function handleRemoveFromCart(request, env) {
 
 async function handleCheckoutCart(request, env) {
   const body = await request.json();
-  const { userId, cartItemIds } = body;
+  const { userId, cartItemIds, addressId } = body;
 
-  if (!userId || !Array.isArray(cartItemIds) || cartItemIds.length === 0) {
+  if (!userId || !Array.isArray(cartItemIds) || cartItemIds.length === 0 || !addressId) {
     return Response.json(
-      { success: false, error: "กรุณาเลือกรายการที่ต้องการชำระ" },
+      { success: false, error: "กรุณาเลือกรายการและที่อยู่จัดส่งให้ครบ" },
       { status: 400 }
     );
+  }
+
+  const address = await env.DB.prepare(
+    "SELECT * FROM addresses WHERE id = ? AND user_id = ?"
+  )
+    .bind(addressId, userId)
+    .first();
+
+  if (!address) {
+    return Response.json({ success: false, error: "ไม่พบที่อยู่จัดส่งที่เลือก" }, { status: 400 });
   }
 
   const placeholders = cartItemIds.map(() => "?").join(",");
@@ -1677,10 +1912,23 @@ async function handleCheckoutCart(request, env) {
     for (const item of items) {
       const total = item.price * item.quantity;
       await env.DB.prepare(
-        `INSERT INTO orders (user_id, product_id, product_name, price, quantity, total, status, size)
-         VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`
+        `INSERT INTO orders
+          (user_id, product_id, product_name, price, quantity, total, status, size,
+           shipping_name, shipping_phone, shipping_address)
+         VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)`
       )
-        .bind(userId, item.product_id, item.product_name, item.price, item.quantity, total, item.size)
+        .bind(
+          userId,
+          item.product_id,
+          item.product_name,
+          item.price,
+          item.quantity,
+          total,
+          item.size,
+          address.recipient_name,
+          address.phone,
+          formatAddress(address)
+        )
         .run();
 
       await env.DB.prepare("DELETE FROM cart_items WHERE id = ?").bind(item.id).run();
