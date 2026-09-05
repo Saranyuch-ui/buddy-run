@@ -41,6 +41,8 @@ function getRegStatusClass(reg) {
 
 function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
   const [activeTab, setActiveTab] = useState("info");
+  const [showEventHistory, setShowEventHistory] = useState(false);
+  const [showOrderHistory, setShowOrderHistory] = useState(false);
 
   const [registrations, setRegistrations] = useState([]);
   const [regLoading, setRegLoading] = useState(true);
@@ -368,12 +370,19 @@ function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
                     <div className="reg-list">{resultGroup.map(renderRegItem)}</div>
                   )}
 
-                  <h3 className="form-section-title">ประวัติกิจกรรม</h3>
-                  {historyGroup.length === 0 ? (
-                    <p className="empty-text">ไม่มีรายการในหมวดนี้</p>
-                  ) : (
-                    <div className="reg-list">{historyGroup.map(renderRegItem)}</div>
-                  )}
+                  <button
+                    type="button"
+                    className="form-section-title form-section-toggle"
+                    onClick={() => setShowEventHistory(!showEventHistory)}
+                  >
+                    ประวัติกิจกรรม <span>{showEventHistory ? "▲" : "▼"}</span>
+                  </button>
+                  {showEventHistory &&
+                    (historyGroup.length === 0 ? (
+                      <p className="empty-text">ไม่มีรายการในหมวดนี้</p>
+                    ) : (
+                      <div className="reg-list">{historyGroup.map(renderRegItem)}</div>
+                    ))}
                 </>
               )}
             </div>
@@ -403,12 +412,19 @@ function Profile({ onNavigate, onLogoClick, currentUser, onLogout }) {
                     <div className="reg-list">{orderPaymentGroup.map(renderOrderItem)}</div>
                   )}
 
-                  <h3 className="form-section-title">ประวัติการสั่งซื้อ</h3>
-                  {orderHistoryGroup.length === 0 ? (
-                    <p className="empty-text">ไม่มีรายการในหมวดนี้</p>
-                  ) : (
-                    <div className="reg-list">{orderHistoryGroup.map(renderOrderItem)}</div>
-                  )}
+                  <button
+                    type="button"
+                    className="form-section-title form-section-toggle"
+                    onClick={() => setShowOrderHistory(!showOrderHistory)}
+                  >
+                    ประวัติการสั่งซื้อ <span>{showOrderHistory ? "▲" : "▼"}</span>
+                  </button>
+                  {showOrderHistory &&
+                    (orderHistoryGroup.length === 0 ? (
+                      <p className="empty-text">ไม่มีรายการในหมวดนี้</p>
+                    ) : (
+                      <div className="reg-list">{orderHistoryGroup.map(renderOrderItem)}</div>
+                    ))}
                 </>
               )}
             </div>
