@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Header from "../components/Header";
+import AddressSelector from "../components/AddressSelector";
 
 function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
   const [products, setProducts] = useState([]);
@@ -7,6 +8,7 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
   const [selection, setSelection] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
 
   useEffect(() => {
     fetch("/api/products")
@@ -103,6 +105,11 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
   const handleBuyNow = async (product) => {
     if (!requireLoginAndSize(product)) return;
 
+    if (!selectedAddressId) {
+      alert("กรุณาเลือกที่อยู่จัดส่งก่อน");
+      return;
+    }
+
     const sel = getSelection(product.id);
     const sizeToSend = hasSizes(product) ? sel.size : "ไม่มีไซส์";
     setSubmitting(true);
@@ -116,6 +123,7 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
           productId: product.id,
           quantity: sel.quantity,
           size: sizeToSend,
+          addressId: selectedAddressId,
         }),
       });
 
@@ -145,6 +153,15 @@ function Shop({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout }) {
 
       <section className="event-section">
         <h2 className="section-title">🛍️ ร้านค้า Buddy Run</h2>
+
+        {isLoggedIn && (
+          <AddressSelector
+            currentUser={currentUser}
+            selectedAddressId={selectedAddressId}
+            onSelect={setSelectedAddressId}
+            onNavigate={onNavigate}
+          />
+        )}
 
         {loading ? (
           <p className="empty-text">กำลังโหลด...</p>
