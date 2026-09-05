@@ -334,6 +334,19 @@ body {
     color: #2563eb;
 }
 
+.form-section-toggle {
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    font: inherit;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .auth-form label {
     margin-top: 12px;
     margin-bottom: 6px;
