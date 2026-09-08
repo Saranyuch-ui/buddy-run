@@ -261,17 +261,16 @@ body {
     background: transparent;
     border: none;
     color: white;
-    padding: 8px 14px;
-    border-radius: 0;
+    padding: 10px 16px;
     cursor: pointer;
-    font-size: 0.9rem;
-    white-space: nowrap;
+    font-size: 0.95rem;
+    position: relative;
 }
 
 .nav-btn:hover {
-    background: transparent;
     color: #dbeafe;
 }
+
 
 .nav-btn-active {
     font-weight: 600;
