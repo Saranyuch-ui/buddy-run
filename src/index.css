@@ -273,6 +273,20 @@ body {
     color: #dbeafe;
 }
 
+.nav-btn-active {
+    font-weight: 600;
+}
+
+.nav-btn-active::after {
+    content: "";
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: -2px;
+    height: 2px;
+    background: white;
+}
+
 .coming-soon {
     max-width: 600px;
     margin: 80px auto;
