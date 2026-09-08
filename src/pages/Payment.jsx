@@ -130,6 +130,11 @@ function Payment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout })
   };
 
   const handlePay = async (reg) => {
+    if (!reg.shipping_address) {
+      alert("กรุณาเลือกที่อยู่จัดส่งก่อนชำระเงิน");
+      return;
+    }
+
     const amountNum = Number(amount);
 
     if (isNaN(amountNum) || amountNum < reg.price) {
@@ -318,7 +323,7 @@ function Payment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout })
                       <button
                         className="auth-submit-btn"
                         onClick={() => handlePay(reg)}
-                        disabled={submitting || ocrProcessing}
+                        disabled={submitting || ocrProcessing || !reg.shipping_address}
                       >
                         {submitting ? "กำลังตรวจสอบ..." : "ยืนยันการชำระเงิน"}
                       </button>
