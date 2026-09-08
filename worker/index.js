@@ -70,6 +70,14 @@ export default {
       return handleSetDefaultAddress(request, env);
     }
 
+    if (url.pathname === "/api/registrations/set-address" && request.method === "POST") {
+      return handleSetRegistrationAddress(request, env);
+    }
+
+    if (url.pathname === "/api/orders/set-address" && request.method === "POST") {
+      return handleSetOrderAddress(request, env);
+    }
+
     if (url.pathname === "/api/admin/pending" && request.method === "GET") {
       return handleGetPendingRegistrations(request, env);
     }
@@ -581,7 +589,8 @@ async function handleGetRegistrations(request, env) {
   const { results } = await env.DB.prepare(
     `SELECT r.id, r.user_id, r.event_id, r.package_id, r.status, r.created_at, r.event_title,
             r.package_name, r.price, r.paid_amount, r.slip_image, r.result_image,
-            r.event_end_date, r.reg_end_date, e.result_start_date, e.result_end_date
+            r.event_end_date, r.reg_end_date, r.shipping_name, r.shipping_phone, r.shipping_address,
+            e.result_start_date, e.result_end_date
      FROM registrations r
      LEFT JOIN events e ON r.event_id = e.id
      WHERE r.user_id = ? ORDER BY r.created_at DESC`
@@ -989,6 +998,74 @@ async function handleSetDefaultAddress(request, env) {
   } catch (err) {
     return Response.json(
       { success: false, error: "อัปเดตไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
+}
+
+async function handleSetRegistrationAddress(request, env) {
+  const body = await request.json();
+  const { userId, registrationId, addressId } = body;
+
+  if (!userId || !registrationId || !addressId) {
+    return Response.json({ success: false, error: "ข้อมูลไม่ถูกต้อง" }, { status: 400 });
+  }
+
+  const address = await env.DB.prepare(
+    "SELECT * FROM addresses WHERE id = ? AND user_id = ?"
+  )
+    .bind(addressId, userId)
+    .first();
+
+  if (!address) {
+    return Response.json({ success: false, error: "ไม่พบที่อยู่ที่เลือก" }, { status: 400 });
+  }
+
+  try {
+    await env.DB.prepare(
+      "UPDATE registrations SET shipping_name = ?, shipping_phone = ?, shipping_address = ? WHERE id = ? AND user_id = ?"
+    )
+      .bind(address.recipient_name, address.phone, formatAddress(address), registrationId, userId)
+      .run();
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "อัปเดตที่อยู่จัดส่งไม่สำเร็จ กรุณาลองใหม่" },
+      { status: 500 }
+    );
+  }
+}
+
+async function handleSetOrderAddress(request, env) {
+  const body = await request.json();
+  const { userId, orderId, addressId } = body;
+
+  if (!userId || !orderId || !addressId) {
+    return Response.json({ success: false, error: "ข้อมูลไม่ถูกต้อง" }, { status: 400 });
+  }
+
+  const address = await env.DB.prepare(
+    "SELECT * FROM addresses WHERE id = ? AND user_id = ?"
+  )
+    .bind(addressId, userId)
+    .first();
+
+  if (!address) {
+    return Response.json({ success: false, error: "ไม่พบที่อยู่ที่เลือก" }, { status: 400 });
+  }
+
+  try {
+    await env.DB.prepare(
+      "UPDATE orders SET shipping_name = ?, shipping_phone = ?, shipping_address = ? WHERE id = ? AND user_id = ?"
+    )
+      .bind(address.recipient_name, address.phone, formatAddress(address), orderId, userId)
+      .run();
+
+    return Response.json({ success: true });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: "อัปเดตที่อยู่จัดส่งไม่สำเร็จ กรุณาลองใหม่" },
       { status: 500 }
     );
   }
@@ -1602,7 +1679,7 @@ async function handleGetUserOrders(request, env) {
   }
 
   const { results } = await env.DB.prepare(
-    "SELECT id, user_id, product_id, product_name, price, quantity, total, status, paid_amount, slip_image, size, created_at FROM orders WHERE user_id = ? ORDER BY created_at DESC"
+    "SELECT id, user_id, product_id, product_name, price, quantity, total, status, paid_amount, slip_image, size, created_at, shipping_name, shipping_phone, shipping_address FROM orders WHERE user_id = ? ORDER BY created_at DESC"
   )
     .bind(userId)
     .all();
