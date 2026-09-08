@@ -319,6 +319,12 @@ function Payment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout })
                       placeholder="แนบสลิปเพื่อให้ระบบอ่านยอดอัตโนมัติ"
                     />
 
+                    {!reg.shipping_address && (
+                      <p className="ocr-status" style={{ color: "#dc2626" }}>
+                        ⚠️ กรุณาเลือกที่อยู่จัดส่งก่อนชำระเงิน
+                      </p>
+                    )}
+
                     <div className="payment-actions">
                       <button
                         className="auth-submit-btn"
