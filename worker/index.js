@@ -1337,6 +1337,17 @@ async function handleGetDashboard(request, env) {
      ORDER BY e.reg_start_date ASC`
   ).all();
 
+  const { results: pastEventsList } = await env.DB.prepare(
+    `SELECT
+       e.id, e.title,
+       (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) AS signups,
+       (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.status IN ('paid','result_pending','completed')) AS paid,
+       (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.status IN ('result_pending','completed')) AS result
+     FROM events e
+     WHERE e.result_end_date < date('now')
+     ORDER BY e.result_end_date DESC`
+  ).all();
+
   return Response.json({
     success: true,
     totalMembers: totalMembers.c,
@@ -1360,6 +1371,7 @@ async function handleGetDashboard(request, env) {
       month: newMembersMonth.c,
     },
     activeEventsList,
+    pastEventsList,
   });
 }
 
