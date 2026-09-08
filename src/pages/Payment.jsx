@@ -329,7 +329,7 @@ function Payment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout })
                       <button
                         className="auth-submit-btn"
                         onClick={() => handlePay(reg)}
-                        disabled={submitting || ocrProcessing || !reg.shipping_address}
+                        disabled={submitting || ocrProcessing}
                       >
                         {submitting ? "กำลังตรวจสอบ..." : "ยืนยันการชำระเงิน"}
                       </button>
