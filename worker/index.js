@@ -408,25 +408,34 @@ async function handleDeleteEvent(request, env) {
   }
 }
 
+async function resolveShippingAddress(env, userId, addressId) {
+  if (addressId) {
+    const address = await env.DB.prepare(
+      "SELECT * FROM addresses WHERE id = ? AND user_id = ?"
+    )
+      .bind(addressId, userId)
+      .first();
+    if (address) return address;
+  }
+
+  return env.DB.prepare(
+    "SELECT * FROM addresses WHERE user_id = ? ORDER BY is_default DESC, created_at ASC LIMIT 1"
+  )
+    .bind(userId)
+    .first();
+}
+
 async function handleCreateRegistration(request, env) {
   const body = await request.json();
 
-  if (!body.userId || !body.eventId || !body.packageId || !body.addressId) {
+  if (!body.userId || !body.eventId || !body.packageId) {
     return Response.json(
-      { success: false, error: "ข้อมูลไม่ครบถ้วน (กรุณาเลือกที่อยู่จัดส่ง)" },
+      { success: false, error: "ข้อมูลไม่ครบถ้วน" },
       { status: 400 }
     );
   }
 
-  const address = await env.DB.prepare(
-    "SELECT * FROM addresses WHERE id = ? AND user_id = ?"
-  )
-    .bind(body.addressId, body.userId)
-    .first();
-
-  if (!address) {
-    return Response.json({ success: false, error: "ไม่พบที่อยู่จัดส่งที่เลือก" }, { status: 400 });
-  }
+  const address = await resolveShippingAddress(env, body.userId, body.addressId);
 
   try {
     await env.DB.prepare(
@@ -444,9 +453,9 @@ async function handleCreateRegistration(request, env) {
         body.price,
         body.eventEndDate || null,
         body.regEndDate || null,
-        address.recipient_name,
-        address.phone,
-        formatAddress(address)
+        address?.recipient_name || null,
+        address?.phone || null,
+        address ? formatAddress(address) : null
       )
       .run();
 
@@ -1530,9 +1539,9 @@ async function handleCreateOrder(request, env) {
   const body = await request.json();
   const { userId, productId, quantity, size, addressId } = body;
 
-  if (!userId || !productId || !quantity || quantity < 1 || !size || !addressId) {
+  if (!userId || !productId || !quantity || quantity < 1 || !size) {
     return Response.json(
-      { success: false, error: "กรุณาเลือกไซส์, จำนวนสินค้า และที่อยู่จัดส่งให้ครบ" },
+      { success: false, error: "กรุณาเลือกไซส์และจำนวนสินค้าให้ครบ" },
       { status: 400 }
     );
   }
@@ -1550,15 +1559,7 @@ async function handleCreateOrder(request, env) {
     );
   }
 
-  const address = await env.DB.prepare(
-    "SELECT * FROM addresses WHERE id = ? AND user_id = ?"
-  )
-    .bind(addressId, userId)
-    .first();
-
-  if (!address) {
-    return Response.json({ success: false, error: "ไม่พบที่อยู่จัดส่งที่เลือก" }, { status: 400 });
-  }
+  const address = await resolveShippingAddress(env, userId, addressId);
 
   const total = product.price * quantity;
 
@@ -1577,9 +1578,9 @@ async function handleCreateOrder(request, env) {
         quantity,
         total,
         size,
-        address.recipient_name,
-        address.phone,
-        formatAddress(address)
+        address?.recipient_name || null,
+        address?.phone || null,
+        address ? formatAddress(address) : null
       )
       .run();
 
@@ -1880,22 +1881,14 @@ async function handleCheckoutCart(request, env) {
   const body = await request.json();
   const { userId, cartItemIds, addressId } = body;
 
-  if (!userId || !Array.isArray(cartItemIds) || cartItemIds.length === 0 || !addressId) {
+  if (!userId || !Array.isArray(cartItemIds) || cartItemIds.length === 0) {
     return Response.json(
-      { success: false, error: "กรุณาเลือกรายการและที่อยู่จัดส่งให้ครบ" },
+      { success: false, error: "กรุณาเลือกรายการที่ต้องการชำระ" },
       { status: 400 }
     );
   }
 
-  const address = await env.DB.prepare(
-    "SELECT * FROM addresses WHERE id = ? AND user_id = ?"
-  )
-    .bind(addressId, userId)
-    .first();
-
-  if (!address) {
-    return Response.json({ success: false, error: "ไม่พบที่อยู่จัดส่งที่เลือก" }, { status: 400 });
-  }
+  const address = await resolveShippingAddress(env, userId, addressId);
 
   const placeholders = cartItemIds.map(() => "?").join(",");
   const { results: items } = await env.DB.prepare(
@@ -1925,9 +1918,9 @@ async function handleCheckoutCart(request, env) {
           item.quantity,
           total,
           item.size,
-          address.recipient_name,
-          address.phone,
-          formatAddress(address)
+          address?.recipient_name || null,
+          address?.phone || null,
+          address ? formatAddress(address) : null
         )
         .run();
 
