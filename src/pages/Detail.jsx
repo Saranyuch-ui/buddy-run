@@ -1,11 +1,9 @@
 import { useState } from "react";
 import Header from "../components/Header";
-import AddressSelector from "../components/AddressSelector";
 import packages from "../data/packages";
 
 function Detail({ event, onBack, onNavigate, isLoggedIn, currentUser, onLogout }) {
   const [selectedPackage, setSelectedPackage] = useState(null);
-  const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [registered, setRegistered] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -27,11 +25,6 @@ function Detail({ event, onBack, onNavigate, isLoggedIn, currentUser, onLogout }
     if (!isLoggedIn) {
       alert("กรุณาเข้าสู่ระบบก่อนลงทะเบียนกิจกรรม");
       onNavigate("login");
-      return;
-    }
-
-    if (!selectedAddressId) {
-      alert("กรุณาเลือกที่อยู่จัดส่งก่อน");
       return;
     }
 
@@ -70,7 +63,6 @@ try {
           regEndDate: event.regEndISO,
           resultStartDate: event.resultStartISO,
           userEmail: currentUser.email,
-          addressId: selectedAddressId,
         }),
       });
 
@@ -139,15 +131,6 @@ alert(
             ))}
           </div>
 
-          {isLoggedIn && !registered && (
-            <AddressSelector
-              currentUser={currentUser}
-              selectedAddressId={selectedAddressId}
-              onSelect={setSelectedAddressId}
-              onNavigate={onNavigate}
-            />
-          )}
-
           {registered ? (
             <p className="register-success">
               ✅ ลงทะเบียน {event.title} เรียบร้อยแล้ว
@@ -155,7 +138,7 @@ alert(
           ) : (
             <button
               className="register-btn"
-              disabled={!selectedPackage || !selectedAddressId || submitting}
+              disabled={!selectedPackage || submitting}
               onClick={handleRegister}
             >
               {submitting ? "กำลังลงทะเบียน..." : "ลงทะเบียนกิจกรรมนี้"}
