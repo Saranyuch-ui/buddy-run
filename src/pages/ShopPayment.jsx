@@ -331,6 +331,12 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
                 placeholder="แนบสลิปเพื่อให้ระบบอ่านยอดอัตโนมัติ"
               />
 
+              {!unpaidOrders.every((o) => o.shipping_address) && (
+                <p className="ocr-status" style={{ color: "#dc2626" }}>
+                  ⚠️ กรุณาเลือกที่อยู่จัดส่งก่อนชำระเงิน
+                </p>
+              )}
+
               <div className="payment-actions">
                 <button
                   className="auth-submit-btn"
