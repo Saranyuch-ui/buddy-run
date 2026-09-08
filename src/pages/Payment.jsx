@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Tesseract from "tesseract.js";
 import Header from "../components/Header";
+import AddressPickerModal from "../components/AddressPickerModal";
 
 function extractAmountFromText(text) {
   const matches = text.match(/\d{1,3}(,\d{3})*\.\d{2}/g);
@@ -26,6 +27,8 @@ function Payment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout })
   const [ocrProcessing, setOcrProcessing] = useState(false);
   const [ocrMessage, setOcrMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [pickerRegId, setPickerRegId] = useState(null);
+  const [updatingAddress, setUpdatingAddress] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -183,6 +186,58 @@ function Payment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout })
     }
   };
 
+  const handleSelectAddress = async (address) => {
+    const registrationId = pickerRegId;
+    setUpdatingAddress(true);
+
+    try {
+      const res = await fetch("/api/registrations/set-address", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          registrationId,
+          addressId: address.id,
+        }),
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.error || "อัปเดตที่อยู่จัดส่งไม่สำเร็จ");
+        return;
+      }
+
+      setRegistrations(
+        registrations.map((r) =>
+          r.id === registrationId
+            ? {
+                ...r,
+                shipping_name: address.recipient_name,
+                shipping_phone: address.phone,
+                shipping_address: [
+                  address.house_no && `บ้านเลขที่ ${address.house_no}`,
+                  address.moo && `หมู่ ${address.moo}`,
+                  address.soi && `ซอย${address.soi}`,
+                  address.road && `ถนน${address.road}`,
+                  address.sub_district && `ต.${address.sub_district}`,
+                  address.district && `อ.${address.district}`,
+                  address.province && `จ.${address.province}`,
+                  address.postal_code,
+                ]
+                  .filter(Boolean)
+                  .join(" "),
+              }
+            : r
+        )
+      );
+      setPickerRegId(null);
+    } catch (err) {
+      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setUpdatingAddress(false);
+    }
+  };
+
   return (
     <>
       <Header
@@ -209,6 +264,19 @@ function Payment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout })
                   <p className="payment-price">
                     ยอดที่ต้องชำระ: {reg.price.toLocaleString()} บาท
                   </p>
+                  <p className="ocr-status">
+                    📦 ที่อยู่จัดส่ง:{" "}
+                    {reg.shipping_address
+                      ? `${reg.shipping_name} (${reg.shipping_phone}) — ${reg.shipping_address}`
+                      : "ยังไม่ได้เลือกที่อยู่"}
+                  </p>
+                  <button
+                    type="button"
+                    className="auth-secondary-btn"
+                    onClick={() => setPickerRegId(reg.id)}
+                  >
+                    📍 เลือกที่อยู่จัดส่ง
+                  </button>
                 </div>
 
                 {payingId === reg.id ? (
@@ -273,6 +341,15 @@ function Payment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogout })
           </div>
         )}
       </div>
+
+      {pickerRegId && (
+        <AddressPickerModal
+          currentUser={currentUser}
+          onClose={() => setPickerRegId(null)}
+          onSelect={handleSelectAddress}
+          onNavigate={onNavigate}
+        />
+      )}
     </>
   );
 }
