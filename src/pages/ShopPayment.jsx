@@ -126,6 +126,12 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
   };
 
   const handlePay = async () => {
+    const hasAddress = unpaidOrders.every((o) => o.shipping_address);
+    if (!hasAddress) {
+      alert("กรุณาเลือกที่อยู่จัดส่งก่อนชำระเงิน");
+      return;
+    }
+
     const amountNum = Number(amount);
 
     if (isNaN(amountNum) || amountNum < grandTotal) {
@@ -329,7 +335,12 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
                 <button
                   className="auth-submit-btn"
                   onClick={handlePay}
-                  disabled={submitting || cancelling || ocrProcessing}
+                  disabled={
+                    submitting ||
+                    cancelling ||
+                    ocrProcessing ||
+                    !unpaidOrders.every((o) => o.shipping_address)
+                  }
                 >
                   {submitting ? "กำลังตรวจสอบ..." : "ชำระเงิน"}
                 </button>
