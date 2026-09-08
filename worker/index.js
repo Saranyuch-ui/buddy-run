@@ -1039,9 +1039,11 @@ async function handleSetRegistrationAddress(request, env) {
 
 async function handleSetOrderAddress(request, env) {
   const body = await request.json();
-  const { userId, orderId, addressId } = body;
+  const { userId, orderId, orderIds, addressId } = body;
 
-  if (!userId || !orderId || !addressId) {
+  const ids = Array.isArray(orderIds) && orderIds.length > 0 ? orderIds : orderId ? [orderId] : [];
+
+  if (!userId || ids.length === 0 || !addressId) {
     return Response.json({ success: false, error: "ข้อมูลไม่ถูกต้อง" }, { status: 400 });
   }
 
@@ -1056,10 +1058,12 @@ async function handleSetOrderAddress(request, env) {
   }
 
   try {
+    const placeholders = ids.map(() => "?").join(",");
     await env.DB.prepare(
-      "UPDATE orders SET shipping_name = ?, shipping_phone = ?, shipping_address = ? WHERE id = ? AND user_id = ?"
+      `UPDATE orders SET shipping_name = ?, shipping_phone = ?, shipping_address = ?
+       WHERE user_id = ? AND id IN (${placeholders})`
     )
-      .bind(address.recipient_name, address.phone, formatAddress(address), orderId, userId)
+      .bind(address.recipient_name, address.phone, formatAddress(address), userId, ...ids)
       .run();
 
     return Response.json({ success: true });
