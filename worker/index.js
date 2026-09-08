@@ -651,6 +651,13 @@ async function handlePayRegistration(request, env) {
     );
   }
 
+  if (!reg.shipping_address) {
+    return Response.json(
+      { success: false, error: "กรุณาเลือกที่อยู่จัดส่งก่อนชำระเงิน" },
+      { status: 400 }
+    );
+  }
+
   if (amount < reg.price) {
     return Response.json(
       { success: false, error: `ยอดชำระต้องไม่ต่ำกว่า ${reg.price.toLocaleString()} บาท` },
@@ -2103,6 +2110,13 @@ async function handlePayAllOrders(request, env) {
   if (!orders || orders.length === 0) {
     return Response.json(
       { success: false, error: "ไม่มีคำสั่งซื้อที่รอชำระเงิน" },
+      { status: 400 }
+    );
+  }
+
+  if (orders.some((o) => !o.shipping_address)) {
+    return Response.json(
+      { success: false, error: "กรุณาเลือกที่อยู่จัดส่งก่อนชำระเงิน" },
       { status: 400 }
     );
   }
