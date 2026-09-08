@@ -9,6 +9,7 @@ function AdminDashboard({ onNavigate, onLogoClick, currentUser, onLogout }) {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("month");
   const [periodShop, setPeriodShop] = useState("month");
+  const [eventsTab, setEventsTab] = useState("active");
 
   const [error, setError] = useState("");
 
@@ -280,23 +281,42 @@ function AdminDashboard({ onNavigate, onLogoClick, currentUser, onLogout }) {
         </div>
 
         <div className="dash-chart-card">
-          <h3>Active Events — ดูภาพรวมของแต่ละกิจกรรม</h3>
-          {data.activeEventsList.length === 0 ? (
-            <p className="empty-text">ไม่มีกิจกรรมที่เปิดอยู่</p>
-          ) : (
-            <div className="event-overview-list">
-              {data.activeEventsList.map((ev) => (
-                <div key={ev.id} className="event-overview-item">
-                  <h4>{ev.title}</h4>
-                  <div className="event-overview-stats">
-                    <span>สมัคร {ev.signups} คน</span>
-                    <span>ชำระแล้ว {ev.paid} คน</span>
-                    <span>ส่งผลแล้ว {ev.result} คน</span>
+          <div className="admin-tabs">
+            <button
+              className={"admin-tab" + (eventsTab === "active" ? " admin-tab-active" : "")}
+              onClick={() => setEventsTab("active")}
+            >
+              Active Events — กิจกรรมที่กำลังเปิดอยู่
+            </button>
+            <button
+              className={"admin-tab" + (eventsTab === "past" ? " admin-tab-active" : "")}
+              onClick={() => setEventsTab("past")}
+            >
+              Past Events — กิจกรรมที่สิ้นสุดแล้ว
+            </button>
+          </div>
+
+          {(() => {
+            const list = eventsTab === "active" ? data.activeEventsList : data.pastEventsList;
+            return list.length === 0 ? (
+              <p className="empty-text">
+                {eventsTab === "active" ? "ไม่มีกิจกรรมที่เปิดอยู่" : "ยังไม่มีกิจกรรมที่สิ้นสุดแล้ว"}
+              </p>
+            ) : (
+              <div className="event-overview-list">
+                {list.map((ev) => (
+                  <div key={ev.id} className="event-overview-item">
+                    <h4>{ev.title}</h4>
+                    <div className="event-overview-stats">
+                      <span>สมัคร {ev.signups} คน</span>
+                      <span>ชำระแล้ว {ev.paid} คน</span>
+                      <span>ส่งผลแล้ว {ev.result} คน</span>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            );
+          })()}
         </div>
       </div>
     </>
