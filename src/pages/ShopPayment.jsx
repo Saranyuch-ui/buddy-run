@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Tesseract from "tesseract.js";
 import Header from "../components/Header";
+import AddressPickerModal from "../components/AddressPickerModal";
 
 function extractAmountFromText(text) {
   const matches = text.match(/\d{1,3}(,\d{3})*\.\d{2}/g);
@@ -21,6 +22,7 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
   const [submitting, setSubmitting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [paidSuccess, setPaidSuccess] = useState(false);
+  const [pickerOrderId, setPickerOrderId] = useState(null);
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -203,6 +205,51 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
     }
   };
 
+  const handleSelectAddress = async (address) => {
+    const orderId = pickerOrderId;
+
+    try {
+      const res = await fetch("/api/orders/set-address", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: currentUser.id, orderId, addressId: address.id }),
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.error || "อัปเดตที่อยู่จัดส่งไม่สำเร็จ");
+        return;
+      }
+
+      setOrders(
+        orders.map((o) =>
+          o.id === orderId
+            ? {
+                ...o,
+                shipping_name: address.recipient_name,
+                shipping_phone: address.phone,
+                shipping_address: [
+                  address.house_no && `บ้านเลขที่ ${address.house_no}`,
+                  address.moo && `หมู่ ${address.moo}`,
+                  address.soi && `ซอย${address.soi}`,
+                  address.road && `ถนน${address.road}`,
+                  address.sub_district && `ต.${address.sub_district}`,
+                  address.district && `อ.${address.district}`,
+                  address.province && `จ.${address.province}`,
+                  address.postal_code,
+                ]
+                  .filter(Boolean)
+                  .join(" "),
+              }
+            : o
+        )
+      );
+      setPickerOrderId(null);
+    } catch (err) {
+      alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
+    }
+  };
+
   return (
     <>
       <Header
@@ -223,11 +270,26 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
           <>
             <div className="cart-summary">
               {unpaidOrders.map((order) => (
-                <div key={order.id} className="shop-summary-row">
-                  <span>
-                    {order.product_name} (ไซส์ {order.size || "-"}) × {order.quantity}
-                  </span>
-                  <span>{order.total.toLocaleString()} บาท</span>
+                <div key={order.id} className="shop-summary-row" style={{ flexDirection: "column", alignItems: "flex-start", gap: "6px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+                    <span>
+                      {order.product_name} (ไซส์ {order.size || "-"}) × {order.quantity}
+                    </span>
+                    <span>{order.total.toLocaleString()} บาท</span>
+                  </div>
+                  <p className="ocr-status" style={{ margin: 0 }}>
+                    📦 ที่อยู่จัดส่ง:{" "}
+                    {order.shipping_address
+                      ? `${order.shipping_name} (${order.shipping_phone}) — ${order.shipping_address}`
+                      : "ยังไม่ได้เลือกที่อยู่"}
+                  </p>
+                  <button
+                    type="button"
+                    className="auth-secondary-btn"
+                    onClick={() => setPickerOrderId(order.id)}
+                  >
+                    📍 เลือกที่อยู่จัดส่ง
+                  </button>
                 </div>
               ))}
               <p className="cart-total">ยอดรวมทั้งหมด: {grandTotal.toLocaleString()} บาท</p>
@@ -280,6 +342,15 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
           </>
         )}
       </div>
+
+      {pickerOrderId && (
+        <AddressPickerModal
+          currentUser={currentUser}
+          onClose={() => setPickerOrderId(null)}
+          onSelect={handleSelectAddress}
+          onNavigate={onNavigate}
+        />
+      )}
     </>
   );
 }
