@@ -341,12 +341,7 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
                 <button
                   className="auth-submit-btn"
                   onClick={handlePay}
-                  disabled={
-                    submitting ||
-                    cancelling ||
-                    ocrProcessing ||
-                    !unpaidOrders.every((o) => o.shipping_address)
-                  }
+                  disabled={submitting || cancelling || ocrProcessing}
                 >
                   {submitting ? "กำลังตรวจสอบ..." : "ชำระเงิน"}
                 </button>
