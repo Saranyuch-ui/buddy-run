@@ -22,7 +22,7 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
   const [submitting, setSubmitting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [paidSuccess, setPaidSuccess] = useState(false);
-  const [pickerOrderId, setPickerOrderId] = useState(null);
+  const [showAddressPicker, setShowAddressPicker] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -206,13 +206,13 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
   };
 
   const handleSelectAddress = async (address) => {
-    const orderId = pickerOrderId;
+    const orderIds = unpaidOrders.map((o) => o.id);
 
     try {
       const res = await fetch("/api/orders/set-address", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: currentUser.id, orderId, addressId: address.id }),
+        body: JSON.stringify({ userId: currentUser.id, orderIds, addressId: address.id }),
       });
       const data = await res.json();
 
@@ -221,30 +221,32 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
         return;
       }
 
+      const shippingAddressText = [
+        address.house_no && `บ้านเลขที่ ${address.house_no}`,
+        address.moo && `หมู่ ${address.moo}`,
+        address.soi && `ซอย${address.soi}`,
+        address.road && `ถนน${address.road}`,
+        address.sub_district && `ต.${address.sub_district}`,
+        address.district && `อ.${address.district}`,
+        address.province && `จ.${address.province}`,
+        address.postal_code,
+      ]
+        .filter(Boolean)
+        .join(" ");
+
       setOrders(
         orders.map((o) =>
-          o.id === orderId
+          orderIds.includes(o.id)
             ? {
                 ...o,
                 shipping_name: address.recipient_name,
                 shipping_phone: address.phone,
-                shipping_address: [
-                  address.house_no && `บ้านเลขที่ ${address.house_no}`,
-                  address.moo && `หมู่ ${address.moo}`,
-                  address.soi && `ซอย${address.soi}`,
-                  address.road && `ถนน${address.road}`,
-                  address.sub_district && `ต.${address.sub_district}`,
-                  address.district && `อ.${address.district}`,
-                  address.province && `จ.${address.province}`,
-                  address.postal_code,
-                ]
-                  .filter(Boolean)
-                  .join(" "),
+                shipping_address: shippingAddressText,
               }
             : o
         )
       );
-      setPickerOrderId(null);
+      setShowAddressPicker(false);
     } catch (err) {
       alert("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง");
     }
@@ -270,29 +272,31 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
           <>
             <div className="cart-summary">
               {unpaidOrders.map((order) => (
-                <div key={order.id} className="shop-summary-row" style={{ flexDirection: "column", alignItems: "flex-start", gap: "6px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
-                    <span>
-                      {order.product_name} (ไซส์ {order.size || "-"}) × {order.quantity}
-                    </span>
-                    <span>{order.total.toLocaleString()} บาท</span>
-                  </div>
-                  <p className="ocr-status" style={{ margin: 0 }}>
-                    📦 ที่อยู่จัดส่ง:{" "}
-                    {order.shipping_address
-                      ? `${order.shipping_name} (${order.shipping_phone}) — ${order.shipping_address}`
-                      : "ยังไม่ได้เลือกที่อยู่"}
-                  </p>
-                  <button
-                    type="button"
-                    className="auth-secondary-btn"
-                    onClick={() => setPickerOrderId(order.id)}
-                  >
-                    📍 เลือกที่อยู่จัดส่ง
-                  </button>
+                <div key={order.id} className="shop-summary-row">
+                  <span>
+                    {order.product_name} (ไซส์ {order.size || "-"}) × {order.quantity}
+                  </span>
+                  <span>{order.total.toLocaleString()} บาท</span>
                 </div>
               ))}
               <p className="cart-total">ยอดรวมทั้งหมด: {grandTotal.toLocaleString()} บาท</p>
+            </div>
+
+            <div className="payment-form" style={{ marginTop: 20 }}>
+              <label>ที่อยู่จัดส่ง (ใช้ที่อยู่เดียวกันสำหรับทุกรายการในคำสั่งซื้อนี้)</label>
+              <p className="ocr-status">
+                📦{" "}
+                {unpaidOrders[0]?.shipping_address
+                  ? `${unpaidOrders[0].shipping_name} (${unpaidOrders[0].shipping_phone}) — ${unpaidOrders[0].shipping_address}`
+                  : "ยังไม่ได้เลือกที่อยู่"}
+              </p>
+              <button
+                type="button"
+                className="auth-secondary-btn"
+                onClick={() => setShowAddressPicker(true)}
+              >
+                📍 เลือกที่อยู่จัดส่ง
+              </button>
             </div>
 
             <div className="payment-form" style={{ marginTop: 20 }}>
@@ -343,10 +347,10 @@ function ShopPayment({ onNavigate, onLogoClick, isLoggedIn, currentUser, onLogou
         )}
       </div>
 
-      {pickerOrderId && (
+      {showAddressPicker && (
         <AddressPickerModal
           currentUser={currentUser}
-          onClose={() => setPickerOrderId(null)}
+          onClose={() => setShowAddressPicker(false)}
           onSelect={handleSelectAddress}
           onNavigate={onNavigate}
         />
