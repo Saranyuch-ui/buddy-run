@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useSyncExternalStore } from "react";
+import { getCurrentPage, subscribe } from "../navState";
 
 function Header({ onLogoClick, onNavigate, currentUser, onLogout }) {
+  const currentPage = useSyncExternalStore(subscribe, getCurrentPage);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [counts, setCounts] = useState({ unpaid: 0, resultPending: 0, cart: 0 });
 
@@ -52,7 +54,10 @@ function Header({ onLogoClick, onNavigate, currentUser, onLogout }) {
           {navItems.map((item) => (
             <button
               key={item.key}
-              className="nav-btn nav-btn-with-badge"
+              className={
+                "nav-btn nav-btn-with-badge" +
+                (currentPage === item.key ? " nav-btn-active" : "")
+              }
               onClick={() => onNavigate && onNavigate(item.key)}
             >
               {item.label}
