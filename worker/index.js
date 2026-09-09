@@ -1,2462 +1,1389 @@
-export default {
-  async fetch(request, env) {
-    const url = new URL(request.url);
-
-    if (url.pathname === "/api/register" && request.method === "POST") {
-      return handleRegister(request, env);
-    }
-
-    if (url.pathname === "/api/login" && request.method === "POST") {
-      return handleLogin(request, env);
-    }
-
-    if (url.pathname === "/api/events" && request.method === "GET") {
-      return handleGetEvents(env);
-    }
-
-    if (url.pathname === "/api/admin/events" && request.method === "POST") {
-      return handleCreateEvent(request, env);
-    }
-
-    if (url.pathname === "/api/admin/events" && request.method === "DELETE") {
-      return handleDeleteEvent(request, env);
-    }
-
-    if (url.pathname === "/api/admin/events" && request.method === "PUT") {
-      return handleUpdateEvent(request, env);
-    }
-
-    if (url.pathname === "/api/registrations" && request.method === "POST") {
-      return handleCreateRegistration(request, env);
-    }
-
-    if (url.pathname === "/api/registrations" && request.method === "GET") {
-      return handleGetRegistrations(request, env);
-    }
-
-    if (url.pathname === "/api/registrations/pay" && request.method === "POST") {
-      return handlePayRegistration(request, env);
-    }
-
-    if (url.pathname === "/api/registrations/result" && request.method === "POST") {
-      return handleSubmitResult(request, env);
-    }
-
-    if (url.pathname === "/api/users" && request.method === "GET") {
-      return handleGetUser(request, env);
-    }
-
-    if (url.pathname === "/api/users" && request.method === "PUT") {
-      return handleUpdateUser(request, env);
-    }
-
-    if (url.pathname === "/api/addresses" && request.method === "GET") {
-      return handleGetAddresses(request, env);
-    }
-
-    if (url.pathname === "/api/addresses" && request.method === "POST") {
-      return handleCreateAddress(request, env);
-    }
-
-    if (url.pathname === "/api/addresses" && request.method === "PUT") {
-      return handleUpdateAddress(request, env);
-    }
-
-    if (url.pathname === "/api/addresses" && request.method === "DELETE") {
-      return handleDeleteAddress(request, env);
-    }
-
-    if (url.pathname === "/api/addresses/set-default" && request.method === "POST") {
-      return handleSetDefaultAddress(request, env);
-    }
-
-    if (url.pathname === "/api/registrations/set-address" && request.method === "POST") {
-      return handleSetRegistrationAddress(request, env);
-    }
-
-    if (url.pathname === "/api/orders/set-address" && request.method === "POST") {
-      return handleSetOrderAddress(request, env);
-    }
-
-    if (url.pathname === "/api/admin/pending" && request.method === "GET") {
-      return handleGetPendingRegistrations(request, env);
-    }
-
-    if (url.pathname === "/api/admin/review" && request.method === "POST") {
-      return handleReviewRegistration(request, env);
-    }
-
-    if (url.pathname === "/api/admin/dashboard" && request.method === "GET") {
-      return handleGetDashboard(request, env);
-    }
-
-    if (url.pathname === "/api/admin/shipping/events" && request.method === "GET") {
-      return handleGetShippingEvents(request, env);
-    }
-
-    if (url.pathname === "/api/admin/shipping/shop" && request.method === "GET") {
-      return handleGetShippingShop(request, env);
-    }
-
-    if (url.pathname === "/api/admin/shipping/mark-shipped" && request.method === "POST") {
-      return handleMarkShipped(request, env);
-    }
-
-    if (url.pathname === "/api/admin/members" && request.method === "GET") {
-      return handleGetMembers(request, env);
-    }
-
-    if (url.pathname === "/api/products" && request.method === "GET") {
-      return handleGetProducts(env);
-    }
-
-    if (url.pathname === "/api/admin/products" && request.method === "POST") {
-      return handleCreateProduct(request, env);
-    }
-
-    if (url.pathname === "/api/admin/products" && request.method === "DELETE") {
-      return handleDeleteProduct(request, env);
-    }
-
-    if (url.pathname === "/api/admin/products" && request.method === "PUT") {
-      return handleUpdateProduct(request, env);
-    }
-
-    if (url.pathname === "/api/admin/categories" && request.method === "GET") {
-      return handleGetCategories(request, env);
-    }
-
-    if (url.pathname === "/api/admin/categories" && request.method === "POST") {
-      return handleCreateCategory(request, env);
-    }
-
-    if (url.pathname === "/api/admin/categories" && request.method === "DELETE") {
-      return handleDeleteCategory(request, env);
-    }
-
-    if (url.pathname === "/api/orders" && request.method === "POST") {
-      return handleCreateOrder(request, env);
-    }
-
-    if (url.pathname === "/api/orders" && request.method === "GET") {
-      return handleGetUserOrders(request, env);
-    }
-
-    if (url.pathname === "/api/orders" && request.method === "DELETE") {
-      return handleCancelOrder(request, env);
-    }
-
-    if (url.pathname === "/api/cart" && request.method === "GET") {
-      return handleGetCart(request, env);
-    }
-
-    if (url.pathname === "/api/cart" && request.method === "POST") {
-      return handleAddToCart(request, env);
-    }
-
-    if (url.pathname === "/api/cart" && request.method === "DELETE") {
-      return handleRemoveFromCart(request, env);
-    }
-
-    if (url.pathname === "/api/cart/checkout" && request.method === "POST") {
-      return handleCheckoutCart(request, env);
-    }
-
-    if (url.pathname === "/api/orders/pay" && request.method === "POST") {
-      return handlePayOrder(request, env);
-    }
-
-    if (url.pathname === "/api/orders/pay-all" && request.method === "POST") {
-      return handlePayAllOrders(request, env);
-    }
-
-    if (url.pathname === "/api/orders/cancel-all" && request.method === "POST") {
-      return handleCancelAllOrders(request, env);
-    }
-
-    if (url.pathname === "/api/admin/shop-pending" && request.method === "GET") {
-      return handleGetPendingOrders(request, env);
-    }
-
-    if (url.pathname === "/api/admin/review-order" && request.method === "POST") {
-      return handleReviewOrder(request, env);
-    }
-
-    if (url.pathname === "/api/nav-counts" && request.method === "GET") {
-      return handleGetNavCounts(request, env);
-    }
-
-    return env.ASSETS.fetch(request);
-  },
-};
-
-async function hashPassword(password) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hashBuffer))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
-async function isAdmin(env, userId) {
-  const user = await env.DB.prepare("SELECT is_admin FROM users WHERE id = ?")
-    .bind(userId)
-    .first();
-  return !!(user && user.is_admin === 1);
+body {
+    background: #f4f7fb;
 }
 
-async function fileToBase64DataUrl(file) {
-  const buffer = await file.arrayBuffer();
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  const chunkSize = 8192;
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
-  }
-  const base64 = btoa(binary);
-  return `data:${file.type};base64,${base64}`;
+.header {
+    background: #2563eb;
+    color: white;
+    padding: 15px 30px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
-async function handleRegister(request, env) {
-  const body = await request.json();
-  const passwordHash = await hashPassword(body.password);
-
-  const existing = await env.DB.prepare(
-    "SELECT id FROM users WHERE username = ?"
-  )
-    .bind(body.username)
-    .first();
-
-  if (existing) {
-    return Response.json(
-      { success: false, error: "User ID นี้ถูกใช้งานแล้ว" },
-      { status: 400 }
-    );
-  }
-
-  try {
-    await env.DB.prepare(
-      `INSERT INTO users
-        (username, email, password_hash, first_name, last_name, birthdate, gender, shirt_size,
-         house_no, moo, soi, road, sub_district, district, province, postal_code, phone)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    )
-      .bind(
-        body.username,
-        body.email,
-        passwordHash,
-        body.firstName,
-        body.lastName,
-        body.birthdate,
-        body.gender,
-        body.shirtSize,
-        body.houseNo,
-        body.moo,
-        body.soi,
-        body.road,
-        body.subDistrict,
-        body.district,
-        body.province,
-        body.postalCode,
-        body.phone
-      )
-      .run();
-
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "อีเมลนี้ถูกใช้งานแล้ว" },
-      { status: 400 }
-    );
-  }
+.header-text h1 {
+    font-size: 1.3rem;
+    line-height: 1.2;
 }
 
-async function handleLogin(request, env) {
-  const body = await request.json();
-  const passwordHash = await hashPassword(body.password);
-
-  const user = await env.DB.prepare(
-    "SELECT id, email, first_name, is_admin FROM users WHERE username = ? AND password_hash = ?"
-  )
-    .bind(body.username, passwordHash)
-    .first();
-
-  if (!user) {
-    return Response.json(
-      { success: false, error: "User ID หรือรหัสผ่านไม่ถูกต้อง" },
-      { status: 401 }
-    );
-  }
-
-  return Response.json({ success: true, user });
+.header-text p {
+    font-size: 0.85rem;
+    opacity: 0.9;
 }
 
-async function handleGetEvents(env) {
-  const { results } = await env.DB.prepare(
-    `SELECT id, title, location, distance, image, description,
-            reg_start_date, reg_end_date, result_start_date, result_end_date, shipping_date
-     FROM events ORDER BY reg_start_date ASC`
-  ).all();
-
-  return Response.json({ success: true, events: results });
+.logo {
+    height: 45px;
+    object-fit: contain;
 }
 
-async function handleCreateEvent(request, env) {
-  const formData = await request.formData();
-  const adminUserId = formData.get("adminUserId");
-
-  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
-    return Response.json(
-      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
-      { status: 403 }
-    );
-  }
-
-  const title = formData.get("title");
-  const challenge = formData.get("challenge");
-  const location = formData.get("location");
-  const distance = formData.get("distance");
-  const regStartDate = formData.get("regStartDate");
-  const regEndDate = formData.get("regEndDate");
-  const resultStartDate = formData.get("resultStartDate");
-  const resultEndDate = formData.get("resultEndDate");
-  const shippingDate = formData.get("shippingDate");
-  const file = formData.get("image");
-
-  if (
-    !title ||
-    !challenge ||
-    !location ||
-    !distance ||
-    !regStartDate ||
-    !regEndDate ||
-    !resultStartDate ||
-    !resultEndDate ||
-    !file
-  ) {
-    return Response.json(
-      { success: false, error: "กรุณากรอกข้อมูลให้ครบถ้วน" },
-      { status: 400 }
-    );
-  }
-
-  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-  if (!allowedTypes.includes(file.type)) {
-    return Response.json(
-      { success: false, error: "รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WEBP) เท่านั้น" },
-      { status: 400 }
-    );
-  }
-
-  if (file.size > 2 * 1024 * 1024) {
-    return Response.json(
-      { success: false, error: "ไฟล์ใหญ่เกินไป (จำกัดไม่เกิน 2MB)" },
-      { status: 400 }
-    );
-  }
-
-  const imageDataUrl = await fileToBase64DataUrl(file);
-
-  try {
-    await env.DB.prepare(
-      `INSERT INTO events
-        (title, event_date, end_date, location, distance, image, description,
-         reg_start_date, reg_end_date, result_start_date, result_end_date, shipping_date)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    )
-      .bind(
-        title,
-        regStartDate,
-        resultEndDate,
-        location,
-        distance,
-        imageDataUrl,
-        challenge,
-        regStartDate,
-        regEndDate,
-        resultStartDate,
-        resultEndDate,
-        shippingDate || null
-      )
-      .run();
-
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "เพิ่มกิจกรรมไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
+.hero {
+    text-align: center;
+    padding: 40px 20px;
 }
 
-async function handleDeleteEvent(request, env) {
-  const body = await request.json();
-  const { adminUserId, eventId } = body;
-
-  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
-    return Response.json(
-      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
-      { status: 403 }
-    );
-  }
-
-  if (!eventId) {
-    return Response.json({ success: false, error: "ไม่พบ eventId" }, { status: 400 });
-  }
-
-  try {
-    await env.DB.prepare("DELETE FROM events WHERE id = ?").bind(eventId).run();
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "ลบกิจกรรมไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
+.search-box {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
 }
 
-async function resolveShippingAddress(env, userId, addressId) {
-  if (addressId) {
-    const address = await env.DB.prepare(
-      "SELECT * FROM addresses WHERE id = ? AND user_id = ?"
-    )
-      .bind(addressId, userId)
-      .first();
-    if (address) return address;
-  }
-
-  return env.DB.prepare(
-    "SELECT * FROM addresses WHERE user_id = ? ORDER BY is_default DESC, created_at ASC LIMIT 1"
-  )
-    .bind(userId)
-    .first();
+.search-box input {
+    width: 320px;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
 }
 
-async function handleCreateRegistration(request, env) {
-  const body = await request.json();
+.grid {
+    width: 90%;
+    margin: auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 50px;
+}
 
-  if (!body.userId || !body.eventId || !body.packageId) {
-    return Response.json(
-      { success: false, error: "ข้อมูลไม่ครบถ้วน" },
-      { status: 400 }
-    );
-  }
+@media (max-width: 1024px) {
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
 
-  const address = await resolveShippingAddress(env, body.userId, body.addressId);
+@media (max-width: 600px) {
+    .grid {
+        grid-template-columns: repeat(1, 1fr);
+    }
+}
 
-  try {
-    await env.DB.prepare(
-      `INSERT INTO registrations
-        (user_id, event_id, package_id, event_title, package_name, price, status, event_end_date, reg_end_date,
-         shipping_name, shipping_phone, shipping_address)
-       VALUES (?, ?, ?, ?, ?, ?, 'confirmed', ?, ?, ?, ?, ?)`
-    )
-      .bind(
-        body.userId,
-        body.eventId,
-        body.packageId,
-        body.eventTitle,
-        body.packageName,
-        body.price,
-        body.eventEndDate || null,
-        body.regEndDate || null,
-        address?.recipient_name || null,
-        address?.phone || null,
-        address ? formatAddress(address) : null
-      )
-      .run();
+.card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,.1);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
 
-    // ส่งอีเมลแจ้งเตือน - ไม่ให้ล้มเหลวตรงนี้กระทบผลลัพธ์การลงทะเบียน
-    if (body.userEmail) {
-      try {
-        await sendRegistrationEmail(env, body.userEmail, body.eventTitle, body.packageName, body.price);
-      } catch (emailErr) {
-        console.log("ส่งอีเมลไม่สำเร็จ:", emailErr);
-      }
+.card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.card-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.card-body h3 {
+    margin-bottom: 10px;
+}
+
+.card-body p {
+    margin: 8px 0;
+}
+
+.card button {
+    margin-top: auto;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    background: #2563eb;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.card button:hover {
+    background: #1d4ed8;
+}
+
+.footer {
+    text-align: center;
+    padding: 20px;
+    background: #111827;
+    color: white;
+}
+
+.event-section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.section-title {
+    margin-bottom: 16px;
+    font-size: 1.4rem;
+}
+
+.empty-text {
+    color: #888;
+    padding: 20px 0;
+}
+
+.detail {
+    max-width: 800px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+}
+
+.detail img {
+    width: 100%;
+    height: 350px;
+    object-fit: cover;
+    border-radius: 0 0 12px 12px;
+}
+
+.detail-body {
+    padding: 20px;
+}
+
+.back-btn {
+    margin: 15px;
+    padding: 8px 16px;
+    border: 1px solid #ccc;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.package-title {
+    margin-top: 25px;
+    margin-bottom: 12px;
+}
+
+.package-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.package-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 15px;
+    cursor: pointer;
+}
+
+.package-selected {
+    border-color: #2563eb;
+    background: #eff6ff;
+}
+
+.package-card input {
+    margin-top: 5px;
+}
+
+.package-info h4 {
+    margin-bottom: 5px;
+}
+
+.package-price {
+    font-weight: bold;
+    color: #2563eb;
+    margin-top: 8px;
+}
+
+.register-btn {
+    margin-top: 20px;
+    width: 100%;
+    padding: 14px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.register-btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+.register-btn:hover:not(:disabled) {
+    background: #1d4ed8;
+}
+
+.register-success {
+    margin-top: 20px;
+    padding: 15px;
+    background: #dcfce7;
+    color: #166534;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+.header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.header-logo-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-nav {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.nav-btn {
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: white;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.nav-btn:hover {
+    background: rgba(255,255,255,0.15);
+}
+
+.nav-btn-active {
+    border-bottom-color: white;
+    font-weight: bold;
+}
+
+.coming-soon {
+    max-width: 600px;
+    margin: 80px auto;
+    text-align: center;
+    padding: 40px;
+}
+
+.coming-soon h2 {
+    margin-bottom: 10px;
+}
+
+.card-disabled {
+    opacity: 0.6;
+}
+
+.card-disabled img {
+    filter: grayscale(60%);
+}
+
+.card button:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+.card button:disabled:hover {
+    background: #9ca3af;
+}
+
+.auth-page {
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.auth-form {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,.1);
+    padding: 30px;
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+}
+
+.register-form {
+    max-width: 500px;
+}
+
+.auth-form h2 {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.form-section-title {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e5e7eb;
+    color: #2563eb;
+}
+
+.form-section-toggle {
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    font: inherit;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.auth-form label {
+    margin-top: 12px;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+.auth-form input,
+.auth-form select {
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.auth-submit-btn {
+    margin-top: 25px;
+    padding: 12px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.auth-submit-btn:hover {
+    background: #1d4ed8;
+}
+
+.auth-divider {
+    border-top: 1px solid #e5e7eb;
+    margin: 20px 0;
+}
+
+.auth-link-btn {
+    background: none;
+    border: none;
+    color: #2563eb;
+    cursor: pointer;
+    padding: 8px 0;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.auth-link-btn:hover {
+    text-decoration: underline;
+}
+
+.auth-secondary-btn {
+    margin-top: 10px;
+    padding: 12px;
+    background: white;
+    color: #2563eb;
+    border: 1px solid #2563eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.auth-secondary-btn:hover {
+    background: #eff6ff;
+}
+
+.required-mark {
+    color: #dc2626;
+    font-weight: bold;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-name {
+    color: white;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.user-dropdown {
+    position: relative;
+}
+
+.user-dropdown-btn {
+    white-space: nowrap;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,.15);
+    overflow: hidden;
+    min-width: 160px;
+    z-index: 200;
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 12px 16px;
+    background: white;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    color: #111827;
+    font-size: 0.9rem;
+}
+
+.dropdown-item:hover {
+    background: #f4f7fb;
+}
+
+.profile-page {
+    max-width: 700px;
+    margin: 40px auto;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.profile-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,.1);
+    padding: 25px;
+}
+
+.profile-card h2 {
+    margin-bottom: 15px;
+}
+
+.profile-card p {
+    margin: 6px 0;
+}
+
+.reg-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.reg-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 15px;
+}
+
+.reg-item h4 {
+    margin-bottom: 5px;
+}
+
+.reg-date {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.reg-status {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.reg-status-confirmed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.reg-status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.profile-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.profile-card-header h2 {
+    margin-bottom: 0;
+}
+
+.edit-btn {
+    padding: 8px 14px;
+    background: white;
+    border: 1px solid #2563eb;
+    color: #2563eb;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.edit-btn:hover {
+    background: #eff6ff;
+}
+
+.edit-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.edit-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px 20px;
+    margin-bottom: 10px;
+}
+
+@media (max-width: 500px) {
+    .edit-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+}
+
+.edit-form label {
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+.edit-form input,
+.edit-form select {
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.edit-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.edit-actions button {
+    flex: 1;
+    margin-top: 0;
+}
+
+.payment-page {
+    max-width: 700px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.payment-title {
+    margin-bottom: 20px;
+}
+
+.payment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.payment-item {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,.1);
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.payment-info h4 {
+    margin-bottom: 6px;
+}
+
+.payment-price {
+    font-weight: bold;
+    color: #2563eb;
+    margin-top: 6px;
+}
+
+.pay-btn {
+    padding: 10px 20px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.pay-btn:hover {
+    background: #1d4ed8;
+}
+
+.pay-btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+.pay-btn:disabled:hover {
+    background: #9ca3af;
+}
+
+.payment-form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 15px;
+    margin-top: 5px;
+}
+
+.payment-form label {
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+.payment-form input {
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    margin-bottom: 12px;
+}
+
+.payment-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.payment-actions button {
+    flex: 1;
+    margin-top: 0;
+}
+
+.reg-status-paid {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.ocr-status {
+    font-size: 0.85rem;
+    color: #374151;
+    background: #f4f7fb;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin: 8px 0;
+}
+
+.slip-preview {
+    max-width: 250px;
+    max-height: 350px;
+    width: auto;
+    height: auto;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    margin: 10px 0;
+    object-fit: contain;
+}
+
+.reg-status-pending_verification {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.admin-page {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.admin-title {
+    margin-bottom: 20px;
+}
+
+.admin-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.admin-item {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,.1);
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.admin-info h4 {
+    margin-bottom: 6px;
+}
+
+.admin-paid {
+    font-weight: bold;
+    color: #2563eb;
+    margin: 6px 0;
+}
+
+.admin-user {
+    font-size: 0.9rem;
+    color: #374151;
+    margin-top: 6px;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.approve-btn {
+    padding: 10px 18px;
+    background: #16a34a;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.approve-btn:hover {
+    background: #15803d;
+}
+
+.reject-btn {
+    padding: 10px 18px;
+    background: #dc2626;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.reject-btn:hover {
+    background: #b91c1c;
+}
+
+.approve-btn:disabled,
+.reject-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.view-slip-btn {
+    margin-top: 10px;
+    padding: 8px 14px;
+    background: white;
+    border: 1px solid #2563eb;
+    color: #2563eb;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.view-slip-btn:hover {
+    background: #eff6ff;
+}
+
+.slip-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.slip-modal-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+}
+
+.slip-modal-content img {
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: 8px;
+    display: block;
+}
+
+.slip-modal-close {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    background: white;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.1rem;
+}
+
+.reg-status-completed {
+    background: #ede9fe;
+    color: #5b21b6;
+}
+
+.admin-section-spacing {
+    margin-top: 40px;
+}
+
+.reg-status-result_pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.reg-status-expired {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.dashboard-page {
+    max-width: 1100px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.dash-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.dash-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,.08);
+    padding: 18px;
+}
+
+.dash-card-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dash-card-label {
+    color: #6b7280;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+}
+
+.dash-card-value {
+    font-size: 1.6rem;
+    font-weight: bold;
+    color: #111827;
+}
+
+.dash-period-select {
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.dash-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 800px) {
+    .dash-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.dash-chart-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,.08);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.dash-chart-card h3 {
+    margin-bottom: 15px;
+    font-size: 1rem;
+}
+
+.bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    height: 160px;
+}
+
+.bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+}
+
+.bar-value {
+    font-size: 0.7rem;
+    color: #374151;
+    margin-bottom: 4px;
+}
+
+.bar {
+    width: 100%;
+    background: #2563eb;
+    border-radius: 4px 4px 0 0;
+    min-height: 2px;
+}
+
+.bar-revenue {
+    background: #16a34a;
+}
+
+.bar-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 6px;
+}
+
+.pending-action-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pending-action-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 15px;
+    background: #fef3c7;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+.pending-action-count {
+    color: #92400e;
+}
+
+.mini-stat-row {
+    display: flex;
+    gap: 15px;
+}
+
+.mini-stat {
+    flex: 1;
+    text-align: center;
+    background: #f4f7fb;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.mini-stat-label {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.mini-stat-value {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #2563eb;
+}
+
+.event-overview-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.event-overview-item {
+    padding: 12px 15px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.event-overview-item h4 {
+    margin-bottom: 6px;
+}
+
+.event-overview-stats {
+    display: flex;
+    gap: 15px;
+    font-size: 0.85rem;
+    color: #374151;
+}
+
+.admin-events-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.event-form {
+    max-width: 600px;
+    margin: 0 auto 30px;
+}
+
+.dash-card-clickable {
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.dash-card-clickable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,.12);
+}
+
+.admin-badge {
+    font-size: 0.75rem;
+    color: #2563eb;
+    font-weight: normal;
+}
+
+.reg-status-pending_ocr_approval {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.shop-buy-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.shop-qty-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.shop-qty-row label {
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+.shop-qty-row input {
+    width: 70px;
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.admin-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-tab {
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 1rem;
+    color: #6b7280;
+}
+
+.admin-tab-active {
+    color: #2563eb;
+    border-bottom-color: #2563eb;
+    font-weight: bold;
+}
+
+.shop-size-row {
+    margin-top: 10px;
+}
+
+.shop-size-row label {
+    display: block;
+    font-size: 0.9rem;
+    color: #374151;
+    margin-bottom: 6px;
+}
+
+.shop-size-options {
+    display: flex;
+    gap: 6px;
+}
+
+.card button.shop-size-btn {
+    width: 40px;
+    height: 36px;
+    border: 1px solid #d1d5db;
+    background: #e5e7eb;
+    color: #374151;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    margin-top: 0;
+}
+
+.card button.shop-size-btn:hover {
+    background: #d1d5db;
+}
+
+.card button.shop-size-selected {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+}
+
+.card button.shop-size-selected:hover {
+    background: #1d4ed8;
+}
+
+.shop-btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.shop-btn-row button {
+    flex: 1;
+    margin-top: 0;
+}
+
+.shop-cart-btn {
+    background: white;
+    color: #2563eb;
+    border: 1px solid #2563eb;
+}
+
+.shop-cart-btn:hover {
+    background: #eff6ff;
+}
+
+.cart-summary {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,.1);
+    padding: 20px;
+    margin-top: 20px;
+    text-align: right;
+}
+
+.cart-total {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #2563eb;
+    margin-bottom: 15px;
+}
+
+.cancel-order-btn {
+    margin-top: 10px;
+    padding: 6px 12px;
+    background: white;
+    border: 1px solid #dc2626;
+    color: #dc2626;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.cancel-order-btn:hover {
+    background: #fef2f2;
+}
+
+.nav-btn-with-badge {
+    position: relative;
+}
+
+.nav-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #dc2626;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: bold;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+}
+
+.cart-checkbox-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    flex: 1;
+}
+
+.cart-checkbox-row input[type="checkbox"] {
+    margin-top: 5px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.shop-summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 0.9rem;
+}
+
+.shop-summary-row:last-of-type {
+    border-bottom: none;
+}
+
+.shop-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.shop-sidebar {
+    width: 200px;
+    flex-shrink: 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,.08);
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.shop-sidebar-title {
+    font-size: 1rem;
+    margin-bottom: 5px;
+}
+
+.shop-category-btn {
+    text-align: left;
+    padding: 10px 12px;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+.shop-category-btn:hover {
+    background: #f4f7fb;
+}
+
+.shop-category-active {
+    background: #2563eb;
+    color: white;
+}
+
+.shop-product-grid {
+    flex: 1;
+    margin: 0;
+}
+
+@media (max-width: 700px) {
+    .shop-layout {
+        flex-direction: column;
     }
 
-    return Response.json({ success: true });
-  } catch (err) {
-    console.log("ลงทะเบียนล้มเหลว:", err.message || err);
-    return Response.json(
-      { success: false, error: "ลงทะเบียนไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
-}
-
-async function sendEmail(env, toEmail, subject, bodyHtml) {
-  if (!env.RESEND_API_KEY) {
-    console.log("ไม่ได้ส่งอีเมล: ไม่พบ secret RESEND_API_KEY (ตั้งค่าด้วย `wrangler secret put RESEND_API_KEY`)");
-    return;
-  }
-
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${env.RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: "Buddy Run <onboarding@resend.dev>",
-      to: [toEmail],
-      subject,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
-          <h2 style="color: #2563eb;">🏃 Buddy Run</h2>
-          ${bodyHtml}
-        </div>
-      `,
-    }),
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    console.log(`ส่งอีเมลไม่สำเร็จ (Resend ตอบ ${res.status}): ${errText}`);
-  }
-}
-
-async function sendRegistrationEmail(env, toEmail, eventTitle, packageName, price) {
-  await sendEmail(
-    env,
-    toEmail,
-    `ลงทะเบียนสำเร็จ - ${eventTitle}`,
-    `
-      <p>ลงทะเบียนกิจกรรมสำเร็จแล้ว!</p>
-      <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-        <tr><td style="padding: 8px 0; color: #6b7280;">กิจกรรม</td><td style="padding: 8px 0; font-weight: bold;">${eventTitle}</td></tr>
-        <tr><td style="padding: 8px 0; color: #6b7280;">แพ็กเกจ</td><td style="padding: 8px 0; font-weight: bold;">${packageName}</td></tr>
-        <tr><td style="padding: 8px 0; color: #6b7280;">ราคา</td><td style="padding: 8px 0; font-weight: bold;">${price.toLocaleString()} บาท</td></tr>
-      </table>
-      <p style="margin-top: 20px; color: #6b7280; font-size: 0.9rem;">
-        กรุณาชำระเงินภายในระยะเวลาที่กำหนด โดยเข้าไปที่หน้า "ชำระเงิน" บนเว็บไซต์
-      </p>
-    `
-  );
-}
-
-async function sendPaymentApprovedEmail(env, toEmail, eventTitle, packageName, price) {
-  await sendEmail(
-    env,
-    toEmail,
-    `ยืนยันการชำระเงินสำเร็จ - ${eventTitle}`,
-    `
-      <p>✅ การชำระเงินของคุณได้รับการตรวจสอบและอนุมัติเรียบร้อยแล้ว!</p>
-      <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-        <tr><td style="padding: 8px 0; color: #6b7280;">กิจกรรม</td><td style="padding: 8px 0; font-weight: bold;">${eventTitle}</td></tr>
-        <tr><td style="padding: 8px 0; color: #6b7280;">แพ็กเกจ</td><td style="padding: 8px 0; font-weight: bold;">${packageName}</td></tr>
-        <tr><td style="padding: 8px 0; color: #6b7280;">ยอดที่ชำระ</td><td style="padding: 8px 0; font-weight: bold;">${price.toLocaleString()} บาท</td></tr>
-      </table>
-      <p style="margin-top: 20px; color: #6b7280; font-size: 0.9rem;">
-        เมื่อถึงวันเริ่มส่งผลกิจกรรม กรุณาเข้าไปที่หน้า "ส่งผลกิจกรรม" บนเว็บไซต์เพื่อส่งหลักฐานผลการวิ่ง
-      </p>
-    `
-  );
-}
-
-async function sendResultApprovedEmail(env, toEmail, eventTitle, packageName, shippingDate) {
-  await sendEmail(
-    env,
-    toEmail,
-    `อนุมัติผลกิจกรรมเรียบร้อยแล้ว - ${eventTitle}`,
-    `
-      <p>🎉 ผลการวิ่งของคุณได้รับการตรวจสอบและอนุมัติเรียบร้อยแล้ว!</p>
-      <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-        <tr><td style="padding: 8px 0; color: #6b7280;">กิจกรรม</td><td style="padding: 8px 0; font-weight: bold;">${eventTitle}</td></tr>
-        <tr><td style="padding: 8px 0; color: #6b7280;">แพ็กเกจ</td><td style="padding: 8px 0; font-weight: bold;">${packageName}</td></tr>
-      </table>
-      ${
-        shippingDate
-          ? `<p style="margin-top: 15px;">🎁 ของรางวัล จะจัดส่งให้ตามที่อยู่ ในวันที่ ${shippingDate.slice(0, 10)}</p>`
-          : ""
-      }
-      <p style="margin-top: 20px; color: #6b7280; font-size: 0.9rem;">
-        ขอบคุณที่เข้าร่วมกิจกรรมกับ Buddy Run! 🏃
-      </p>
-    `
-  );
-}
-
-async function handleGetRegistrations(request, env) {
-  const url = new URL(request.url);
-  const userId = url.searchParams.get("userId");
-
-  if (!userId) {
-    return Response.json({ success: false, error: "ไม่พบ userId" }, { status: 400 });
-  }
-
-  const { results } = await env.DB.prepare(
-    `SELECT r.id, r.user_id, r.event_id, r.package_id, r.status, r.created_at, r.event_title,
-            r.package_name, r.price, r.paid_amount, r.slip_image, r.result_image,
-            r.event_end_date, r.reg_end_date, r.shipping_name, r.shipping_phone, r.shipping_address,
-            e.result_start_date, e.result_end_date
-     FROM registrations r
-     LEFT JOIN events e ON r.event_id = e.id
-     WHERE r.user_id = ? ORDER BY r.created_at DESC`
-  )
-    .bind(userId)
-    .all();
-
-  return Response.json({ success: true, registrations: results });
-}
-
-async function handlePayRegistration(request, env) {
-  const formData = await request.formData();
-
-  const registrationId = formData.get("registrationId");
-  const amount = Number(formData.get("amount"));
-  const file = formData.get("slip");
-  const verifiedByOcr = formData.get("verifiedByOcr") === "true";
-
-  if (!registrationId || !amount || !file) {
-    return Response.json(
-      { success: false, error: "ข้อมูลไม่ครบถ้วน กรุณาแนบสลิปและกรอกยอดเงิน" },
-      { status: 400 }
-    );
-  }
-
-  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-  if (!allowedTypes.includes(file.type)) {
-    return Response.json(
-      { success: false, error: "รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WEBP) เท่านั้น" },
-      { status: 400 }
-    );
-  }
-
-  if (file.size > 2 * 1024 * 1024) {
-    return Response.json(
-      { success: false, error: "ไฟล์ใหญ่เกินไป (จำกัดไม่เกิน 2MB)" },
-      { status: 400 }
-    );
-  }
-
-  const reg = await env.DB.prepare(
-    "SELECT * FROM registrations WHERE id = ?"
-  )
-    .bind(registrationId)
-    .first();
-
-  if (!reg) {
-    return Response.json(
-      { success: false, error: "ไม่พบรายการลงทะเบียนนี้" },
-      { status: 404 }
-    );
-  }
-
-  if (reg.status === "paid") {
-    return Response.json(
-      { success: false, error: "รายการนี้ชำระเงินแล้ว" },
-      { status: 400 }
-    );
-  }
-
-  if (!reg.shipping_address) {
-    return Response.json(
-      { success: false, error: "กรุณาเลือกที่อยู่จัดส่งก่อนชำระเงิน" },
-      { status: 400 }
-    );
-  }
-
-  if (amount < reg.price) {
-    return Response.json(
-      { success: false, error: `ยอดชำระต้องไม่ต่ำกว่า ${reg.price.toLocaleString()} บาท` },
-      { status: 400 }
-    );
-  }
-
-  const newStatus = verifiedByOcr ? "pending_ocr_approval" : "pending_verification";
-  const slipDataUrl = await fileToBase64DataUrl(file);
-
-  try {
-    await env.DB.prepare(
-      "UPDATE registrations SET status = ?, paid_amount = ?, slip_image = ? WHERE id = ?"
-    )
-      .bind(newStatus, amount, slipDataUrl, registrationId)
-      .run();
-
-    return Response.json({ success: true, status: newStatus });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "อัปเดตสถานะไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
-}
-
-async function handleSubmitResult(request, env) {
-  const formData = await request.formData();
-
-  const registrationId = formData.get("registrationId");
-  const userId = formData.get("userId");
-  const file = formData.get("resultImage");
-
-  if (!registrationId || !userId || !file) {
-    return Response.json(
-      { success: false, error: "ข้อมูลไม่ครบถ้วน กรุณาแนบรูปผลกิจกรรม" },
-      { status: 400 }
-    );
-  }
-
-  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-  if (!allowedTypes.includes(file.type)) {
-    return Response.json(
-      { success: false, error: "รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WEBP) เท่านั้น" },
-      { status: 400 }
-    );
-  }
-
-  if (file.size > 2 * 1024 * 1024) {
-    return Response.json(
-      { success: false, error: "ไฟล์ใหญ่เกินไป (จำกัดไม่เกิน 2MB)" },
-      { status: 400 }
-    );
-  }
-
-  const reg = await env.DB.prepare(
-    "SELECT * FROM registrations WHERE id = ?"
-  )
-    .bind(registrationId)
-    .first();
-
-  if (!reg) {
-    return Response.json(
-      { success: false, error: "ไม่พบรายการลงทะเบียนนี้" },
-      { status: 404 }
-    );
-  }
-
-  if (String(reg.user_id) !== String(userId)) {
-    return Response.json(
-      { success: false, error: "ไม่มีสิทธิ์ทำรายการนี้" },
-      { status: 403 }
-    );
-  }
-
-  if (reg.status !== "paid") {
-    return Response.json(
-      { success: false, error: "กิจกรรมนี้ยังไม่พร้อมให้ส่งผล" },
-      { status: 400 }
-    );
-  }
-
-  const event = await env.DB.prepare(
-    "SELECT result_start_date, result_end_date FROM events WHERE id = ?"
-  )
-    .bind(reg.event_id)
-    .first();
-
-  const todayStr = new Date().toISOString().slice(0, 10);
-  if (event?.result_start_date && todayStr < event.result_start_date.slice(0, 10)) {
-    return Response.json(
-      { success: false, error: "ยังไม่ถึงวันเริ่มส่งผลกิจกรรม" },
-      { status: 400 }
-    );
-  }
-  if (event?.result_end_date && todayStr > event.result_end_date.slice(0, 10)) {
-    return Response.json(
-      { success: false, error: "หมดเวลาส่งผลกิจกรรมแล้ว" },
-      { status: 400 }
-    );
-  }
-
-  const resultDataUrl = await fileToBase64DataUrl(file);
-
-  try {
-    await env.DB.prepare(
-      "UPDATE registrations SET status = 'result_pending', result_image = ? WHERE id = ?"
-    )
-      .bind(resultDataUrl, registrationId)
-      .run();
-
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "ส่งผลกิจกรรมไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
-}
-
-async function handleGetUser(request, env) {
-  const url = new URL(request.url);
-  const userId = url.searchParams.get("userId");
-
-  if (!userId) {
-    return Response.json({ success: false, error: "ไม่พบ userId" }, { status: 400 });
-  }
-
-  const user = await env.DB.prepare(
-    `SELECT id, username, email, first_name, last_name, birthdate, gender, shirt_size,
-            house_no, moo, soi, road, sub_district, district, province, postal_code, phone, is_admin
-     FROM users WHERE id = ?`
-  )
-    .bind(userId)
-    .first();
-
-  if (!user) {
-    return Response.json({ success: false, error: "ไม่พบผู้ใช้" }, { status: 404 });
-  }
-
-  return Response.json({ success: true, user });
-}
-
-async function handleUpdateUser(request, env) {
-  const body = await request.json();
-
-  if (!body.userId) {
-    return Response.json({ success: false, error: "ไม่พบ userId" }, { status: 400 });
-  }
-
-  try {
-    await env.DB.prepare(
-      `UPDATE users SET
-        first_name = ?, last_name = ?, birthdate = ?, gender = ?, shirt_size = ?,
-        house_no = ?, moo = ?, soi = ?, road = ?, sub_district = ?, district = ?,
-        province = ?, postal_code = ?, phone = ?
-       WHERE id = ?`
-    )
-      .bind(
-        body.firstName,
-        body.lastName,
-        body.birthdate,
-        body.gender,
-        body.shirtSize,
-        body.houseNo,
-        body.moo,
-        body.soi,
-        body.road,
-        body.subDistrict,
-        body.district,
-        body.province,
-        body.postalCode,
-        body.phone,
-        body.userId
-      )
-      .run();
-
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "แก้ไขข้อมูลไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
-}
-
-async function handleGetAddresses(request, env) {
-  const url = new URL(request.url);
-  const userId = url.searchParams.get("userId");
-
-  if (!userId) {
-    return Response.json({ success: false, error: "ไม่พบ userId" }, { status: 400 });
-  }
-
-  const { results } = await env.DB.prepare(
-    "SELECT * FROM addresses WHERE user_id = ? ORDER BY is_default DESC, created_at ASC"
-  )
-    .bind(userId)
-    .all();
-
-  return Response.json({ success: true, addresses: results });
-}
-
-async function handleCreateAddress(request, env) {
-  const body = await request.json();
-
-  if (!body.userId || !body.recipientName || !body.phone || !body.province) {
-    return Response.json(
-      { success: false, error: "กรุณากรอกข้อมูลที่อยู่ให้ครบถ้วน" },
-      { status: 400 }
-    );
-  }
-
-  try {
-    if (body.isDefault) {
-      await env.DB.prepare("UPDATE addresses SET is_default = 0 WHERE user_id = ?")
-        .bind(body.userId)
-        .run();
+    .shop-sidebar {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
     }
-
-    const existingCount = await env.DB.prepare(
-      "SELECT COUNT(*) AS c FROM addresses WHERE user_id = ?"
-    )
-      .bind(body.userId)
-      .first();
-
-    await env.DB.prepare(
-      `INSERT INTO addresses
-        (user_id, label, recipient_name, phone, house_no, moo, soi, road, sub_district, district, province, postal_code, is_default)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    )
-      .bind(
-        body.userId,
-        body.label || "ที่อยู่จัดส่ง",
-        body.recipientName,
-        body.phone,
-        body.houseNo || "",
-        body.moo || "",
-        body.soi || "",
-        body.road || "",
-        body.subDistrict || "",
-        body.district || "",
-        body.province || "",
-        body.postalCode || "",
-        body.isDefault || existingCount.c === 0 ? 1 : 0
-      )
-      .run();
-
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "เพิ่มที่อยู่ไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
 }
 
-async function handleUpdateAddress(request, env) {
-  const body = await request.json();
-
-  if (!body.addressId || !body.userId || !body.recipientName || !body.phone || !body.province) {
-    return Response.json(
-      { success: false, error: "กรุณากรอกข้อมูลที่อยู่ให้ครบถ้วน" },
-      { status: 400 }
-    );
-  }
-
-  try {
-    if (body.isDefault) {
-      await env.DB.prepare("UPDATE addresses SET is_default = 0 WHERE user_id = ?")
-        .bind(body.userId)
-        .run();
-    }
-
-    await env.DB.prepare(
-      `UPDATE addresses SET
-        label = ?, recipient_name = ?, phone = ?, house_no = ?, moo = ?, soi = ?, road = ?,
-        sub_district = ?, district = ?, province = ?, postal_code = ?, is_default = ?
-       WHERE id = ? AND user_id = ?`
-    )
-      .bind(
-        body.label || "ที่อยู่จัดส่ง",
-        body.recipientName,
-        body.phone,
-        body.houseNo || "",
-        body.moo || "",
-        body.soi || "",
-        body.road || "",
-        body.subDistrict || "",
-        body.district || "",
-        body.province || "",
-        body.postalCode || "",
-        body.isDefault ? 1 : 0,
-        body.addressId,
-        body.userId
-      )
-      .run();
-
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "แก้ไขที่อยู่ไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
+.shop-content {
+    flex: 1;
 }
 
-async function handleDeleteAddress(request, env) {
-  const body = await request.json();
-
-  if (!body.addressId || !body.userId) {
-    return Response.json({ success: false, error: "ข้อมูลไม่ถูกต้อง" }, { status: 400 });
-  }
-
-  try {
-    await env.DB.prepare("DELETE FROM addresses WHERE id = ? AND user_id = ?")
-      .bind(body.addressId, body.userId)
-      .run();
-
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "ลบที่อยู่ไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
+.shop-actions {
+    margin-top: auto;
 }
 
-async function handleSetDefaultAddress(request, env) {
-  const body = await request.json();
-
-  if (!body.addressId || !body.userId) {
-    return Response.json({ success: false, error: "ข้อมูลไม่ถูกต้อง" }, { status: 400 });
-  }
-
-  try {
-    await env.DB.prepare("UPDATE addresses SET is_default = 0 WHERE user_id = ?")
-      .bind(body.userId)
-      .run();
-    await env.DB.prepare("UPDATE addresses SET is_default = 1 WHERE id = ? AND user_id = ?")
-      .bind(body.addressId, body.userId)
-      .run();
-
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "อัปเดตไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
+.shop-product-grid .card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
-async function handleSetRegistrationAddress(request, env) {
-  const body = await request.json();
-  const { userId, registrationId, addressId } = body;
-
-  if (!userId || !registrationId || !addressId) {
-    return Response.json({ success: false, error: "ข้อมูลไม่ถูกต้อง" }, { status: 400 });
-  }
-
-  const address = await env.DB.prepare(
-    "SELECT * FROM addresses WHERE id = ? AND user_id = ?"
-  )
-    .bind(addressId, userId)
-    .first();
-
-  if (!address) {
-    return Response.json({ success: false, error: "ไม่พบที่อยู่ที่เลือก" }, { status: 400 });
-  }
-
-  try {
-    await env.DB.prepare(
-      "UPDATE registrations SET shipping_name = ?, shipping_phone = ?, shipping_address = ? WHERE id = ? AND user_id = ?"
-    )
-      .bind(address.recipient_name, address.phone, formatAddress(address), registrationId, userId)
-      .run();
-
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "อัปเดตที่อยู่จัดส่งไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
+.shop-product-grid .card-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
 }
 
-async function handleSetOrderAddress(request, env) {
-  const body = await request.json();
-  const { userId, orderId, orderIds, addressId } = body;
-
-  const ids = Array.isArray(orderIds) && orderIds.length > 0 ? orderIds : orderId ? [orderId] : [];
-
-  if (!userId || ids.length === 0 || !addressId) {
-    return Response.json({ success: false, error: "ข้อมูลไม่ถูกต้อง" }, { status: 400 });
-  }
-
-  const address = await env.DB.prepare(
-    "SELECT * FROM addresses WHERE id = ? AND user_id = ?"
-  )
-    .bind(addressId, userId)
-    .first();
-
-  if (!address) {
-    return Response.json({ success: false, error: "ไม่พบที่อยู่ที่เลือก" }, { status: 400 });
-  }
-
-  try {
-    const placeholders = ids.map(() => "?").join(",");
-    await env.DB.prepare(
-      `UPDATE orders SET shipping_name = ?, shipping_phone = ?, shipping_address = ?
-       WHERE user_id = ? AND id IN (${placeholders})`
-    )
-      .bind(address.recipient_name, address.phone, formatAddress(address), userId, ...ids)
-      .run();
-
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "อัปเดตที่อยู่จัดส่งไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
+.shop-product-grid .card-body h3 {
+    min-height: 70px;
 }
 
-async function handleGetPendingRegistrations(request, env) {
-  const url = new URL(request.url);
-  const adminUserId = url.searchParams.get("adminUserId");
-
-  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
-    return Response.json(
-      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
-      { status: 403 }
-    );
-  }
-
-  const { results } = await env.DB.prepare(
-    `SELECT r.*, u.email AS user_email, u.first_name AS user_first_name, u.last_name AS user_last_name
-     FROM registrations r
-     JOIN users u ON r.user_id = u.id
-     WHERE r.status IN ('pending_verification', 'pending_ocr_approval', 'result_pending')
-     ORDER BY r.created_at ASC`
-  ).all();
-
-  return Response.json({ success: true, registrations: results });
+.shop-product-grid .card-body p:not(.package-price) {
+    min-height: 60px;
 }
 
-async function handleReviewRegistration(request, env) {
-  const body = await request.json();
-  const { adminUserId, registrationId, action } = body;
-
-  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
-    return Response.json(
-      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
-      { status: 403 }
-    );
-  }
-
-  if (!registrationId || !["approve", "reject"].includes(action)) {
-    return Response.json(
-      { success: false, error: "ข้อมูลไม่ครบถ้วน" },
-      { status: 400 }
-    );
-  }
-
-  const reg = await env.DB.prepare("SELECT * FROM registrations WHERE id = ?")
-    .bind(registrationId)
-    .first();
-
-  if (!reg) {
-    return Response.json(
-      { success: false, error: "ไม่พบรายการลงทะเบียนนี้" },
-      { status: 404 }
-    );
-  }
-
-  try {
-    if (reg.status === "pending_verification" || reg.status === "pending_ocr_approval") {
-      await env.DB.prepare(
-        "INSERT INTO admin_reviews (registration_id, review_type, action) VALUES (?, 'payment', ?)"
-      )
-        .bind(registrationId, action)
-        .run();
-
-      if (action === "approve") {
-        await env.DB.prepare(
-          "UPDATE registrations SET status = 'paid', slip_image = NULL, paid_at = datetime('now') WHERE id = ?"
-        )
-          .bind(registrationId)
-          .run();
-
-        const user = await env.DB.prepare("SELECT email FROM users WHERE id = ?")
-          .bind(reg.user_id)
-          .first();
-        if (user?.email) {
-          try {
-            await sendPaymentApprovedEmail(
-              env,
-              user.email,
-              reg.event_title,
-              reg.package_name,
-              reg.paid_amount ?? reg.price
-            );
-          } catch (emailErr) {
-            console.log("ส่งอีเมลไม่สำเร็จ:", emailErr);
-          }
-        }
-      } else {
-        await env.DB.prepare(
-          "UPDATE registrations SET status = 'confirmed' WHERE id = ?"
-        )
-          .bind(registrationId)
-          .run();
-      }
-    } else if (reg.status === "result_pending") {
-      await env.DB.prepare(
-        "INSERT INTO admin_reviews (registration_id, review_type, action) VALUES (?, 'result', ?)"
-      )
-        .bind(registrationId, action)
-        .run();
-
-      if (action === "approve") {
-        await env.DB.prepare(
-          "UPDATE registrations SET status = 'completed', result_image = NULL WHERE id = ?"
-        )
-          .bind(registrationId)
-          .run();
-
-        const user = await env.DB.prepare("SELECT email FROM users WHERE id = ?")
-          .bind(reg.user_id)
-          .first();
-        const event = await env.DB.prepare("SELECT shipping_date FROM events WHERE id = ?")
-          .bind(reg.event_id)
-          .first();
-        if (user?.email) {
-          try {
-            await sendResultApprovedEmail(
-              env,
-              user.email,
-              reg.event_title,
-              reg.package_name,
-              event?.shipping_date
-            );
-          } catch (emailErr) {
-            console.log("ส่งอีเมลไม่สำเร็จ:", emailErr);
-          }
-        }
-      } else {
-        await env.DB.prepare(
-          "UPDATE registrations SET status = 'paid' WHERE id = ?"
-        )
-          .bind(registrationId)
-          .run();
-      }
-    } else {
-      return Response.json(
-        { success: false, error: "รายการนี้ไม่ได้อยู่ในสถานะรอตรวจสอบ" },
-        { status: 400 }
-      );
-    }
-
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "อัปเดตสถานะไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
+.shop-product-grid .package-price {
+    min-height: 35px;
 }
 
-async function handleGetDashboard(request, env) {
-  const url = new URL(request.url);
-  const adminUserId = url.searchParams.get("adminUserId");
-  const period = url.searchParams.get("period") || "month";
-  const periodShop = url.searchParams.get("periodShop") || "month";
-
-  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
-    return Response.json(
-      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
-      { status: 403 }
-    );
-  }
-
-  const totalMembers = await env.DB.prepare("SELECT COUNT(*) AS c FROM users").first();
-
-  const activeEventsCount = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM events WHERE reg_start_date <= date('now') AND result_end_date >= date('now')"
-  ).first();
-
-  const todaySignups = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM registrations WHERE date(created_at) = date('now')"
-  ).first();
-
-  const revenueQuery =
-    period === "today"
-      ? "SELECT COALESCE(SUM(paid_amount),0) AS s FROM registrations WHERE paid_at IS NOT NULL AND date(paid_at) = date('now')"
-      : "SELECT COALESCE(SUM(paid_amount),0) AS s FROM registrations WHERE paid_at IS NOT NULL AND strftime('%Y-%m', paid_at) = strftime('%Y-%m', 'now')";
-  const revenue = await env.DB.prepare(revenueQuery).first();
-
-  const shopRevenueQuery =
-    periodShop === "today"
-      ? "SELECT COALESCE(SUM(paid_amount),0) AS s FROM orders WHERE paid_at IS NOT NULL AND date(paid_at) = date('now')"
-      : "SELECT COALESCE(SUM(paid_amount),0) AS s FROM orders WHERE paid_at IS NOT NULL AND strftime('%Y-%m', paid_at) = strftime('%Y-%m', 'now')";
-  const shopRevenue = await env.DB.prepare(shopRevenueQuery).first();
-
-  const pendingPayment = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM registrations WHERE status = 'confirmed'"
-  ).first();
-
-  const pendingSlip = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM registrations WHERE status IN ('pending_verification', 'pending_ocr_approval')"
-  ).first();
-
-  const pendingShopSlip = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM orders WHERE status IN ('pending_verification', 'pending_ocr_approval')"
-  ).first();
-
-  const pendingResult = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM registrations WHERE status = 'result_pending'"
-  ).first();
-
-  const pendingShipmentEvents = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM registrations WHERE status = 'completed' AND shipped_at IS NULL"
-  ).first();
-
-  const pendingShipmentShop = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM orders WHERE status = 'paid' AND shipped_at IS NULL"
-  ).first();
-
-  const { results: weeklySignupsRaw } = await env.DB.prepare(
-    `SELECT date(created_at) AS d, COUNT(*) AS c
-     FROM registrations
-     WHERE date(created_at) >= date('now', '-6 days')
-     GROUP BY d
-     ORDER BY d ASC`
-  ).all();
-
-  const { results: monthlyRevenueEventRaw } = await env.DB.prepare(
-    `SELECT strftime('%m', paid_at) AS m, SUM(paid_amount) AS s
-     FROM registrations
-     WHERE paid_at IS NOT NULL AND strftime('%Y', paid_at) = strftime('%Y', 'now')
-     GROUP BY m
-     ORDER BY m ASC`
-  ).all();
-
-  const { results: monthlyRevenueShopRaw } = await env.DB.prepare(
-    `SELECT strftime('%m', paid_at) AS m, SUM(paid_amount) AS s
-     FROM orders
-     WHERE paid_at IS NOT NULL AND strftime('%Y', paid_at) = strftime('%Y', 'now')
-     GROUP BY m
-     ORDER BY m ASC`
-  ).all();
-
-  const monthlyRevenueMap = {};
-  monthlyRevenueEventRaw.forEach((row) => {
-    monthlyRevenueMap[row.m] = (monthlyRevenueMap[row.m] || 0) + (row.s || 0);
-  });
-  monthlyRevenueShopRaw.forEach((row) => {
-    monthlyRevenueMap[row.m] = (monthlyRevenueMap[row.m] || 0) + (row.s || 0);
-  });
-  const monthlyRevenueRaw = Object.keys(monthlyRevenueMap)
-    .sort()
-    .map((m) => ({ m, s: monthlyRevenueMap[m] }));
-
-  const newMembersToday = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM users WHERE date(created_at) = date('now')"
-  ).first();
-
-  const newMembersWeek = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM users WHERE date(created_at) >= date('now', '-6 days')"
-  ).first();
-
-  const newMembersMonth = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM users WHERE strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now')"
-  ).first();
-
-  const { results: activeEventsList } = await env.DB.prepare(
-    `SELECT
-       e.id, e.title,
-       (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) AS signups,
-       (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.status IN ('paid','result_pending','completed')) AS paid,
-       (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.status IN ('result_pending','completed')) AS result
-     FROM events e
-     WHERE e.reg_start_date <= date('now') AND e.result_end_date >= date('now')
-     ORDER BY e.reg_start_date ASC`
-  ).all();
-
-  const { results: pastEventsList } = await env.DB.prepare(
-    `SELECT
-       e.id, e.title,
-       (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id) AS signups,
-       (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.status IN ('paid','result_pending','completed')) AS paid,
-       (SELECT COUNT(*) FROM registrations r WHERE r.event_id = e.id AND r.status IN ('result_pending','completed')) AS result
-     FROM events e
-     WHERE e.result_end_date < date('now')
-     ORDER BY e.result_end_date DESC`
-  ).all();
-
-  return Response.json({
-    success: true,
-    totalMembers: totalMembers.c,
-    activeEvents: activeEventsCount.c,
-    todaySignups: todaySignups.c,
-    revenue: revenue.s,
-    revenuePeriod: period,
-    shopRevenue: shopRevenue.s,
-    shopRevenuePeriod: periodShop,
-    pendingPayment: pendingPayment.c,
-    pendingSlip: pendingSlip.c,
-    pendingShopSlip: pendingShopSlip.c,
-    pendingResult: pendingResult.c,
-    pendingShipmentEvents: pendingShipmentEvents.c,
-    pendingShipmentShop: pendingShipmentShop.c,
-    weeklySignups: weeklySignupsRaw,
-    monthlyRevenue: monthlyRevenueRaw,
-    newMembers: {
-      today: newMembersToday.c,
-      week: newMembersWeek.c,
-      month: newMembersMonth.c,
-    },
-    activeEventsList,
-    pastEventsList,
-  });
-}
-
-function formatAddress(u) {
-  const parts = [
-    u.house_no ? `บ้านเลขที่ ${u.house_no}` : "",
-    u.moo ? `หมู่ ${u.moo}` : "",
-    u.soi ? `ซอย${u.soi}` : "",
-    u.road ? `ถนน${u.road}` : "",
-    u.sub_district ? `ตำบล/แขวง${u.sub_district}` : "",
-    u.district ? `อำเภอ/เขต${u.district}` : "",
-    u.province ? `จังหวัด${u.province}` : "",
-    u.postal_code || "",
-  ].filter(Boolean);
-  return parts.join(" ");
-}
-
-async function handleGetShippingEvents(request, env) {
-  const url = new URL(request.url);
-  const adminUserId = url.searchParams.get("adminUserId");
-  const view = url.searchParams.get("view") === "shipped" ? "shipped" : "pending";
-  const search = (url.searchParams.get("search") || "").trim();
-
-  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
-    return Response.json(
-      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
-      { status: 403 }
-    );
-  }
-
-  const shippedCondition = view === "shipped" ? "r.shipped_at IS NOT NULL" : "r.shipped_at IS NULL";
-  const orderBy = view === "shipped" ? "r.shipped_at DESC" : "r.created_at ASC";
-
-  let query = `SELECT r.id, r.event_title, r.package_name, r.shipped_at,
-            r.shipping_name, r.shipping_phone, r.shipping_address,
-            u.first_name, u.last_name, u.phone, u.shirt_size,
-            u.house_no, u.moo, u.soi, u.road, u.sub_district, u.district, u.province, u.postal_code
-     FROM registrations r
-     JOIN users u ON r.user_id = u.id
-     WHERE r.status = 'completed' AND ${shippedCondition}`;
-
-  const params = [];
-  if (search) {
-    query += ` AND (r.shipping_name LIKE ? OR u.first_name LIKE ? OR u.last_name LIKE ? OR r.shipping_phone LIKE ? OR u.phone LIKE ? OR r.event_title LIKE ?)`;
-    const term = `%${search}%`;
-    params.push(term, term, term, term, term, term);
-  }
-  query += ` ORDER BY ${orderBy}`;
-
-  const { results } = await env.DB.prepare(query)
-    .bind(...params)
-    .all();
-
-  const items = results.map((r) => ({
-    id: r.id,
-    name: r.shipping_name || `${r.first_name || ""} ${r.last_name || ""}`.trim(),
-    phone: r.shipping_phone || r.phone || "",
-    address: r.shipping_address || formatAddress(r),
-    eventTitle: r.event_title,
-    packageName: r.package_name,
-    shirtSize: r.shirt_size || "",
-    shippedAt: r.shipped_at,
-  }));
-
-  return Response.json({ success: true, items });
-}
-
-async function handleGetShippingShop(request, env) {
-  const url = new URL(request.url);
-  const adminUserId = url.searchParams.get("adminUserId");
-  const view = url.searchParams.get("view") === "shipped" ? "shipped" : "pending";
-  const search = (url.searchParams.get("search") || "").trim();
-
-  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
-    return Response.json(
-      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
-      { status: 403 }
-    );
-  }
-
-  const shippedCondition = view === "shipped" ? "o.shipped_at IS NOT NULL" : "o.shipped_at IS NULL";
-  const orderBy = view === "shipped" ? "o.shipped_at DESC" : "o.created_at ASC";
-
-  let query = `SELECT o.id, o.product_name, o.size, o.quantity, o.shipped_at,
-            o.shipping_name, o.shipping_phone, o.shipping_address,
-            u.first_name, u.last_name, u.phone,
-            u.house_no, u.moo, u.soi, u.road, u.sub_district, u.district, u.province, u.postal_code
-     FROM orders o
-     JOIN users u ON o.user_id = u.id
-     WHERE o.status = 'paid' AND ${shippedCondition}`;
-
-  const params = [];
-  if (search) {
-    query += ` AND (o.shipping_name LIKE ? OR u.first_name LIKE ? OR u.last_name LIKE ? OR o.shipping_phone LIKE ? OR u.phone LIKE ? OR o.product_name LIKE ?)`;
-    const term = `%${search}%`;
-    params.push(term, term, term, term, term, term);
-  }
-  query += ` ORDER BY ${orderBy}`;
-
-  const { results } = await env.DB.prepare(query)
-    .bind(...params)
-    .all();
-
-  const items = results.map((o) => ({
-    id: o.id,
-    name: o.shipping_name || `${o.first_name || ""} ${o.last_name || ""}`.trim(),
-    phone: o.shipping_phone || o.phone || "",
-    address: o.shipping_address || formatAddress(o),
-    productName: o.product_name,
-    size: o.size || "",
-    quantity: o.quantity,
-    shippedAt: o.shipped_at,
-  }));
-
-  return Response.json({ success: true, items });
-}
-
-async function handleMarkShipped(request, env) {
-  const body = await request.json();
-  const { adminUserId, type, ids } = body;
-
-  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
-    return Response.json(
-      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
-      { status: 403 }
-    );
-  }
-
-  if (!type || !["event", "shop"].includes(type) || !Array.isArray(ids) || ids.length === 0) {
-    return Response.json({ success: false, error: "ข้อมูลไม่ถูกต้อง" }, { status: 400 });
-  }
-
-  const table = type === "event" ? "registrations" : "orders";
-  const placeholders = ids.map(() => "?").join(",");
-
-  try {
-    await env.DB.prepare(
-      `UPDATE ${table} SET shipped_at = datetime('now') WHERE id IN (${placeholders})`
-    )
-      .bind(...ids)
-      .run();
-
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "อัปเดตสถานะไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
-}
-
-async function handleGetMembers(request, env) {
-  const url = new URL(request.url);
-  const adminUserId = url.searchParams.get("adminUserId");
-
-  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
-    return Response.json(
-      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
-      { status: 403 }
-    );
-  }
-
-  const { results } = await env.DB.prepare(
-    `SELECT id, username, email, first_name, last_name, phone, is_admin, created_at
-     FROM users
-     ORDER BY created_at DESC`
-  ).all();
-
-  return Response.json({ success: true, members: results });
-}
-
-async function handleGetProducts(env) {
-  const { results } = await env.DB.prepare(
-    "SELECT id, name, price, description, image, category, sizes FROM products ORDER BY created_at DESC"
-  ).all();
-
-  return Response.json({ success: true, products: results });
-}
-
-async function handleGetCategories(request, env) {
-  const url = new URL(request.url);
-  const adminUserId = url.searchParams.get("adminUserId");
-
-  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
-    return Response.json(
-      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
-      { status: 403 }
-    );
-  }
-
-  const { results } = await env.DB.prepare(
-    "SELECT id, name FROM categories ORDER BY name ASC"
-  ).all();
-
-  return Response.json({ success: true, categories: results });
-}
-
-async function handleCreateCategory(request, env) {
-  const body = await request.json();
-  const { adminUserId, name } = body;
-
-  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
-    return Response.json(
-      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
-      { status: 403 }
-    );
-  }
-
-  const trimmedName = (name || "").trim();
-  if (!trimmedName) {
-    return Response.json(
-      { success: false, error: "กรุณากรอกชื่อหมวดหมู่" },
-      { status: 400 }
-    );
-  }
-
-  try {
-    await env.DB.prepare("INSERT INTO categories (name) VALUES (?)")
-      .bind(trimmedName)
-      .run();
-
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "หมวดหมู่นี้มีอยู่แล้ว หรือเพิ่มไม่สำเร็จ" },
-      { status: 400 }
-    );
-  }
-}
-
-async function handleDeleteCategory(request, env) {
-  const body = await request.json();
-  const { adminUserId, categoryId } = body;
-
-  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
-    return Response.json(
-      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
-      { status: 403 }
-    );
-  }
-
-  if (!categoryId) {
-    return Response.json({ success: false, error: "ไม่พบ categoryId" }, { status: 400 });
-  }
-
-  try {
-    await env.DB.prepare("DELETE FROM categories WHERE id = ?").bind(categoryId).run();
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "ลบหมวดหมู่ไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
-}
-
-async function handleCreateOrder(request, env) {
-  const body = await request.json();
-  const { userId, productId, quantity, size, addressId } = body;
-
-  if (!userId || !productId || !quantity || quantity < 1 || !size) {
-    return Response.json(
-      { success: false, error: "กรุณาเลือกไซส์และจำนวนสินค้าให้ครบ" },
-      { status: 400 }
-    );
-  }
-
-  const product = await env.DB.prepare(
-    "SELECT id, name, price FROM products WHERE id = ?"
-  )
-    .bind(productId)
-    .first();
-
-  if (!product) {
-    return Response.json(
-      { success: false, error: "ไม่พบสินค้านี้" },
-      { status: 404 }
-    );
-  }
-
-  const address = await resolveShippingAddress(env, userId, addressId);
-
-  const total = product.price * quantity;
-
-  try {
-    await env.DB.prepare(
-      `INSERT INTO orders
-        (user_id, product_id, product_name, price, quantity, total, status, size,
-         shipping_name, shipping_phone, shipping_address)
-       VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)`
-    )
-      .bind(
-        userId,
-        product.id,
-        product.name,
-        product.price,
-        quantity,
-        total,
-        size,
-        address?.recipient_name || null,
-        address?.phone || null,
-        address ? formatAddress(address) : null
-      )
-      .run();
-
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "สั่งซื้อไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
-}
-
-async function handleGetUserOrders(request, env) {
-  const url = new URL(request.url);
-  const userId = url.searchParams.get("userId");
-
-  if (!userId) {
-    return Response.json({ success: false, error: "ไม่พบ userId" }, { status: 400 });
-  }
-
-  const { results } = await env.DB.prepare(
-    "SELECT id, user_id, product_id, product_name, price, quantity, total, status, paid_amount, slip_image, size, created_at, shipping_name, shipping_phone, shipping_address FROM orders WHERE user_id = ? ORDER BY created_at DESC"
-  )
-    .bind(userId)
-    .all();
-
-  return Response.json({ success: true, orders: results });
-}
-
-async function handlePayOrder(request, env) {
-  const formData = await request.formData();
-
-  const orderId = formData.get("orderId");
-  const amount = Number(formData.get("amount"));
-  const file = formData.get("slip");
-  const verifiedByOcr = formData.get("verifiedByOcr") === "true";
-
-  if (!orderId || !amount || !file) {
-    return Response.json(
-      { success: false, error: "ข้อมูลไม่ครบถ้วน กรุณาแนบสลิปและกรอกยอดเงิน" },
-      { status: 400 }
-    );
-  }
-
-  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-  if (!allowedTypes.includes(file.type)) {
-    return Response.json(
-      { success: false, error: "รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WEBP) เท่านั้น" },
-      { status: 400 }
-    );
-  }
-
-  if (file.size > 2 * 1024 * 1024) {
-    return Response.json(
-      { success: false, error: "ไฟล์ใหญ่เกินไป (จำกัดไม่เกิน 2MB)" },
-      { status: 400 }
-    );
-  }
-
-  const order = await env.DB.prepare("SELECT * FROM orders WHERE id = ?")
-    .bind(orderId)
-    .first();
-
-  if (!order) {
-    return Response.json(
-      { success: false, error: "ไม่พบคำสั่งซื้อนี้" },
-      { status: 404 }
-    );
-  }
-
-  if (order.status === "paid") {
-    return Response.json(
-      { success: false, error: "คำสั่งซื้อนี้ชำระเงินแล้ว" },
-      { status: 400 }
-    );
-  }
-
-  if (amount < order.total) {
-    return Response.json(
-      { success: false, error: `ยอดชำระต้องไม่ต่ำกว่า ${order.total.toLocaleString()} บาท` },
-      { status: 400 }
-    );
-  }
-
-  const newStatus = verifiedByOcr ? "pending_ocr_approval" : "pending_verification";
-  const slipDataUrl = await fileToBase64DataUrl(file);
-
-  try {
-    await env.DB.prepare(
-      "UPDATE orders SET status = ?, paid_amount = ?, slip_image = ? WHERE id = ?"
-    )
-      .bind(newStatus, amount, slipDataUrl, orderId)
-      .run();
-
-    return Response.json({ success: true, status: newStatus });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "อัปเดตสถานะไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
-}
-
-async function handleGetPendingOrders(request, env) {
-  const url = new URL(request.url);
-  const adminUserId = url.searchParams.get("adminUserId");
-
-  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
-    return Response.json(
-      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
-      { status: 403 }
-    );
-  }
-
-  const { results } = await env.DB.prepare(
-    `SELECT o.*, u.email AS user_email, u.first_name AS user_first_name, u.last_name AS user_last_name
-     FROM orders o
-     JOIN users u ON o.user_id = u.id
-     WHERE o.status IN ('pending_verification', 'pending_ocr_approval')
-     ORDER BY o.created_at ASC`
-  ).all();
-
-  return Response.json({ success: true, orders: results });
-}
-
-async function handleReviewOrder(request, env) {
-  const body = await request.json();
-  const { adminUserId, orderId, action } = body;
-
-  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
-    return Response.json(
-      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
-      { status: 403 }
-    );
-  }
-
-  if (!orderId || !["approve", "reject"].includes(action)) {
-    return Response.json(
-      { success: false, error: "ข้อมูลไม่ครบถ้วน" },
-      { status: 400 }
-    );
-  }
-
-  try {
-    if (action === "approve") {
-      await env.DB.prepare(
-        "UPDATE orders SET status = 'paid', slip_image = NULL, paid_at = datetime('now') WHERE id = ?"
-      )
-        .bind(orderId)
-        .run();
-    } else {
-      await env.DB.prepare(
-        "UPDATE orders SET status = 'pending' WHERE id = ?"
-      )
-        .bind(orderId)
-        .run();
-    }
-
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "อัปเดตสถานะไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
-}
-
-async function handleCancelOrder(request, env) {
-  const body = await request.json();
-  const { userId, orderId } = body;
-
-  if (!userId || !orderId) {
-    return Response.json({ success: false, error: "ข้อมูลไม่ครบถ้วน" }, { status: 400 });
-  }
-
-  const order = await env.DB.prepare("SELECT * FROM orders WHERE id = ?")
-    .bind(orderId)
-    .first();
-
-  if (!order) {
-    return Response.json({ success: false, error: "ไม่พบคำสั่งซื้อนี้" }, { status: 404 });
-  }
-
-  if (String(order.user_id) !== String(userId)) {
-    return Response.json({ success: false, error: "ไม่มีสิทธิ์ทำรายการนี้" }, { status: 403 });
-  }
-
-  if (order.status !== "pending") {
-    return Response.json(
-      { success: false, error: "ไม่สามารถยกเลิกคำสั่งซื้อนี้ได้แล้ว" },
-      { status: 400 }
-    );
-  }
-
-  try {
-    // ยกเลิกแล้ว -> ย้ายรายการกลับไปที่ตะกร้าแทนการลบทิ้ง
-    await env.DB.prepare(
-      `INSERT INTO cart_items (user_id, product_id, product_name, price, size, quantity)
-       VALUES (?, ?, ?, ?, ?, ?)`
-    )
-      .bind(order.user_id, order.product_id, order.product_name, order.price, order.size, order.quantity)
-      .run();
-
-    await env.DB.prepare("DELETE FROM orders WHERE id = ?").bind(orderId).run();
-
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "ยกเลิกคำสั่งซื้อไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
-}
-
-async function handleGetCart(request, env) {
-  const url = new URL(request.url);
-  const userId = url.searchParams.get("userId");
-
-  if (!userId) {
-    return Response.json({ success: false, error: "ไม่พบ userId" }, { status: 400 });
-  }
-
-  const { results } = await env.DB.prepare(
-    "SELECT * FROM cart_items WHERE user_id = ? ORDER BY created_at DESC"
-  )
-    .bind(userId)
-    .all();
-
-  return Response.json({ success: true, cartItems: results });
-}
-
-async function handleAddToCart(request, env) {
-  const body = await request.json();
-  const { userId, productId, quantity, size } = body;
-
-  if (!userId || !productId || !quantity || quantity < 1 || !size) {
-    return Response.json(
-      { success: false, error: "กรุณาเลือกไซส์และจำนวนสินค้าให้ครบ" },
-      { status: 400 }
-    );
-  }
-
-  const product = await env.DB.prepare(
-    "SELECT id, name, price FROM products WHERE id = ?"
-  )
-    .bind(productId)
-    .first();
-
-  if (!product) {
-    return Response.json({ success: false, error: "ไม่พบสินค้านี้" }, { status: 404 });
-  }
-
-  try {
-    await env.DB.prepare(
-      `INSERT INTO cart_items (user_id, product_id, product_name, price, size, quantity)
-       VALUES (?, ?, ?, ?, ?, ?)`
-    )
-      .bind(userId, product.id, product.name, product.price, size, quantity)
-      .run();
-
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "เพิ่มสินค้าลงตะกร้าไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
-}
-
-async function handleRemoveFromCart(request, env) {
-  const body = await request.json();
-  const { userId, cartItemId } = body;
-
-  if (!userId || !cartItemId) {
-    return Response.json({ success: false, error: "ข้อมูลไม่ครบถ้วน" }, { status: 400 });
-  }
-
-  const item = await env.DB.prepare("SELECT * FROM cart_items WHERE id = ?")
-    .bind(cartItemId)
-    .first();
-
-  if (!item || String(item.user_id) !== String(userId)) {
-    return Response.json({ success: false, error: "ไม่มีสิทธิ์ทำรายการนี้" }, { status: 403 });
-  }
-
-  try {
-    await env.DB.prepare("DELETE FROM cart_items WHERE id = ?").bind(cartItemId).run();
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "ลบสินค้าออกจากตะกร้าไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
-}
-
-async function handleCheckoutCart(request, env) {
-  const body = await request.json();
-  const { userId, cartItemIds, addressId } = body;
-
-  if (!userId || !Array.isArray(cartItemIds) || cartItemIds.length === 0) {
-    return Response.json(
-      { success: false, error: "กรุณาเลือกรายการที่ต้องการชำระ" },
-      { status: 400 }
-    );
-  }
-
-  const address = await resolveShippingAddress(env, userId, addressId);
-
-  const placeholders = cartItemIds.map(() => "?").join(",");
-  const { results: items } = await env.DB.prepare(
-    `SELECT * FROM cart_items WHERE user_id = ? AND id IN (${placeholders})`
-  )
-    .bind(userId, ...cartItemIds)
-    .all();
-
-  if (!items || items.length === 0) {
-    return Response.json({ success: false, error: "ไม่พบรายการที่เลือก" }, { status: 400 });
-  }
-
-  try {
-    for (const item of items) {
-      const total = item.price * item.quantity;
-      await env.DB.prepare(
-        `INSERT INTO orders
-          (user_id, product_id, product_name, price, quantity, total, status, size,
-           shipping_name, shipping_phone, shipping_address)
-         VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)`
-      )
-        .bind(
-          userId,
-          item.product_id,
-          item.product_name,
-          item.price,
-          item.quantity,
-          total,
-          item.size,
-          address?.recipient_name || null,
-          address?.phone || null,
-          address ? formatAddress(address) : null
-        )
-        .run();
-
-      await env.DB.prepare("DELETE FROM cart_items WHERE id = ?").bind(item.id).run();
-    }
-
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "ดำเนินการชำระเงินไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
-}
-
-async function handleGetNavCounts(request, env) {
-  const url = new URL(request.url);
-  const userId = url.searchParams.get("userId");
-
-  if (!userId) {
-    return Response.json({ success: false, error: "ไม่พบ userId" }, { status: 400 });
-  }
-
-  const unpaidCount = await env.DB.prepare(
-    `SELECT COUNT(*) AS c FROM registrations
-     WHERE user_id = ? AND status = 'confirmed'
-     AND (reg_end_date IS NULL OR reg_end_date >= date('now'))`
-  )
-    .bind(userId)
-    .first();
-  const resultPendingCount = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM registrations WHERE user_id = ? AND status = 'paid'"
-  )
-    .bind(userId)
-    .first();
-
-  const cartCount = await env.DB.prepare(
-    "SELECT COUNT(*) AS c FROM cart_items WHERE user_id = ?"
-  )
-    .bind(userId)
-    .first();
-
-  return Response.json({
-    success: true,
-    unpaid: unpaidCount.c,
-    resultPending: resultPendingCount.c,
-    cart: cartCount.c,
-  });
-}
-
-async function handlePayAllOrders(request, env) {
-  const formData = await request.formData();
-
-  const userId = formData.get("userId");
-  const amount = Number(formData.get("amount"));
-  const file = formData.get("slip");
-  const verifiedByOcr = formData.get("verifiedByOcr") === "true";
-
-  if (!userId || !amount || !file) {
-    return Response.json(
-      { success: false, error: "ข้อมูลไม่ครบถ้วน กรุณาแนบสลิปและกรอกยอดเงิน" },
-      { status: 400 }
-    );
-  }
-
-  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-  if (!allowedTypes.includes(file.type)) {
-    return Response.json(
-      { success: false, error: "รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WEBP) เท่านั้น" },
-      { status: 400 }
-    );
-  }
-
-  if (file.size > 2 * 1024 * 1024) {
-    return Response.json(
-      { success: false, error: "ไฟล์ใหญ่เกินไป (จำกัดไม่เกิน 2MB)" },
-      { status: 400 }
-    );
-  }
-
-  const { results: orders } = await env.DB.prepare(
-    "SELECT * FROM orders WHERE user_id = ? AND status = 'pending'"
-  )
-    .bind(userId)
-    .all();
-
-  if (!orders || orders.length === 0) {
-    return Response.json(
-      { success: false, error: "ไม่มีคำสั่งซื้อที่รอชำระเงิน" },
-      { status: 400 }
-    );
-  }
-
-  if (orders.some((o) => !o.shipping_address)) {
-    return Response.json(
-      { success: false, error: "กรุณาเลือกที่อยู่จัดส่งก่อนชำระเงิน" },
-      { status: 400 }
-    );
-  }
-
-  const grandTotal = orders.reduce((sum, o) => sum + o.total, 0);
-
-  if (amount < grandTotal) {
-    return Response.json(
-      { success: false, error: `ยอดชำระต้องไม่ต่ำกว่า ${grandTotal.toLocaleString()} บาท` },
-      { status: 400 }
-    );
-  }
-
-  const newStatus = verifiedByOcr ? "pending_ocr_approval" : "pending_verification";
-  const slipDataUrl = await fileToBase64DataUrl(file);
-
-  try {
-    for (const order of orders) {
-      await env.DB.prepare(
-        "UPDATE orders SET status = ?, paid_amount = ?, slip_image = ? WHERE id = ?"
-      )
-        .bind(newStatus, order.total, slipDataUrl, order.id)
-        .run();
-    }
-
-    return Response.json({ success: true, status: newStatus });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "อัปเดตสถานะไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
-}
-
-async function handleCancelAllOrders(request, env) {
-  const body = await request.json();
-  const { userId } = body;
-
-  if (!userId) {
-    return Response.json({ success: false, error: "ไม่พบ userId" }, { status: 400 });
-  }
-
-  const { results: orders } = await env.DB.prepare(
-    "SELECT * FROM orders WHERE user_id = ? AND status = 'pending'"
-  )
-    .bind(userId)
-    .all();
-
-  if (!orders || orders.length === 0) {
-    return Response.json({ success: false, error: "ไม่มีคำสั่งซื้อที่รอชำระเงิน" }, { status: 400 });
-  }
-
-  try {
-    for (const order of orders) {
-      await env.DB.prepare(
-        `INSERT INTO cart_items (user_id, product_id, product_name, price, size, quantity)
-         VALUES (?, ?, ?, ?, ?, ?)`
-      )
-        .bind(order.user_id, order.product_id, order.product_name, order.price, order.size, order.quantity)
-        .run();
-
-      await env.DB.prepare("DELETE FROM orders WHERE id = ?").bind(order.id).run();
-    }
-
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "ยกเลิกคำสั่งซื้อไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
-}
-
-async function handleCreateProduct(request, env) {
-  const formData = await request.formData();
-  const adminUserId = formData.get("adminUserId");
-
-  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
-    return Response.json(
-      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
-      { status: 403 }
-    );
-  }
-
-  const name = formData.get("name");
-  const price = Number(formData.get("price"));
-  const description = formData.get("description");
-  const category = formData.get("category");
-  const sizes = formData.get("sizes");
-  const file = formData.get("image");
-
-  if (!name || !price || price <= 0 || !category || !file) {
-    return Response.json(
-      { success: false, error: "กรุณากรอกข้อมูลให้ครบถ้วน" },
-      { status: 400 }
-    );
-  }
-
-  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-  if (!allowedTypes.includes(file.type)) {
-    return Response.json(
-      { success: false, error: "รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WEBP) เท่านั้น" },
-      { status: 400 }
-    );
-  }
-
-  if (file.size > 2 * 1024 * 1024) {
-    return Response.json(
-      { success: false, error: "ไฟล์ใหญ่เกินไป (จำกัดไม่เกิน 2MB)" },
-      { status: 400 }
-    );
-  }
-
-  const imageDataUrl = await fileToBase64DataUrl(file);
-
-  try {
-    await env.DB.prepare(
-      "INSERT INTO products (name, price, description, image, category, sizes) VALUES (?, ?, ?, ?, ?, ?)"
-    )
-      .bind(name, price, description, imageDataUrl, category, sizes)
-      .run();
-
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "เพิ่มสินค้าไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
-}
-
-async function handleDeleteProduct(request, env) {
-  const body = await request.json();
-  const { adminUserId, productId } = body;
-
-  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
-    return Response.json(
-      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
-      { status: 403 }
-    );
-  }
-
-  if (!productId) {
-    return Response.json({ success: false, error: "ไม่พบ productId" }, { status: 400 });
-  }
-
-  try {
-    await env.DB.prepare("DELETE FROM products WHERE id = ?").bind(productId).run();
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "ลบสินค้าไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
-}
-
-async function handleUpdateEvent(request, env) {
-  const formData = await request.formData();
-  const adminUserId = formData.get("adminUserId");
-
-  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
-    return Response.json(
-      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
-      { status: 403 }
-    );
-  }
-
-  const eventId = formData.get("eventId");
-  const title = formData.get("title");
-  const challenge = formData.get("challenge");
-  const location = formData.get("location");
-  const distance = formData.get("distance");
-  const regStartDate = formData.get("regStartDate");
-  const regEndDate = formData.get("regEndDate");
-  const resultStartDate = formData.get("resultStartDate");
-  const resultEndDate = formData.get("resultEndDate");
-  const shippingDate = formData.get("shippingDate");
-  const file = formData.get("image");
-
-  if (
-    !eventId ||
-    !title ||
-    !challenge ||
-    !location ||
-    !distance ||
-    !regStartDate ||
-    !regEndDate ||
-    !resultStartDate ||
-    !resultEndDate
-  ) {
-    return Response.json(
-      { success: false, error: "กรุณากรอกข้อมูลให้ครบถ้วน" },
-      { status: 400 }
-    );
-  }
-
-  let imageDataUrl = null;
-
-  if (file && file.size > 0) {
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-    if (!allowedTypes.includes(file.type)) {
-      return Response.json(
-        { success: false, error: "รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WEBP) เท่านั้น" },
-        { status: 400 }
-      );
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      return Response.json(
-        { success: false, error: "ไฟล์ใหญ่เกินไป (จำกัดไม่เกิน 2MB)" },
-        { status: 400 }
-      );
-    }
-    imageDataUrl = await fileToBase64DataUrl(file);
-  }
-
-  try {
-    if (imageDataUrl) {
-      await env.DB.prepare(
-        `UPDATE events SET
-          title = ?, event_date = ?, end_date = ?, location = ?, distance = ?,
-          image = ?, description = ?, reg_start_date = ?, reg_end_date = ?,
-          result_start_date = ?, result_end_date = ?, shipping_date = ?
-         WHERE id = ?`
-      )
-        .bind(
-          title,
-          regStartDate,
-          resultEndDate,
-          location,
-          distance,
-          imageDataUrl,
-          challenge,
-          regStartDate,
-          regEndDate,
-          resultStartDate,
-          resultEndDate,
-          shippingDate || null,
-          eventId
-        )
-        .run();
-    } else {
-      await env.DB.prepare(
-        `UPDATE events SET
-          title = ?, event_date = ?, end_date = ?, location = ?, distance = ?,
-          description = ?, reg_start_date = ?, reg_end_date = ?,
-          result_start_date = ?, result_end_date = ?, shipping_date = ?
-         WHERE id = ?`
-      )
-        .bind(
-          title,
-          regStartDate,
-          resultEndDate,
-          location,
-          distance,
-          challenge,
-          regStartDate,
-          regEndDate,
-          resultStartDate,
-          resultEndDate,
-          shippingDate || null,
-          eventId
-        )
-        .run();
-    }
-
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "แก้ไขกิจกรรมไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
-}
-
-async function handleUpdateProduct(request, env) {
-  const formData = await request.formData();
-  const adminUserId = formData.get("adminUserId");
-
-  if (!adminUserId || !(await isAdmin(env, adminUserId))) {
-    return Response.json(
-      { success: false, error: "ไม่มีสิทธิ์เข้าถึงส่วนนี้" },
-      { status: 403 }
-    );
-  }
-
-  const productId = formData.get("productId");
-  const name = formData.get("name");
-  const price = Number(formData.get("price"));
-  const description = formData.get("description");
-  const category = formData.get("category");
-  const sizes = formData.get("sizes");
-  const file = formData.get("image");
-
-  if (!productId || !name || !price || price <= 0 || !category) {
-    return Response.json(
-      { success: false, error: "กรุณากรอกข้อมูลให้ครบถ้วน" },
-      { status: 400 }
-    );
-  }
-
-  let imageDataUrl = null;
-
-  if (file && file.size > 0) {
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-    if (!allowedTypes.includes(file.type)) {
-      return Response.json(
-        { success: false, error: "รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WEBP) เท่านั้น" },
-        { status: 400 }
-      );
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      return Response.json(
-        { success: false, error: "ไฟล์ใหญ่เกินไป (จำกัดไม่เกิน 2MB)" },
-        { status: 400 }
-      );
-    }
-    imageDataUrl = await fileToBase64DataUrl(file);
-  }
-
-  try {
-    if (imageDataUrl) {
-      await env.DB.prepare(
-        "UPDATE products SET name = ?, price = ?, description = ?, category = ?, sizes = ?, image = ? WHERE id = ?"
-      )
-        .bind(name, price, description, category, sizes, imageDataUrl, productId)
-        .run();
-    } else {
-      await env.DB.prepare(
-        "UPDATE products SET name = ?, price = ?, description = ?, category = ?, sizes = ? WHERE id = ?"
-      )
-        .bind(name, price, description, category, sizes, productId)
-        .run();
-    }
-
-    return Response.json({ success: true });
-  } catch (err) {
-    return Response.json(
-      { success: false, error: "แก้ไขสินค้าไม่สำเร็จ กรุณาลองใหม่" },
-      { status: 500 }
-    );
-  }
+.card-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
 }
