@@ -260,30 +260,21 @@ body {
 .nav-btn {
     background: transparent;
     border: none;
+    border-bottom: 3px solid transparent;
     color: white;
-    padding: 10px 16px;
+    padding: 8px 14px;
     cursor: pointer;
-    font-size: 0.95rem;
-    position: relative;
+    font-size: 0.9rem;
+    white-space: nowrap;
 }
 
 .nav-btn:hover {
-    color: #dbeafe;
+    background: rgba(255,255,255,0.15);
 }
-
 
 .nav-btn-active {
-    font-weight: 600;
-}
-
-.nav-btn-active::after {
-    content: "";
-    position: absolute;
-    left: 10px;
-    right: 10px;
-    bottom: -2px;
-    height: 2px;
-    background: white;
+    border-bottom-color: white;
+    font-weight: bold;
 }
 
 .coming-soon {
