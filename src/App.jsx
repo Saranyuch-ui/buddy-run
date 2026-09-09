@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { setCurrentPage } from "./navState";
 import Header from "./components/Header";
 import Home from "./pages/Home";
 import Detail from "./pages/Detail";
@@ -38,6 +39,10 @@ function App() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [page, setPage] = useState("home");
   const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    setCurrentPage(page);
+  }, [page]);
 
   const isLoggedIn = !!currentUser;
 
