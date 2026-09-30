@@ -33,9 +33,24 @@ body {
     object-fit: contain;
 }
 
-.hero {
-    text-align: center;
-    padding: 40px 20px;
+.hero-ad {
+    max-width: 1200px;
+    margin: 20px auto 0;
+    padding: 0 20px;
+}
+
+.hero-ad a {
+    display: block;
+}
+
+.hero-ad-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 320px;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,.1);
 }
 
 .search-box {
